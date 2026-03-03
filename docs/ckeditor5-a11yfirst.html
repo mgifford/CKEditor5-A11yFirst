@@ -12,6 +12,9 @@
     .editor { min-height: 180px; }
     .note { font-size: 0.95rem; color: #444; }
     .status { margin-top: 0.5rem; color: #7a2f00; font-size: 0.92rem; }
+    .strict-toolbar { margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    .strict-toolbar label { font-size: 0.92rem; }
+    .strict-toolbar select { padding: 0.25rem 0.5rem; }
     a { color: #0b57d0; text-decoration: none; }
     a:hover { text-decoration: underline; }
   </style>
@@ -32,9 +35,15 @@
 
     <section class="panel">
       <h2>Demo 2: High-Restriction Heading Mode</h2>
+      <div class="strict-toolbar">
+        <label for="strict-heading-select">Heading level:</label>
+        <select id="strict-heading-select" aria-label="Apply accessible heading level">
+          <option value="paragraph">Paragraph</option>
+        </select>
+      </div>
       <div id="editor-strict" class="editor">
-        <h1>Heading 1</h1>
-        <p>Try adding headings out of sequence to observe warnings.</p>
+        <h2>Heading 2</h2>
+        <p>This mode starts at Heading 2 and removes skipped-level options by default.</p>
       </div>
       <div id="status-strict" class="status" aria-live="polite"></div>
     </section>
@@ -72,6 +81,72 @@
       return '';
     }
 
+    function getCurrentHeadingLevel(editor) {
+      const selection = editor.model.document.selection;
+      const block = selection.getFirstPosition() && selection.getFirstPosition().findAncestor('paragraph');
+
+      if (!block) {
+        return null;
+      }
+
+      if (block.name.startsWith('heading')) {
+        return Number(block.name.replace('heading', ''));
+      }
+
+      return null;
+    }
+
+    function getAllowedStrictLevels(level) {
+      if (level === null) {
+        return [2];
+      }
+
+      if (level === 2) {
+        return [2, 3];
+      }
+
+      if (level === 3) {
+        return [2, 3, 4];
+      }
+
+      if (level >= 4) {
+        return [3, 4];
+      }
+
+      return [2];
+    }
+
+    function modelForHeadingLevel(level) {
+      if (level === null) {
+        return 'paragraph';
+      }
+
+      return `heading${level}`;
+    }
+
+    function renderStrictHeadingOptions(editor) {
+      const select = document.getElementById('strict-heading-select');
+      const level = getCurrentHeadingLevel(editor);
+      const allowedLevels = getAllowedStrictLevels(level);
+
+      const options = [
+        { value: 'paragraph', text: 'Paragraph' },
+        ...allowedLevels.map((allowedLevel) => ({
+          value: String(allowedLevel),
+          text: `Heading ${allowedLevel}`
+        }))
+      ];
+
+      const currentValue = level === null ? 'paragraph' : String(level);
+      select.innerHTML = options
+        .map((option) => `<option value="${option.value}">${option.text}</option>`)
+        .join('');
+
+      const hasCurrent = options.some((option) => option.value === currentValue);
+      select.value = hasCurrent ? currentValue : 'paragraph';
+      setStatus('strict', `Allowed now: ${options.map((option) => option.text).join(', ')}.`);
+    }
+
     ClassicEditor.create(document.querySelector('#editor-standard'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
       heading: {
@@ -85,21 +160,46 @@
     }).then(() => setStatus('standard', 'Editor ready.'));
 
     ClassicEditor.create(document.querySelector('#editor-strict'), {
-      toolbar: ['heading', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo'],
+      toolbar: ['bold', 'italic', 'link', '|', 'undo', 'redo'],
       heading: {
         options: [
           { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-          { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
           { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
           { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
           { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' }
         ]
       }
     }).then((editor) => {
+      const select = document.getElementById('strict-heading-select');
+
       setStatus('strict', 'Strict mode ready.');
+      renderStrictHeadingOptions(editor);
+
+      select.addEventListener('change', () => {
+        const value = select.value;
+
+        if (value === 'paragraph') {
+          editor.execute('heading', { value: 'paragraph' });
+        } else {
+          editor.execute('heading', { value: modelForHeadingLevel(Number(value)) });
+        }
+
+        editor.editing.view.focus();
+        renderStrictHeadingOptions(editor);
+      });
+
+      editor.model.document.selection.on('change:range', () => {
+        renderStrictHeadingOptions(editor);
+      });
+
       editor.model.document.on('change:data', () => {
         const warning = headingSequenceWarnings(editor.getData());
-        setStatus('strict', warning || 'No heading sequence warnings.');
+        if (warning) {
+          setStatus('strict', `${warning} Adjust heading levels to continue.`);
+          return;
+        }
+
+        renderStrictHeadingOptions(editor);
       });
     });
 
