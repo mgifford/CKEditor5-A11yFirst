@@ -38,7 +38,7 @@ requirement_refs:
 # Work Package Prompt: WP08 - End-to-End Parity Gates and Readiness
 
 ## Implementation Command
-- `spec-kitty implement WP08 --base WP05`
+- `spec-kitty implement WP08 --base WP07`
 
 ## Objectives and Success Criteria
 

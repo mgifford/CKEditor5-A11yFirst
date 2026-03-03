@@ -37,7 +37,7 @@ history:
 # Work Package Prompt: WP06 - Link Module Accessibility Parity
 
 ## Implementation Command
-- `spec-kitty implement WP06 --base WP03`
+- `spec-kitty implement WP06 --base WP04`
 
 ## Objectives and Success Criteria
 

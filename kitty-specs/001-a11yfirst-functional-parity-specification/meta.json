@@ -1,9 +1,10 @@
 {
   "feature_number": "001",
   "slug": "001-a11yfirst-functional-parity-specification",
-  "feature_slug": "001-a11yfirst-functional-parity-specification",
-  "friendly_name": "a11yfirst functional parity specification",
+  "friendly_name": "A11yFirst Functional Parity Specification",
   "mission": "software-dev",
+  "source_description": "I want to pull out all of the features of this CKEDITOR4 Plugin and describe how they function and are documented. I want a complete functional specification, to allow me to then start a clean migration to a CKEDITOR5 implementation. I do not want to change the functionality as part of the upgrade. This is a big lift and shift.",
+  "created_at": "2026-03-03T19:50:36Z",
   "target_branch": "a11yfirst-master",
-  "created_at": "2026-03-03T19:43:53.823980+00:00"
+  "vcs": "git"
 }

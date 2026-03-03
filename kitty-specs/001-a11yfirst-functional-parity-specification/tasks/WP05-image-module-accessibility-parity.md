@@ -38,7 +38,7 @@ history:
 # Work Package Prompt: WP05 - Image Module Accessibility Parity
 
 ## Implementation Command
-- `spec-kitty implement WP05 --base WP03`
+- `spec-kitty implement WP05 --base WP04`
 
 ## Objectives and Success Criteria
 

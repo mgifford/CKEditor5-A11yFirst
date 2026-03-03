@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A11yFirst CKEditor5 Demo</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 1.5rem; line-height: 1.5; }
+    h1, h2 { margin-bottom: 0.4rem; }
+    .row { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .panel { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
+    .editor { min-height: 180px; }
+    .note { font-size: 0.95rem; color: #444; }
+    .status { margin-top: 0.5rem; color: #7a2f00; font-size: 0.92rem; }
+    a { color: #0b57d0; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <p><a href="./index.html">← Back to demo hub</a></p>
+  <h1>A11yFirst CKEditor 5 Migration Preview</h1>
+  <p class="note">This is an interim preview page to validate deployment and UX direction while WP03+ modules are implemented.</p>
+
+  <div class="row">
+    <section class="panel">
+      <h2>Demo 1: Standard A11yFirst Configuration</h2>
+      <div id="editor-standard" class="editor">
+        <p>Standard mode content.</p>
+      </div>
+      <div id="status-standard" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Demo 2: High-Restriction Heading Mode</h2>
+      <div id="editor-strict" class="editor">
+        <h1>Heading 1</h1>
+        <p>Try adding headings out of sequence to observe warnings.</p>
+      </div>
+      <div id="status-strict" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Demo 3: Image-Focused Mode</h2>
+      <div id="editor-image" class="editor">
+        <p>Insert images and provide alt text as part of workflow testing.</p>
+      </div>
+      <div id="status-image" class="status" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+  <script>
+    const status = {
+      standard: document.getElementById('status-standard'),
+      strict: document.getElementById('status-strict'),
+      image: document.getElementById('status-image')
+    };
+
+    function setStatus(target, message) {
+      status[target].textContent = message;
+    }
+
+    function headingSequenceWarnings(html) {
+      const headingMatches = Array.from(html.matchAll(/<h([1-6])\b/gi)).map((m) => Number(m[1]));
+      let previous = null;
+      for (const current of headingMatches) {
+        if (previous !== null && current > previous + 1) {
+          return `Heading sequence warning: found H${current} after H${previous}.`;
+        }
+        previous = current;
+      }
+      return '';
+    }
+
+    ClassicEditor.create(document.querySelector('#editor-standard'), {
+      toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
+      heading: {
+        options: [
+          { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+          { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+          { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+          { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+        ]
+      }
+    }).then(() => setStatus('standard', 'Editor ready.'));
+
+    ClassicEditor.create(document.querySelector('#editor-strict'), {
+      toolbar: ['heading', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo'],
+      heading: {
+        options: [
+          { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+          { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+          { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+          { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
+          { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' }
+        ]
+      }
+    }).then((editor) => {
+      setStatus('strict', 'Strict mode ready.');
+      editor.model.document.on('change:data', () => {
+        const warning = headingSequenceWarnings(editor.getData());
+        setStatus('strict', warning || 'No heading sequence warnings.');
+      });
+    });
+
+    ClassicEditor.create(document.querySelector('#editor-image'), {
+      toolbar: ['heading', '|', 'bold', 'italic', 'link', 'insertTable', '|', 'undo', 'redo']
+    }).then(() => {
+      setStatus('image', 'Image-focused mode ready. (Full a11yimage parity to be wired in WP05.)');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+openapi: 3.1.0
+info:
+  title: A11yFirst CKEditor5 Parity Rollout API Contract
+  version: 0.1.0
+  summary: Contract for orchestrating parity baselines, validation runs, and feature-flag module rollout gates.
+servers:
+  - url: https://parity.local
+paths:
+  /modules:
+    get:
+      summary: List in-scope parity modules and rollout status
+      operationId: listModules
+      responses:
+        "200":
+          description: Module list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CapabilityModule"
+  /baseline-observations:
+    post:
+      summary: Record runtime behavior observation from hosted or local baseline
+      operationId: createBaselineObservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BaselineObservationInput"
+      responses:
+        "201":
+          description: Observation captured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaselineObservation"
+  /baseline-conflicts/resolve:
+    post:
+      summary: Resolve baseline conflict using policy
+      operationId: resolveBaselineConflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BaselineConflictResolutionInput"
+      responses:
+        "200":
+          description: Conflict resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaselineConflict"
+  /parity-runs:
+    post:
+      summary: Execute parity checks for a module
+      operationId: runParityChecks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParityRunRequest"
+      responses:
+        "202":
+          description: Run accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParityRun"
+  /parity-runs/{runId}:
+    get:
+      summary: Retrieve parity run status and results
+      operationId: getParityRun
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Run result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParityRun"
+  /feature-flags/{moduleKey}/enable:
+    post:
+      summary: Enable module feature flag when gates pass
+      operationId: enableModuleFlag
+      parameters:
+        - in: path
+          name: moduleKey
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnableFlagRequest"
+      responses:
+        "200":
+          description: Flag enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatureFlagGate"
+        "409":
+          description: Gate requirements not satisfied
+components:
+  schemas:
+    CapabilityModule:
+      type: object
+      required:
+        - moduleKey
+        - rolloutStage
+      properties:
+        moduleKey:
+          type: string
+          enum: [heading, image, link, help, styles, checker, toolbar_state]
+        displayName:
+          type: string
+        rolloutStage:
+          type: string
+          enum: [not_started, implemented, qa_validated, flagged_off, flagged_on_canary, flagged_on_full]
+        flagKey:
+          type: string
+    BaselineObservationInput:
+      type: object
+      required: [moduleKey, baselineSource, scenarioKey, observedBehavior]
+      properties:
+        moduleKey:
+          type: string
+        baselineSource:
+          type: string
+          enum: [local_repo_runtime, hosted_demo_runtime]
+        scenarioKey:
+          type: string
+        observedBehavior:
+          type: string
+    BaselineObservation:
+      allOf:
+        - $ref: "#/components/schemas/BaselineObservationInput"
+        - type: object
+          required: [observationId, capturedAt]
+          properties:
+            observationId:
+              type: string
+            capturedAt:
+              type: string
+              format: date-time
+    BaselineConflictResolutionInput:
+      type: object
+      required: [conflictId, resolution]
+      properties:
+        conflictId:
+          type: string
+        resolution:
+          type: string
+          enum: [use_local_runtime]
+        resolutionNote:
+          type: string
+    BaselineConflict:
+      type: object
+      required: [conflictId, moduleKey, scenarioKey, resolution]
+      properties:
+        conflictId:
+          type: string
+        moduleKey:
+          type: string
+        scenarioKey:
+          type: string
+        hostedBehavior:
+          type: string
+        localBehavior:
+          type: string
+        resolution:
+          type: string
+          enum: [use_local_runtime]
+        resolutionNote:
+          type: string
+    ParityRunRequest:
+      type: object
+      required: [moduleKey, checks]
+      properties:
+        moduleKey:
+          type: string
+        checks:
+          type: array
+          items:
+            type: string
+            enum: [ui_parity, output_equivalence, automated_regression]
+    ParityRun:
+      type: object
+      required: [runId, moduleKey, status, checks]
+      properties:
+        runId:
+          type: string
+        moduleKey:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, passed, failed]
+        checks:
+          type: array
+          items:
+            type: object
+            required: [type, result]
+            properties:
+              type:
+                type: string
+              result:
+                type: string
+                enum: [pass, fail]
+              details:
+                type: string
+    EnableFlagRequest:
+      type: object
+      required: [requestedBy]
+      properties:
+        requestedBy:
+          type: string
+        evidenceRunId:
+          type: string
+    FeatureFlagGate:
+      type: object
+      required: [moduleKey, gateStatus]
+      properties:
+        moduleKey:
+          type: string
+        gateStatus:
+          type: string
+          enum: [locked, eligible, enabled]
+        requiresUiParity:
+          type: boolean
+        requiresOutputEquivalence:
+          type: boolean
+        requiresRegressionSuite:
+          type: boolean
