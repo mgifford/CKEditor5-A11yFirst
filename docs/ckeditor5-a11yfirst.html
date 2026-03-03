@@ -9,7 +9,8 @@
     h1, h2 { margin-bottom: 0.4rem; }
     .row { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem; }
     .panel { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
-    .editor { min-height: 180px; }
+    .editor { min-height: 260px; }
+    #editor-strict { min-height: 420px; }
     .note { font-size: 0.95rem; color: #444; }
     .status { margin-top: 0.5rem; color: #7a2f00; font-size: 0.92rem; }
     .strict-toolbar { margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
@@ -42,8 +43,15 @@
         </select>
       </div>
       <div id="editor-strict" class="editor">
-        <h2>Heading 2</h2>
-        <p>This mode starts at Heading 2 and removes skipped-level options by default.</p>
+        <h2>H2</h2>
+        <h3>H3</h3>
+        <h3>H3</h3>
+        <h2>H2</h2>
+        <h3>H3</h3>
+        <h4>H4</h4>
+        <h5>H5</h5>
+        <h5>H5</h5>
+        <h2>H2</h2>
       </div>
       <div id="status-strict" class="status" aria-live="polite"></div>
     </section>
@@ -83,14 +91,16 @@
 
     function getCurrentHeadingLevel(editor) {
       const selection = editor.model.document.selection;
-      const block = selection.getFirstPosition() && selection.getFirstPosition().findAncestor('paragraph');
+      const firstBlock = Array.from(selection.getSelectedBlocks())[0];
 
-      if (!block) {
+      if (!firstBlock) {
         return null;
       }
 
-      if (block.name.startsWith('heading')) {
-        return Number(block.name.replace('heading', ''));
+      const blockName = String(firstBlock.name);
+
+      if (blockName.startsWith('heading')) {
+        return Number(blockName.replace('heading', ''));
       }
 
       return null;
@@ -101,7 +111,7 @@
         return [2];
       }
 
-      const minLevel = Math.max(2, level - 1);
+      const minLevel = 2;
       const maxLevel = Math.min(6, level + 1);
       const allowedLevels = [];
 
@@ -126,20 +136,19 @@
       const allowedLevels = getAllowedStrictLevels(level);
 
       const options = [
-        { value: 'paragraph', text: 'Paragraph' },
         ...allowedLevels.map((allowedLevel) => ({
           value: String(allowedLevel),
           text: `Heading ${allowedLevel}`
         }))
       ];
 
-      const currentValue = level === null ? 'paragraph' : String(level);
+      const currentValue = level === null ? '2' : String(level);
       select.innerHTML = options
         .map((option) => `<option value="${option.value}">${option.text}</option>`)
         .join('');
 
       const hasCurrent = options.some((option) => option.value === currentValue);
-      select.value = hasCurrent ? currentValue : 'paragraph';
+      select.value = hasCurrent ? currentValue : '2';
       setStatus('strict', `Allowed now: ${options.map((option) => option.text).join(', ')}.`);
     }
 
@@ -154,7 +163,7 @@
         if (previousLevel === null) {
           normalizedLevel = 2;
         } else {
-          const minAllowed = Math.max(2, previousLevel - 1);
+          const minAllowed = 2;
           const maxAllowed = Math.min(6, previousLevel + 1);
           normalizedLevel = Math.min(maxAllowed, Math.max(minAllowed, normalizedLevel));
         }
@@ -206,11 +215,7 @@
       select.addEventListener('change', () => {
         const value = select.value;
 
-        if (value === 'paragraph') {
-          editor.execute('heading', { value: 'paragraph' });
-        } else {
-          editor.execute('heading', { value: modelForHeadingLevel(Number(value)) });
-        }
+        editor.execute('heading', { value: modelForHeadingLevel(Number(value)) });
 
         editor.editing.view.focus();
         renderStrictHeadingOptions(editor);
