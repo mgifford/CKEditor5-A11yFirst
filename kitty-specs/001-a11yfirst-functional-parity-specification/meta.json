@@ -1,0 +1,9 @@
+{
+  "feature_number": "001",
+  "slug": "001-a11yfirst-functional-parity-specification",
+  "feature_slug": "001-a11yfirst-functional-parity-specification",
+  "friendly_name": "a11yfirst functional parity specification",
+  "mission": "software-dev",
+  "target_branch": "a11yfirst-master",
+  "created_at": "2026-03-03T19:43:53.823980+00:00"
+}
