@@ -101,19 +101,15 @@
         return [2];
       }
 
-      if (level === 2) {
-        return [2, 3];
+      const minLevel = Math.max(2, level - 1);
+      const maxLevel = Math.min(6, level + 1);
+      const allowedLevels = [];
+
+      for (let currentLevel = minLevel; currentLevel <= maxLevel; currentLevel += 1) {
+        allowedLevels.push(currentLevel);
       }
 
-      if (level === 3) {
-        return [2, 3, 4];
-      }
-
-      if (level >= 4) {
-        return [3, 4];
-      }
-
-      return [2];
+      return allowedLevels;
     }
 
     function modelForHeadingLevel(level) {
@@ -147,6 +143,35 @@
       setStatus('strict', `Allowed now: ${options.map((option) => option.text).join(', ')}.`);
     }
 
+    function normalizeStrictHeadings(html) {
+      const headingPattern = /<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1>/gi;
+      let previousLevel = null;
+
+      return html.replace(headingPattern, (_match, levelRaw, attrs, content) => {
+        const parsedLevel = Number(levelRaw);
+        let normalizedLevel = Number.isNaN(parsedLevel) ? 2 : parsedLevel;
+
+        if (previousLevel === null) {
+          normalizedLevel = 2;
+        } else {
+          const minAllowed = Math.max(2, previousLevel - 1);
+          const maxAllowed = Math.min(6, previousLevel + 1);
+          normalizedLevel = Math.min(maxAllowed, Math.max(minAllowed, normalizedLevel));
+        }
+
+        if (normalizedLevel < 2) {
+          normalizedLevel = 2;
+        }
+
+        if (normalizedLevel > 6) {
+          normalizedLevel = 6;
+        }
+
+        previousLevel = normalizedLevel;
+        return `<h${normalizedLevel}${attrs}>${content}</h${normalizedLevel}>`;
+      });
+    }
+
     ClassicEditor.create(document.querySelector('#editor-standard'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
       heading: {
@@ -166,11 +191,14 @@
           { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
           { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
           { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
-          { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' }
+          { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
+          { model: 'heading5', view: 'h5', title: 'Heading 5', class: 'ck-heading_heading5' },
+          { model: 'heading6', view: 'h6', title: 'Heading 6', class: 'ck-heading_heading6' }
         ]
       }
     }).then((editor) => {
       const select = document.getElementById('strict-heading-select');
+      let isNormalizingStrictHeadings = false;
 
       setStatus('strict', 'Strict mode ready.');
       renderStrictHeadingOptions(editor);
@@ -193,6 +221,21 @@
       });
 
       editor.model.document.on('change:data', () => {
+        if (isNormalizingStrictHeadings) {
+          return;
+        }
+
+        const normalizedData = normalizeStrictHeadings(editor.getData());
+        if (normalizedData !== editor.getData()) {
+          isNormalizingStrictHeadings = true;
+          editor.setData(normalizedData).then(() => {
+            isNormalizingStrictHeadings = false;
+            setStatus('strict', 'Strict mode normalized disallowed heading levels (no H1, no skipped levels).');
+            renderStrictHeadingOptions(editor);
+          });
+          return;
+        }
+
         const warning = headingSequenceWarnings(editor.getData());
         if (warning) {
           setStatus('strict', `${warning} Adjust heading levels to continue.`);
