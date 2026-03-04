@@ -25,22 +25,33 @@ test.describe('CKEditor5 demo site', () => {
   test('strict mode heading ladder behavior is exposed in selector', async ({ page }) => {
     await page.goto('/ckeditor5-a11yfirst.html');
 
-    const strictEditor = page.locator('#editor-strict');
+    const strictPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 2: High-Restriction Heading Mode' }) });
+
+    const strictEditor = strictPanel.locator('#editor-strict');
     await expect(strictEditor).toBeVisible();
 
-    const headingSelect = page.locator('#strict-heading-select');
-    await expect(headingSelect).toBeVisible();
-
-    await strictEditor.click();
+    await strictEditor.locator('h2').first().click();
 
     const allowedText = page.locator('#status-strict');
-    await expect(allowedText).toContainText('Allowed now:');
+    await expect(allowedText).toContainText('Allowed now: Paragraph, Heading 2, Heading 3');
 
-    await headingSelect.selectOption('3');
-    await expect(allowedText).toContainText('Heading 2, Heading 3, Heading 4');
+    const headingDropdownButton = strictPanel.locator('.ck-heading-dropdown .ck-dropdown__button');
+    await headingDropdownButton.click();
 
-    await headingSelect.selectOption('5');
-    await expect(allowedText).toContainText('Heading 2, Heading 3, Heading 4, Heading 5, Heading 6');
+    const paragraphButton = strictPanel.locator('.ck-heading_paragraph');
+    await expect(paragraphButton).toBeVisible();
+
+    const heading4Button = strictPanel.locator('.ck-heading_heading4');
+    await expect(heading4Button).toHaveAttribute('aria-disabled', 'true');
+
+    await strictPanel.locator('.ck-heading_heading3').click();
+    await expect(allowedText).toContainText('Allowed now: Paragraph, Heading 2, Heading 3, Heading 4');
+
+    await headingDropdownButton.click();
+    const heading5Button = strictPanel.locator('.ck-heading_heading5');
+    await expect(heading5Button).toHaveAttribute('aria-disabled', 'true');
   });
 
   test('strict mode normalizes disallowed H1 headings', async ({ page }) => {

@@ -6,7 +6,7 @@
   "scripts": {
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "serve:docs": "http-server ../../docs -p 4173 -c-1"
+    "serve:docs": "http-server ../../../docs -p 4173 -c-1"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",
