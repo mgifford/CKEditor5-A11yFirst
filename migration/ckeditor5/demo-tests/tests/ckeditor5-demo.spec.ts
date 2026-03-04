@@ -18,7 +18,7 @@ test.describe('CKEditor5 demo site', () => {
 
     await expect(page.getByRole('link', { name: 'Open CKEditor 4 baseline demo' })).toHaveAttribute(
       'href',
-      'https://a11yfirst.gitlab.io/CKEditor4/a11yfirst.html'
+      './CKEditor4/a11yfirst.html'
     );
   });
 

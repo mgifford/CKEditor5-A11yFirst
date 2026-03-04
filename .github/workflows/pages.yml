@@ -32,6 +32,12 @@ jobs:
         with:
           enablement: true
 
+      - name: Sync CKEditor4 archive into docs
+        run: |
+          rm -rf docs/CKEditor4
+          mkdir -p docs/CKEditor4
+          rsync -a --delete CKEditor4/ docs/CKEditor4/
+
       - name: Upload docs artifact
         uses: actions/upload-pages-artifact@v3
         with:
