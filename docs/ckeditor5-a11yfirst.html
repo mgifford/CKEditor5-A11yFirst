@@ -21,10 +21,10 @@
     .image-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
     .image-actions .secondary { margin-left: 0.4rem; }
     .tool-status { margin-top: 0.4rem; font-size: 0.85rem; color: #555; }
-    .image-props-modal { position: fixed; inset: 0; z-index: 2200; display: none; align-items: center; justify-content: center; }
+    .image-props-modal { position: fixed; inset: 0; z-index: 2200; display: none; align-items: center; justify-content: center; pointer-events: none; }
     .image-props-modal.open { display: flex; }
     .image-props-modal .backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); }
-    .image-props-modal .dialog { position: relative; background: #fff; width: min(820px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 0.9rem 1rem; }
+    .image-props-modal .dialog { position: relative; background: #fff; width: min(820px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 0.9rem 1rem; pointer-events: auto; }
     .image-props-modal h3 { margin: 0 0 0.5rem; font-size: 1rem; }
     .image-props-modal .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 0.75rem; }
     .image-props-modal .full { grid-column: 1 / -1; }
@@ -39,10 +39,10 @@
     .image-context-menu button { width: 100%; border: 0; background: transparent; text-align: left; padding: 0.45rem 0.7rem; font-size: 0.9rem; cursor: pointer; }
     .image-context-menu button:hover, .image-context-menu button:focus { background: #f2f6fc; outline: none; }
     .link-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
-    .link-props-modal { position: fixed; inset: 0; z-index: 2200; display: none; align-items: center; justify-content: center; }
+    .link-props-modal { position: fixed; inset: 0; z-index: 2200; display: none; align-items: center; justify-content: center; pointer-events: none; }
     .link-props-modal.open { display: flex; }
     .link-props-modal .backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); }
-    .link-props-modal .dialog { position: relative; background: #fff; width: min(700px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 0.9rem 1rem; }
+    .link-props-modal .dialog { position: relative; background: #fff; width: min(700px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 0.9rem 1rem; pointer-events: auto; }
     .link-props-modal h3 { margin: 0 0 0.5rem; font-size: 1rem; }
     .link-props-modal .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 0.75rem; }
     .link-props-modal .full { grid-column: 1 / -1; }
@@ -1100,6 +1100,27 @@
         return '';
       }
 
+      if (selection.isCollapsed) {
+        const position = firstRange.start;
+        const nodeBefore = position.nodeBefore;
+        if (nodeBefore && nodeBefore.is && (nodeBefore.is('$text') || nodeBefore.is('$textProxy'))) {
+          const href = nodeBefore.getAttribute('linkHref');
+          if (href) {
+            return String(href);
+          }
+        }
+
+        const nodeAfter = position.nodeAfter;
+        if (nodeAfter && nodeAfter.is && (nodeAfter.is('$text') || nodeAfter.is('$textProxy'))) {
+          const href = nodeAfter.getAttribute('linkHref');
+          if (href) {
+            return String(href);
+          }
+        }
+
+        return '';
+      }
+
       for (const item of firstRange.getItems()) {
         if (item.is && item.is('$textProxy')) {
           const href = item.getAttribute('linkHref');
@@ -1588,7 +1609,7 @@
       const sa11yButton = document.getElementById('sa11y-enable');
       const controls = getImagePropertiesElements();
       const helpControls = getHelpElements();
-      const imagePanel = document.getElementById('editor-image');
+      const imageEditableRoot = imageEditor.editing.view.getDomRoot();
       const imageContextMenu = document.getElementById('image-context-menu');
       const imageContextOpenProps = document.getElementById('image-context-open-props');
       const imagePropsToolbarButton = createImagePropertiesToolbarButton(imageEditor);
@@ -1617,8 +1638,8 @@
         imagePropsToolbarButton.addEventListener('click', () => openImagePropertiesDialog(imageEditor, controls));
       }
 
-      if (imagePanel) {
-        imagePanel.addEventListener('contextmenu', (event) => {
+      if (imageEditableRoot) {
+        imageEditableRoot.addEventListener('contextmenu', (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) {
             hideImageContextMenu(imageContextMenu);
@@ -1655,6 +1676,12 @@
         controls.altInput.disabled = controls.decorativeInput.checked;
         if (controls.decorativeInput.checked) {
           controls.altInput.value = '';
+        }
+      });
+
+      controls.altInput.addEventListener('input', () => {
+        if (controls.altInput.value.trim().length > 0) {
+          controls.decorativeInput.checked = false;
         }
       });
 
@@ -1709,7 +1736,7 @@
 
       const controls = getLinkPropertiesElements();
       const helpControls = getHelpElements();
-      const linkPanel = document.getElementById('editor-link');
+      const linkEditableRoot = linkEditor.editing.view.getDomRoot();
       const linkContextMenu = document.getElementById('link-context-menu');
       const linkContextOpenProps = document.getElementById('link-context-open-props');
       const linkPropsToolbarButton = createLinkPropertiesToolbarButton(linkEditor);
@@ -1755,8 +1782,8 @@
         linkPropsToolbarButton.addEventListener('click', () => openLinkPropertiesDialog(linkEditor, controls));
       }
 
-      if (linkPanel) {
-        linkPanel.addEventListener('contextmenu', (event) => {
+      if (linkEditableRoot) {
+        linkEditableRoot.addEventListener('contextmenu', (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) {
             hideLinkContextMenu(linkContextMenu);
@@ -1789,7 +1816,7 @@
         hideLinkContextMenu(linkContextMenu);
       });
 
-      linkEditor.model.document.selection.on('change:range', () => {
+      const handleLinkSelectionChange = () => {
         const hasLink = hasLinkInSelection(linkEditor);
         setLinkPropertiesButtonVisibility(linkPropsToolbarButton, hasLink);
 
@@ -1803,7 +1830,10 @@
 
         syncLinkPropertiesFromSelection(linkEditor, controls);
         syncLinkTypeControls();
-      });
+      };
+
+      linkEditor.model.document.selection.on('change:range', handleLinkSelectionChange);
+      linkEditor.model.document.selection.on('change:attribute', handleLinkSelectionChange);
 
       linkEditor.model.document.on('change:data', () => {
         refreshLinkAnchorOptions(linkEditor, controls, controls.anchorSelect.value);
