@@ -71,6 +71,7 @@
     .style-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem; align-items: center; }
     .style-actions select { padding: 0.3rem 0.4rem; min-width: 220px; }
     .style-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
+    .marker { background-color: #fff3a3; }
     .image-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .image-results ul { margin: 0.2rem 0 0 1.1rem; }
     .image-results .ok { color: #0a6b1f; }
@@ -1380,6 +1381,81 @@
       };
     }
 
+    const a11yCustomStyleAttributes = [
+      'a11yMarker',
+      'a11yInlineQuote',
+      'a11yCitedWork',
+      'a11yDeletedText',
+      'a11yInsertedText'
+    ];
+
+    function A11yFirstCharacterStylesPlugin(editor) {
+      const schema = editor.model.schema;
+      const conversion = editor.conversion;
+
+      a11yCustomStyleAttributes.forEach((attribute) => {
+        schema.extend('$text', { allowAttributes: attribute });
+      });
+
+      conversion.for('upcast').elementToAttribute({
+        view: { name: 'span', classes: 'marker' },
+        model: { key: 'a11yMarker', value: true }
+      });
+      conversion.for('upcast').elementToAttribute({ view: 'q', model: { key: 'a11yInlineQuote', value: true } });
+      conversion.for('upcast').elementToAttribute({ view: 'cite', model: { key: 'a11yCitedWork', value: true } });
+      conversion.for('upcast').elementToAttribute({ view: 'del', model: { key: 'a11yDeletedText', value: true } });
+      conversion.for('upcast').elementToAttribute({ view: 'ins', model: { key: 'a11yInsertedText', value: true } });
+
+      conversion.for('downcast').attributeToElement({
+        model: 'a11yMarker',
+        view: (value, { writer }) => value ? writer.createAttributeElement('span', { class: 'marker' }, { priority: 6 }) : null
+      });
+      conversion.for('downcast').attributeToElement({
+        model: 'a11yInlineQuote',
+        view: (value, { writer }) => value ? writer.createAttributeElement('q', {}, { priority: 6 }) : null
+      });
+      conversion.for('downcast').attributeToElement({
+        model: 'a11yCitedWork',
+        view: (value, { writer }) => value ? writer.createAttributeElement('cite', {}, { priority: 6 }) : null
+      });
+      conversion.for('downcast').attributeToElement({
+        model: 'a11yDeletedText',
+        view: (value, { writer }) => value ? writer.createAttributeElement('del', {}, { priority: 6 }) : null
+      });
+      conversion.for('downcast').attributeToElement({
+        model: 'a11yInsertedText',
+        view: (value, { writer }) => value ? writer.createAttributeElement('ins', {}, { priority: 6 }) : null
+      });
+    }
+
+    function clearCustomCharacterStyles(writer, selection) {
+      for (const range of selection.getRanges()) {
+        a11yCustomStyleAttributes.forEach((attribute) => {
+          writer.removeAttribute(attribute, range);
+        });
+      }
+
+      a11yCustomStyleAttributes.forEach((attribute) => {
+        writer.removeSelectionAttribute(attribute);
+      });
+    }
+
+    function applyCustomCharacterStyle(editor, attribute) {
+      editor.model.change((writer) => {
+        const selection = editor.model.document.selection;
+        clearCustomCharacterStyles(writer, selection);
+
+        if (selection.isCollapsed) {
+          writer.setSelectionAttribute(attribute, true);
+          return;
+        }
+
+        for (const range of selection.getRanges()) {
+          writer.setAttribute(attribute, true, range);
+        }
+      });
+    }
+
     function applyCharacterStyle(editor, controls) {
       const selectedStyle = controls.styleChoice.value;
       const selection = editor.model.document.selection;
@@ -1397,6 +1473,21 @@
         subscript: 'subscript',
         superscript: 'superscript'
       };
+
+      const customStyleMap = {
+        marker: 'a11yMarker',
+        inlinequote: 'a11yInlineQuote',
+        cite: 'a11yCitedWork',
+        deleted: 'a11yDeletedText',
+        inserted: 'a11yInsertedText'
+      };
+
+      const customAttribute = customStyleMap[selectedStyle];
+      if (customAttribute) {
+        applyCustomCharacterStyle(editor, customAttribute);
+        setStatus('style', `Applied character style: ${controls.styleChoice.options[controls.styleChoice.selectedIndex].text}.`);
+        return;
+      }
 
       const command = commandMap[selectedStyle];
       if (!command) {
@@ -1416,11 +1507,22 @@
 
     function removeCharacterStyles(editor) {
       editor.model.change((writer) => {
+        const selection = editor.model.document.selection;
+        clearCustomCharacterStyles(writer, selection);
+
         writer.removeSelectionAttribute('bold');
         writer.removeSelectionAttribute('italic');
         writer.removeSelectionAttribute('code');
         writer.removeSelectionAttribute('subscript');
         writer.removeSelectionAttribute('superscript');
+
+        for (const range of selection.getRanges()) {
+          writer.removeAttribute('bold', range);
+          writer.removeAttribute('italic', range);
+          writer.removeAttribute('code', range);
+          writer.removeAttribute('subscript', range);
+          writer.removeAttribute('superscript', range);
+        }
       });
 
       const removeFormatCommand = editor.commands.get('removeFormat');
@@ -1785,7 +1887,8 @@
     });
 
     ClassicEditor.create(document.querySelector('#editor-style'), {
-      toolbar: ['bold', 'italic', 'link', '|', 'undo', 'redo']
+      toolbar: ['bold', 'italic', 'link', '|', 'undo', 'redo'],
+      extraPlugins: [A11yFirstCharacterStylesPlugin]
     }).then((styleEditor) => {
       window.styleEditorInstance = styleEditor;
       const controls = getCharacterStyleElements();

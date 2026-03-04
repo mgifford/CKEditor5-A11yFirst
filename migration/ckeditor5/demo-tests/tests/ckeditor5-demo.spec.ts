@@ -338,6 +338,34 @@ test.describe('CKEditor5 demo site', () => {
     await stylePanel.locator('#style-apply').click();
     await expect(page.locator('#status-style')).toContainText('Applied character style');
 
+    await stylePanel.locator('#style-choice').selectOption('marker');
+    await stylePanel.locator('#style-apply').click();
+    await expect(page.locator('#status-style')).toContainText('Applied character style: Marker.');
+
+    const markerData = await page.evaluate(() => {
+      const editor = (window as unknown as { styleEditorInstance?: { getData: () => string } }).styleEditorInstance;
+      if (!editor) {
+        throw new Error('style editor instance not found');
+      }
+
+      return editor.getData();
+    });
+    expect(markerData).toContain('class="marker"');
+
+    await stylePanel.locator('#style-choice').selectOption('deleted');
+    await stylePanel.locator('#style-apply').click();
+    await expect(page.locator('#status-style')).toContainText('Applied character style: Deleted Text.');
+
+    const deletedData = await page.evaluate(() => {
+      const editor = (window as unknown as { styleEditorInstance?: { getData: () => string } }).styleEditorInstance;
+      if (!editor) {
+        throw new Error('style editor instance not found');
+      }
+
+      return editor.getData();
+    });
+    expect(deletedData).toContain('<del>');
+
     await stylePanel.locator('#style-remove').click();
     await expect(page.locator('#status-style')).toContainText('Removed inline character styles');
   });
