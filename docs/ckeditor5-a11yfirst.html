@@ -867,7 +867,6 @@
           setTimeout(() => {
             isNormalizingStrictHeadings = false;
             setStatus('strict', 'Strict mode normalized disallowed heading levels (no H1, no skipped levels).');
-            renderStrictStatus(editor);
             updateStrictDropdownAvailability(editor);
           }, 0);
           return;

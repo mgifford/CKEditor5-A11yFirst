@@ -32,7 +32,7 @@ test.describe('CKEditor5 demo site', () => {
     const strictEditor = strictPanel.locator('.ck-editor__editable');
     await expect(strictEditor).toBeVisible();
 
-    await strictEditor.locator('h2').first().click();
+    await strictEditor.locator('h2').nth(1).click();
 
     const allowedText = page.locator('#status-strict');
     await expect(allowedText).toContainText('Allowed now: Paragraph, Heading 2, Heading 3');
@@ -114,7 +114,7 @@ test.describe('CKEditor5 demo site', () => {
       .locator('section.panel')
       .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
 
-    const editorEditable = imagePanel.locator('.ck-editor__editable');
+    const editorEditable = imagePanel.locator('.ck-editor__editable_inline');
     await expect(editorEditable).toBeVisible();
 
     const openPropsButton = imagePanel.locator('#image-props-open');
@@ -166,7 +166,7 @@ test.describe('CKEditor5 demo site', () => {
       .locator('section.panel')
       .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
 
-    const editorEditable = imagePanel.locator('.ck-editor__editable');
+    const editorEditable = imagePanel.locator('.ck-editor__editable_inline');
     await expect(editorEditable).toBeVisible();
 
     const openPropsButton = imagePanel.locator('#image-props-open');
@@ -192,7 +192,7 @@ test.describe('CKEditor5 demo site', () => {
       .locator('section.panel')
       .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
 
-    const editorEditable = imagePanel.locator('.ck-editor__editable');
+    const editorEditable = imagePanel.locator('.ck-editor__editable_inline');
     await expect(editorEditable).toBeVisible();
 
     await editorEditable.locator('img').first().click({ button: 'right' });
