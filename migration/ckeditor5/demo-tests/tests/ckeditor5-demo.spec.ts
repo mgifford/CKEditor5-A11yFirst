@@ -158,4 +158,30 @@ test.describe('CKEditor5 demo site', () => {
     expect(imageData.alt).toBe('A mountain lake at sunrise');
     expect(imageData.longDesc).toBe('after');
   });
+
+  test('image properties modal auto-closes when image selection is cleared', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const imagePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
+
+    const editorEditable = imagePanel.locator('.ck-editor__editable');
+    await expect(editorEditable).toBeVisible();
+
+    const openPropsButton = imagePanel.locator('#image-props-open');
+    await expect(openPropsButton).toBeHidden();
+
+    await editorEditable.locator('img').first().click();
+    await expect(openPropsButton).toBeVisible();
+    await openPropsButton.click();
+
+    const imageDialog = page.locator('#image-props-modal');
+    await expect(imageDialog).toHaveClass(/open/);
+
+    await editorEditable.locator('p').first().click();
+
+    await expect(imageDialog).not.toHaveClass(/open/);
+    await expect(openPropsButton).toBeHidden();
+  });
 });
