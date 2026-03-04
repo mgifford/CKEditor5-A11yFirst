@@ -186,36 +186,37 @@
         <p>Use anchors for internal navigation where appropriate.</p>
       </div>
       <div id="link-context-menu" class="link-context-menu" role="menu" aria-label="Link actions">
-        <button id="link-context-open-props" type="button" role="menuitem">Link Properties</button>
+        <button id="link-context-open-props" type="button" role="menuitem">Edit Link</button>
       </div>
       <div id="link-props-modal" class="link-props-modal" role="dialog" aria-modal="true" aria-labelledby="link-props-title">
         <div class="backdrop" data-close-link-props="true"></div>
         <div class="dialog">
-          <h3 id="link-props-title">A11yFirst Link Properties</h3>
+          <h3 id="link-props-title">A11yFirst Link</h3>
           <div class="grid">
             <div class="full">
-              <label for="link-display-input">Display text</label>
-              <input id="link-display-input" type="text" placeholder="Describe the destination clearly" />
+              <label for="link-display-input">Display Text</label>
+              <input id="link-display-input" type="text" placeholder="Use descriptive text for the link target" />
             </div>
             <div>
-              <label for="link-type-select">Link type</label>
+              <label for="link-type-select">Link Type</label>
               <select id="link-type-select">
                 <option value="url">URL</option>
-                <option value="email">Email</option>
-                <option value="anchor">Anchor in this document</option>
+                <option value="email">E-mail</option>
+                <option value="anchor">Link to anchor in the text</option>
               </select>
             </div>
             <div>
-              <label for="link-url-input">URL or email</label>
+              <label id="link-url-label" for="link-url-input">URL</label>
               <input id="link-url-input" type="text" placeholder="https://example.org" />
             </div>
             <div class="full">
-              <label for="link-anchor-select">Anchor target</label>
+              <label for="link-anchor-select">Select an Anchor</label>
               <select id="link-anchor-select"></select>
             </div>
           </div>
           <div class="actions">
             <button id="link-apply" type="button">Apply link properties</button>
+            <button id="link-help" type="button">Help</button>
             <button id="link-props-close" type="button" class="dialog-close">Close</button>
           </div>
         </div>
@@ -239,6 +240,24 @@
       loading: false,
       customCheckBound: false,
       instance: null
+    };
+
+    const linkLang = {
+      menu: 'Edit Link',
+      noAnchors: '(No anchors available in the document)',
+      noUrl: 'Please type the link URL',
+      noEmail: 'Please type the e-mail address',
+      msgEmptyDisplayText: 'Please type the display text for the link',
+      msgInvalidStartText: 'Please remove "%s" from the display text',
+      msgInvalidDisplayText: 'Please replace "%s" with text that describes the target of the link',
+      msgUrlDisplayText: 'For accessibility reasons the URL is considered a poor choice as the display text for the link.\n\nAre you sure you want to continue?',
+      msgEmailDisplayText: 'For accessibility reasons the e-mail address is considered a poor choice as the display text for the link.\n\nAre you sure you want to continue?',
+      msgNoAnchors: 'No anchors available in the document. The link will be inserted, but will not link to an anchor.',
+      msgNoAnchorSelected: 'The link is not associated with an anchor. Do you want to continue?',
+      msgNameEqualToDisplayText: 'For accessibility reasons, in many cases the anchor name or ID may not be a good choice as the display text for the link. Are you sure you want to continue?',
+      helpNotFound: 'The A11yFirst Help system is not installed. Please contact your CMS or CKEditor administrator for more information.',
+      a11yFirstInvalidStartText: ['link to', 'link'],
+      a11yFirstInvalidDisplayText: ['add', 'click', 'click here', 'clone', 'delete', 'download', 'go to', 'here', 'image', 'link to', 'link', 'more', 'order', 'read', 'read more', 'view']
     };
 
     function setStatus(target, message) {
@@ -861,8 +880,10 @@
         displayInput: document.getElementById('link-display-input'),
         typeSelect: document.getElementById('link-type-select'),
         urlInput: document.getElementById('link-url-input'),
+        urlLabel: document.getElementById('link-url-label'),
         anchorSelect: document.getElementById('link-anchor-select'),
         applyButton: document.getElementById('link-apply'),
+        helpButton: document.getElementById('link-help'),
         closeButton: document.getElementById('link-props-close')
       };
     }
@@ -877,7 +898,7 @@
       button.type = 'button';
       button.id = 'link-props-open';
       button.className = 'ck ck-button ck-off';
-      button.textContent = 'A11yFirst Link Properties';
+      button.textContent = linkLang.menu;
       button.style.display = 'none';
       toolbarElement.appendChild(button);
       return button;
@@ -982,7 +1003,7 @@
       if (!anchors.length) {
         const option = document.createElement('option');
         option.value = '';
-        option.textContent = 'No anchors available in this document';
+        option.textContent = linkLang.noAnchors;
         controls.anchorSelect.appendChild(option);
         return anchors;
       }
@@ -1008,7 +1029,7 @@
 
       controls.modal.classList.remove('open');
       if (!options.keepStatus) {
-        setStatus('link', 'Closed A11yFirst Link Properties dialog.');
+        setStatus('link', 'Closed A11yFirst Link dialog.');
       }
     }
 
@@ -1050,7 +1071,7 @@
       if (type === 'anchor') {
         const selectedAnchor = String(controls.anchorSelect.value || '').trim();
         if (!selectedAnchor) {
-          return { href: '', error: 'No anchors are available. Add an element with an id first.' };
+          return { href: '', error: linkLang.msgNoAnchorSelected };
         }
 
         return { href: `#${selectedAnchor}`, error: '' };
@@ -1058,7 +1079,7 @@
 
       const raw = String(controls.urlInput.value || '').trim();
       if (!raw) {
-        return { href: '', error: 'Enter a destination first.' };
+        return { href: '', error: type === 'email' ? linkLang.noEmail : linkLang.noUrl };
       }
 
       if (type === 'email') {
@@ -1069,54 +1090,105 @@
       return { href: raw, error: '' };
     }
 
-    function getLinkWarningMessage(displayText, href) {
+    function getLinkWarningMessage(displayText, href, type, anchorValue) {
       const normalizedText = displayText.trim().toLowerCase();
-      const genericPhrases = ['click here', 'here', 'read more', 'more', 'link'];
 
-      if (genericPhrases.includes(normalizedText)) {
-        return 'Display text may be too generic for accessibility. Continue anyway?';
+      for (const invalidDisplayText of linkLang.a11yFirstInvalidDisplayText) {
+        if (normalizedText === invalidDisplayText) {
+          return {
+            type: 'block',
+            message: linkLang.msgInvalidDisplayText.replace('%s', displayText)
+          };
+        }
       }
 
-      if (normalizedText === href.trim().toLowerCase()) {
-        return 'Display text matches destination exactly. Continue anyway?';
+      for (const invalidStartText of linkLang.a11yFirstInvalidStartText) {
+        if (normalizedText.startsWith(invalidStartText)) {
+          return {
+            type: 'block',
+            message: linkLang.msgInvalidStartText.replace('%s', invalidStartText)
+          };
+        }
       }
 
-      if (normalizedText.startsWith('click ') || normalizedText.startsWith('visit ')) {
-        return 'Display text starts with a discouraged phrase. Continue anyway?';
+      if (type === 'url' && normalizedText === href.trim().toLowerCase()) {
+        return {
+          type: 'confirm',
+          message: linkLang.msgUrlDisplayText
+        };
       }
 
-      return '';
+      if (type === 'email' && normalizedText === href.replace(/^mailto:/, '').trim().toLowerCase()) {
+        return {
+          type: 'confirm',
+          message: linkLang.msgEmailDisplayText
+        };
+      }
+
+      if (type === 'anchor' && anchorValue && normalizedText === anchorValue.trim().toLowerCase()) {
+        return {
+          type: 'confirm',
+          message: linkLang.msgNameEqualToDisplayText
+        };
+      }
+
+      return null;
     }
 
     function openLinkPropertiesDialog(editor, controls) {
       const hasLink = hasLinkInSelection(editor);
       if (!hasLink) {
-        setStatus('link', 'Select a link first to open A11yFirst Link Properties.');
+        setStatus('link', 'Select a link first to edit link properties.');
         return;
       }
 
       syncLinkPropertiesFromSelection(editor, controls);
       controls.modal.classList.add('open');
       controls.displayInput.focus();
-      setStatus('link', 'A11yFirst Link Properties dialog opened for selected link.');
+      setStatus('link', 'A11yFirst Link dialog opened for selected link.');
     }
 
     function applyLinkProperties(editor, controls) {
       const displayText = String(controls.displayInput.value || '').trim();
       if (!displayText) {
-        setStatus('link', 'Display text is required and should describe the destination.');
+        setStatus('link', linkLang.msgEmptyDisplayText);
         return;
       }
+
+      const linkType = controls.typeSelect.value;
+      const selectedAnchorValue = String(controls.anchorSelect.value || '').trim();
 
       const linkNormalization = normalizeLinkHrefFromControls(controls);
       if (linkNormalization.error) {
+        if (linkType === 'anchor' && linkNormalization.error === linkLang.msgNoAnchorSelected) {
+          if (!window.confirm(linkLang.msgNoAnchorSelected)) {
+            setStatus('link', 'Link properties update cancelled by user.');
+            return;
+          }
+        }
+
         setStatus('link', linkNormalization.error);
+        if (linkType !== 'anchor') {
+          return;
+        }
+      }
+
+      if (linkType === 'anchor') {
+        const anchors = getAnchorOptionsFromEditorData(editor);
+        if (!anchors.length) {
+          setStatus('link', linkLang.msgNoAnchors);
+          return;
+        }
+      }
+
+      const href = linkNormalization.href || '#';
+      const warning = getLinkWarningMessage(displayText, href, linkType, selectedAnchorValue);
+      if (warning && warning.type === 'block') {
+        setStatus('link', warning.message);
         return;
       }
 
-      const href = linkNormalization.href;
-      const warningMessage = getLinkWarningMessage(displayText, href);
-      if (warningMessage && !window.confirm(warningMessage)) {
+      if (warning && warning.type === 'confirm' && !window.confirm(warning.message)) {
         setStatus('link', 'Link properties update cancelled by user.');
         return;
       }
@@ -1127,7 +1199,7 @@
       if (selection.isCollapsed && existingHref) {
         editor.execute('link', href);
         closeLinkPropertiesDialog(controls, { keepStatus: true });
-        setStatus('link', 'Updated link destination. Select link text to change display wording.');
+        setStatus('link', 'Updated link destination. Select link text to update Display Text.');
         return;
       }
 
@@ -1390,7 +1462,7 @@
       toolbar: ['bold', 'italic', 'link', 'unlink', '|', 'undo', 'redo']
     }).then((linkEditor) => {
       window.linkEditorInstance = linkEditor;
-      setStatus('link', 'Link-focused mode ready. Select a link to reveal A11yFirst Link Properties in the toolbar or right-click menu.');
+      setStatus('link', 'Link-focused mode ready. Select a link to reveal Edit Link in the toolbar or right-click menu.');
 
       const controls = getLinkPropertiesElements();
       const linkPanel = document.getElementById('editor-link');
@@ -1403,16 +1475,21 @@
         const useAnchor = type === 'anchor';
         controls.anchorSelect.disabled = !useAnchor;
         controls.urlInput.disabled = useAnchor;
+        controls.urlLabel.textContent = type === 'email' ? 'E-Mail Address' : 'URL';
+        controls.urlInput.placeholder = type === 'email' ? 'name@example.org' : 'https://example.org';
 
         if (useAnchor) {
           const anchors = refreshLinkAnchorOptions(linkEditor, controls, controls.anchorSelect.value);
           if (!anchors.length) {
-            setStatus('link', 'No anchors are available for anchor linking yet.');
+            setStatus('link', linkLang.msgNoAnchors);
           }
         }
       };
 
       controls.applyButton.addEventListener('click', () => applyLinkProperties(linkEditor, controls));
+      controls.helpButton.addEventListener('click', () => {
+        setStatus('link', linkLang.helpNotFound);
+      });
       controls.closeButton.addEventListener('click', () => closeLinkPropertiesDialog(controls));
       controls.typeSelect.addEventListener('change', syncLinkTypeControls);
 
@@ -1426,7 +1503,7 @@
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && controls.modal.classList.contains('open')) {
           closeLinkPropertiesDialog(controls, { keepStatus: true });
-          setStatus('link', 'Closed A11yFirst Link Properties dialog.');
+          setStatus('link', 'Closed A11yFirst Link dialog.');
         }
       });
 

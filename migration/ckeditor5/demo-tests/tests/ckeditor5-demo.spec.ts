@@ -228,7 +228,7 @@ test.describe('CKEditor5 demo site', () => {
 
     await linkPanel.locator('#link-display-input').fill('');
     await linkPanel.locator('#link-apply').click();
-    await expect(page.locator('#status-link')).toContainText('Display text is required');
+    await expect(page.locator('#status-link')).toContainText('Please type the display text for the link');
 
     await linkPanel.locator('#link-display-input').fill('Accessibility guide');
     await linkPanel.locator('#link-url-input').fill('https://example.org/new-guide');
