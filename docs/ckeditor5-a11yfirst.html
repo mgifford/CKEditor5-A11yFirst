@@ -67,6 +67,10 @@
     .a11yhelp-modal .content { border: 1px solid #ddd; border-radius: 6px; padding: 0.6rem; min-height: 120px; }
     .a11yhelp-modal .actions { margin-top: 0.7rem; display: flex; justify-content: flex-end; }
     .a11yhelp-modal .actions button { padding: 0.3rem 0.6rem; cursor: pointer; }
+    .style-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
+    .style-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem; align-items: center; }
+    .style-actions select { padding: 0.3rem 0.4rem; min-width: 220px; }
+    .style-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
     .image-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .image-results ul { margin: 0.2rem 0 0 1.1rem; }
     .image-results .ok { color: #0a6b1f; }
@@ -245,6 +249,32 @@
       </div>
       <div id="status-help" class="status" aria-live="polite"></div>
     </section>
+
+    <section id="demo6" class="panel">
+      <h2 id="demo6-heading">Demo 6: Character Style Mode</h2>
+      <p class="style-guidance">Apply inline character styles separately from structural heading controls, then remove styles or open Help.</p>
+      <div class="style-actions">
+        <select id="style-choice" aria-label="Character style choice">
+          <option value="strong">Strong</option>
+          <option value="emphasis">Emphasis</option>
+          <option value="marker">Marker</option>
+          <option value="inlinequote">Inline quotation</option>
+          <option value="cite">Cited work</option>
+          <option value="code">Computer code</option>
+          <option value="subscript">Subscript</option>
+          <option value="superscript">Superscript</option>
+          <option value="deleted">Deleted Text</option>
+          <option value="inserted">Inserted Text</option>
+        </select>
+        <button id="style-apply" type="button">Apply Character Style</button>
+        <button id="style-remove" type="button">Remove Styles</button>
+        <button id="style-help" type="button">Help</button>
+      </div>
+      <div id="editor-style" class="editor">
+        <p>Select text and apply a character style. This demo prioritizes inline semantics and styling guidance.</p>
+      </div>
+      <div id="status-style" class="status" aria-live="polite"></div>
+    </section>
   </div>
 
   <div id="a11yhelp-modal" class="a11yhelp-modal" role="dialog" aria-modal="true" aria-labelledby="a11yhelp-title">
@@ -270,7 +300,8 @@
       strict: document.getElementById('status-strict'),
       image: document.getElementById('status-image'),
       link: document.getElementById('status-link'),
-      help: document.getElementById('status-help')
+      help: document.getElementById('status-help'),
+      style: document.getElementById('status-style')
     };
 
     const sa11yRuntime = {
@@ -1340,6 +1371,66 @@
       setStatus('link', 'Link properties applied.');
     }
 
+    function getCharacterStyleElements() {
+      return {
+        styleChoice: document.getElementById('style-choice'),
+        applyButton: document.getElementById('style-apply'),
+        removeButton: document.getElementById('style-remove'),
+        helpButton: document.getElementById('style-help')
+      };
+    }
+
+    function applyCharacterStyle(editor, controls) {
+      const selectedStyle = controls.styleChoice.value;
+      const selection = editor.model.document.selection;
+      const selectedText = getSelectedText(editor);
+
+      if (!selectedText && selection.isCollapsed) {
+        setStatus('style', 'Select text first to apply a character style.');
+        return;
+      }
+
+      const commandMap = {
+        strong: 'bold',
+        emphasis: 'italic',
+        code: 'code',
+        subscript: 'subscript',
+        superscript: 'superscript'
+      };
+
+      const command = commandMap[selectedStyle];
+      if (!command) {
+        setStatus('style', `Character style "${selectedStyle}" is documented but not yet available in this CKEditor5 build.`);
+        return;
+      }
+
+      const editorCommand = editor.commands.get(command);
+      if (!editorCommand || !editorCommand.isEnabled) {
+        setStatus('style', `Character style command "${command}" is not available for current selection.`);
+        return;
+      }
+
+      editor.execute(command);
+      setStatus('style', `Applied character style: ${controls.styleChoice.options[controls.styleChoice.selectedIndex].text}.`);
+    }
+
+    function removeCharacterStyles(editor) {
+      editor.model.change((writer) => {
+        writer.removeSelectionAttribute('bold');
+        writer.removeSelectionAttribute('italic');
+        writer.removeSelectionAttribute('code');
+        writer.removeSelectionAttribute('subscript');
+        writer.removeSelectionAttribute('superscript');
+      });
+
+      const removeFormatCommand = editor.commands.get('removeFormat');
+      if (removeFormatCommand && removeFormatCommand.isEnabled) {
+        editor.execute('removeFormat');
+      }
+
+      setStatus('style', 'Removed inline character styles for current selection.');
+    }
+
     ClassicEditor.create(document.querySelector('#editor-standard'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
       heading: {
@@ -1691,6 +1782,20 @@
       syncLinkPropertiesFromSelection(linkEditor, controls);
       syncLinkTypeControls();
       setLinkPropertiesButtonVisibility(linkPropsToolbarButton, false);
+    });
+
+    ClassicEditor.create(document.querySelector('#editor-style'), {
+      toolbar: ['bold', 'italic', 'link', '|', 'undo', 'redo']
+    }).then((styleEditor) => {
+      window.styleEditorInstance = styleEditor;
+      const controls = getCharacterStyleElements();
+      const helpControls = getHelpElements();
+
+      setStatus('style', 'Character Style mode ready. Select text and apply inline styles.');
+
+      controls.applyButton.addEventListener('click', () => applyCharacterStyle(styleEditor, controls));
+      controls.removeButton.addEventListener('click', () => removeCharacterStyles(styleEditor));
+      controls.helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'CharacterStyle', 'style'));
     });
 
     (() => {

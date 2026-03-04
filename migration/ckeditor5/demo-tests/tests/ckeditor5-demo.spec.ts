@@ -316,4 +316,41 @@ test.describe('CKEditor5 demo site', () => {
     await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
     await expect(page.locator('#a11yhelp-content')).toContainText('Display Text should describe the target');
   });
+
+  test('character style mode applies and removes inline styles', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const stylePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 6: Character Style Mode' }) });
+
+    const editorEditable = stylePanel.locator('.ck-editor__editable_inline');
+    await expect(editorEditable).toBeVisible();
+
+    const firstParagraph = editorEditable.locator('p').first();
+    await firstParagraph.click();
+
+    await page.keyboard.down('Control');
+    await page.keyboard.press('KeyA');
+    await page.keyboard.up('Control');
+
+    await stylePanel.locator('#style-choice').selectOption('strong');
+    await stylePanel.locator('#style-apply').click();
+    await expect(page.locator('#status-style')).toContainText('Applied character style');
+
+    await stylePanel.locator('#style-remove').click();
+    await expect(page.locator('#status-style')).toContainText('Removed inline character styles');
+  });
+
+  test('character style mode opens A11yFirst Help topic', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const stylePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 6: Character Style Mode' }) });
+
+    await stylePanel.locator('#style-help').click();
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+    await expect(page.locator('#a11yhelp-content')).toContainText('character styles');
+  });
 });
