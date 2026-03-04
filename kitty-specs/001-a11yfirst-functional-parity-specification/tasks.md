@@ -158,6 +158,8 @@
 ### Implementation Notes
 - Preserve current phrase/pattern checks, length warning behavior, and user confirmation dialogs.
 - Ensure output-equivalence checks cover informative and decorative image branches.
+- Defer advanced long-description linkage enhancements (for example explicit `aria-describedby` wiring) until after higher-priority core parity elements are completed; current parity accepts adjacency/proximity semantics.
+- Use University of Illinois A11yFirst Images documentation as explicit acceptance-scenario input for WP05 test coverage, while preserving repository runtime behavior as canonical if differences are found.
 
 ### Parallel Opportunities
 - T030 can start in parallel with T031 after T025–T029 behaviors are stabilized.
@@ -226,6 +228,8 @@
 ### Implementation Notes
 - Treat checker as first-class module, not auxiliary dependency.
 - Ensure rule-category compatibility with parity-run orchestration contract.
+- Prioritize external-checker integration using Sa11y (with axe-core custom checks support) for single-page deployment compatibility; do not add pa11y to the core migration path.
+- Align delivery with GitHub Pages + Actions architecture: lightweight in-page checker UX plus CI axe validation gates.
 
 ### Parallel Opportunities
 - T043 can run in parallel with T040/T041 once baseline inventory T039 is complete.

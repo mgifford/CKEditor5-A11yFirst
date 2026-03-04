@@ -13,6 +13,10 @@
 - Q: For parity acceptance, should migration preserve actual current runtime behavior even where it differs from docs/intent, or normalize to documented intended behavior? → A: Preserve runtime behavior exactly.
 - Q: Which runtime baseline should be canonical for parity checks? → A: Use both GitLab demo and repository-local demo/runtime; if conflict exists, repository-local runtime behavior is authoritative.
 
+### Session 2026-03-04
+
+- Q: After reviewing University of Illinois A11yFirst feature docs, should parity treat that documentation set as an explicit reference input? → A: Yes; use it as a normative documentation source for parity coverage while preserving runtime behavior as the final authority when conflicts exist.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Establish authoritative feature inventory (Priority: P1)
@@ -120,6 +124,7 @@ As an engineering manager, I need explicit in-scope and out-of-scope boundaries 
 - **FR-027**: When observed runtime behavior and documentation differ, the specification MUST treat observed runtime behavior as the authoritative parity target and record any documentation mismatch as a separate note.
 - **FR-028**: Parity validation MUST compare behavior against both the GitLab-hosted demo configuration and repository-local runtime behavior.
 - **FR-029**: If runtime baseline conflicts are found between GitLab-hosted demo behavior and repository-local behavior, repository-local runtime behavior MUST be used as the canonical parity target, with conflict notes retained for traceability.
+- **FR-030**: Parity acceptance criteria for image behavior MUST explicitly cover the core flows described in University of Illinois A11yFirst Images documentation (insert image source, informative alternative text, decorative image handling, long-description location, and caption handling), while still preserving observed runtime behavior when wording or sequence differs.
 
 ### Assumptions & Dependencies
 

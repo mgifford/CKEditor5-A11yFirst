@@ -18,7 +18,7 @@ test.describe('CKEditor5 demo site', () => {
 
     await expect(page.getByRole('link', { name: 'Open CKEditor 4 baseline demo' })).toHaveAttribute(
       'href',
-      'https://a11yfirst.gitlab.io/custom/a11yfirst.html'
+      'https://a11yfirst.gitlab.io/CKEditor4/a11yfirst.html'
     );
   });
 
@@ -40,17 +40,17 @@ test.describe('CKEditor5 demo site', () => {
     const headingDropdownButton = strictPanel.locator('.ck-heading-dropdown .ck-dropdown__button');
     await headingDropdownButton.click();
 
-    const paragraphButton = strictPanel.locator('.ck-heading_paragraph');
+    const paragraphButton = page.locator('.ck.ck-dropdown__panel .ck-heading_paragraph').first();
     await expect(paragraphButton).toBeVisible();
 
-    const heading4Button = strictPanel.locator('.ck-heading_heading4');
+    const heading4Button = page.locator('.ck.ck-dropdown__panel .ck-heading_heading4').first();
     await expect(heading4Button).toHaveAttribute('aria-disabled', 'true');
 
-    await strictPanel.locator('.ck-heading_heading3').click();
+    await page.locator('.ck.ck-dropdown__panel .ck-heading_heading3').first().click();
     await expect(allowedText).toContainText('Allowed now: Paragraph, Heading 2, Heading 3, Heading 4');
 
     await headingDropdownButton.click();
-    const heading5Button = strictPanel.locator('.ck-heading_heading5');
+    const heading5Button = page.locator('.ck.ck-dropdown__panel .ck-heading_heading5').first();
     await expect(heading5Button).toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -98,9 +98,55 @@ test.describe('CKEditor5 demo site', () => {
       .locator('section.panel')
       .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
 
+    await expect(imagePanel.locator('#sa11y-enable')).toBeVisible();
+    await expect(imagePanel.locator('#sa11y-status')).toContainText('disabled');
+
     await imagePanel.locator('#image-audit').click();
 
     await expect(imagePanel.locator('#image-results')).toContainText('axe-core audit');
     await expect(page.locator('#status-image')).toContainText('axe-core audit');
+  });
+
+  test('image-focused mode supports URL insert and accessibility metadata', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const imagePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
+
+    const editorEditable = imagePanel.locator('.ck-editor__editable');
+    await expect(editorEditable).toBeVisible();
+
+    await imagePanel.locator('#image-src-input').fill('https://picsum.photos/420/210');
+    await imagePanel.locator('#image-insert-url').click();
+    await expect(page.locator('#status-image')).toContainText('image URL');
+
+    await editorEditable.locator('img').first().click();
+    await imagePanel.locator('#image-alt-input').fill('A mountain lake at sunrise');
+    await imagePanel.locator('#image-longdesc-select').selectOption('after');
+    await imagePanel.locator('#image-apply-metadata').click();
+
+    await expect(page.locator('#status-image')).toContainText('metadata applied');
+
+    const imageData = await page.evaluate(() => {
+      const editor = (window as unknown as { imageEditorInstance?: { model: { document: { selection: { getSelectedElement: () => { getAttribute: (name: string) => string | null } | null } } } } }).imageEditorInstance;
+
+      if (!editor) {
+        throw new Error('image editor instance not found');
+      }
+
+      const selected = editor.model.document.selection.getSelectedElement();
+      if (!selected) {
+        throw new Error('no selected image after metadata apply');
+      }
+
+      return {
+        alt: selected.getAttribute('alt') || '',
+        longDesc: selected.getAttribute('a11yLongDescPosition') || ''
+      };
+    });
+
+    expect(imageData.alt).toBe('A mountain lake at sunrise');
+    expect(imageData.longDesc).toBe('after');
   });
 });

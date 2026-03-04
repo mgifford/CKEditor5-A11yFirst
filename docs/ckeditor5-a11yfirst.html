@@ -19,13 +19,24 @@
     .image-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
     .image-actions { margin-bottom: 0.7rem; }
     .image-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
+    .image-actions .secondary { margin-left: 0.4rem; }
+    .tool-status { margin-top: 0.4rem; font-size: 0.85rem; color: #555; }
+    .image-props { border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem; margin: 0.6rem 0 0.7rem; }
+    .image-props h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+    .image-props .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 0.75rem; }
+    .image-props .full { grid-column: 1 / -1; }
+    .image-props label { font-size: 0.9rem; display: block; margin-bottom: 0.2rem; }
+    .image-props input[type="text"], .image-props select { width: 100%; padding: 0.3rem 0.4rem; box-sizing: border-box; }
+    .image-props .actions { margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.45rem; }
+    .image-props .actions button { padding: 0.3rem 0.6rem; cursor: pointer; }
+    .image-props .hint { font-size: 0.85rem; color: #555; margin-top: 0.45rem; }
     .image-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .image-results ul { margin: 0.2rem 0 0 1.1rem; }
     .image-results .ok { color: #0a6b1f; }
     .image-results .warn { color: #7a2f00; }
     .image-results .block { color: #8a1c1c; }
-    a { color: #0b57d0; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    a { color: #0050a3; text-decoration: underline; text-underline-offset: 2px; }
+    a:hover { text-decoration-thickness: 2px; }
   </style>
 </head>
 <body>
@@ -34,16 +45,16 @@
   <p class="note">This is an interim preview page to validate deployment and UX direction while WP03+ modules are implemented.</p>
 
   <div class="row">
-    <section class="panel">
-      <h2>Demo 1: Standard A11yFirst Configuration</h2>
+    <section id="demo1" class="panel">
+      <h2 id="demo1-heading">Demo 1: Standard A11yFirst Configuration</h2>
       <div id="editor-standard" class="editor">
         <p>Standard mode content.</p>
       </div>
       <div id="status-standard" class="status" aria-live="polite"></div>
     </section>
 
-    <section class="panel">
-      <h2>Demo 2: High-Restriction Heading Mode</h2>
+    <section id="demo2" class="panel">
+      <h2 id="demo2-heading">Demo 2: High-Restriction Heading Mode</h2>
       <div id="editor-strict" class="editor">
         <h2>2. Harmonic Urban Planning</h2>
         <h3>3. Integrated Permaculture Zones</h3>
@@ -59,16 +70,67 @@
       <div id="strict-tests" class="strict-tests" aria-live="polite"></div>
     </section>
 
-    <section class="panel">
-      <h2>Demo 3: Image-Focused Mode</h2>
+    <section id="demo3" class="panel">
+      <h2 id="demo3-heading">Demo 3: Image-Focused Mode</h2>
       <p class="image-guidance">
-        Uses CKEditor5 native image tools (insert image, text alternative, caption, and image styles),
+        Uses CKEditor5 native text + image tools (bold, italic, link, text alternative, caption, and image styles),
         then runs external checker audits (axe-core).
         Integration targets: <a href="https://sa11y.netlify.app/" target="_blank" rel="noreferrer">sa11y</a>
         and <a href="https://www.drupal.org/project/editoria11y" target="_blank" rel="noreferrer">editoria11y (Drupal)</a>.
       </p>
+      <p class="image-guidance">Image insertion in this demo is URL-based through A11yFirst Image Properties to remain compatible with GitHub Pages (no binary upload flow).</p>
       <div class="image-actions">
         <button id="image-audit" type="button">Run axe-core image audit</button>
+        <button id="sa11y-enable" class="secondary" type="button">Enable Sa11y overlay</button>
+        <div id="sa11y-status" class="tool-status" aria-live="polite">Sa11y is disabled (opt-in).</div>
+      </div>
+      <div class="image-props" aria-labelledby="image-props-title">
+        <h3 id="image-props-title">A11yFirst Image Properties (MVP)</h3>
+        <div class="grid">
+          <div class="full">
+            <label for="image-src-input">Image URL</label>
+            <input id="image-src-input" type="text" placeholder="https://example.com/image.jpg" />
+          </div>
+          <div class="full">
+            <label for="image-alt-input">Alternative text (spoken by screen reader)</label>
+            <input id="image-alt-input" type="text" placeholder="Short, meaningful description" />
+          </div>
+          <div class="full">
+            <label>
+              <input id="image-decorative-input" type="checkbox" />
+              Image does not require alternative text
+            </label>
+          </div>
+          <div class="full">
+            <label for="image-longdesc-select">Is a long description needed, and if so, where will it be located?</label>
+            <select id="image-longdesc-select">
+              <option value="nodesc">No, the alternative text is adequate</option>
+              <option value="before">Yes; in the document before the image</option>
+              <option value="after">Yes; in the document after the image</option>
+              <option value="both">Yes; in the document before and after the image</option>
+            </select>
+          </div>
+          <div>
+            <label for="image-width-input">Width (e.g. 50%)</label>
+            <input id="image-width-input" type="text" placeholder="50%" />
+          </div>
+          <div>
+            <label for="image-align-select">Alignment</label>
+            <select id="image-align-select">
+              <option value="none">None</option>
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="image-insert-url" type="button">Insert / update image URL</button>
+          <button id="image-apply-metadata" type="button">Apply accessibility metadata</button>
+          <button id="image-toggle-caption" type="button">Toggle caption</button>
+          <button id="image-apply-style" type="button">Apply alignment + width</button>
+        </div>
+        <p class="hint">Select an existing image to edit it. If no image is selected, URL insert creates a new image.</p>
       </div>
       <div id="editor-image" class="editor">
         <p>Select an image and use the CKEditor5 image toolbar controls to set text alternatives and caption.</p>
@@ -82,7 +144,7 @@
     </section>
   </div>
 
-  <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+  <script src="./assets/ckeditor5/ckeditor.classic.41.4.2.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.11.1/axe.min.js"></script>
   <script>
     const status = {
@@ -91,8 +153,138 @@
       image: document.getElementById('status-image')
     };
 
+    const sa11yRuntime = {
+      enabled: false,
+      loading: false,
+      customCheckBound: false,
+      instance: null
+    };
+
     function setStatus(target, message) {
       status[target].textContent = message;
+    }
+
+    function setSa11yStatus(message) {
+      const statusElement = document.getElementById('sa11y-status');
+      if (statusElement) {
+        statusElement.textContent = message;
+      }
+    }
+
+    function loadScriptOnce(src, globalName) {
+      if (globalName && window[globalName]) {
+        return Promise.resolve();
+      }
+
+      const existingScript = document.querySelector(`script[data-src="${src}"]`);
+      if (existingScript) {
+        return new Promise((resolve, reject) => {
+          existingScript.addEventListener('load', () => resolve(), { once: true });
+          existingScript.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+        });
+      }
+
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.dataset.src = src;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Failed to load ${src}`));
+        document.head.appendChild(script);
+      });
+    }
+
+    function loadStyleOnce(href) {
+      const existingLink = document.querySelector(`link[data-href="${href}"]`);
+      if (existingLink) {
+        return Promise.resolve();
+      }
+
+      return new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.dataset.href = href;
+        link.onload = () => resolve();
+        link.onerror = () => reject(new Error(`Failed to load ${href}`));
+        document.head.appendChild(link);
+      });
+    }
+
+    function bindSa11yCustomChecks(sa11y) {
+      if (sa11yRuntime.customCheckBound) {
+        return;
+      }
+
+      document.addEventListener('sa11y-custom-checks', () => {
+        const imagePanel = document.querySelector('#editor-image');
+        const panelImages = imagePanel ? imagePanel.querySelectorAll('img') : [];
+
+        panelImages.forEach((image) => {
+          const altText = (image.getAttribute('alt') || '').trim();
+          if (!altText) {
+            const key = sa11y.prepareDismissal(`missing-alt-${image.getAttribute('src') || 'image'}`);
+            sa11y.results.push({
+              element: image,
+              type: 'warning',
+              content: 'Image appears decorative or missing alt text. Confirm intent in A11yFirst Image Properties.',
+              inline: false,
+              position: 'beforebegin',
+              dismiss: key
+            });
+          }
+        });
+
+        document.dispatchEvent(new CustomEvent('sa11y-resume'));
+      });
+
+      sa11yRuntime.customCheckBound = true;
+    }
+
+    async function enableSa11yOverlay() {
+      if (sa11yRuntime.enabled) {
+        setSa11yStatus('Sa11y is already enabled.');
+        return;
+      }
+
+      if (sa11yRuntime.loading) {
+        return;
+      }
+
+      sa11yRuntime.loading = true;
+      setSa11yStatus('Loading Sa11y...');
+
+      try {
+        await loadStyleOnce('https://cdn.jsdelivr.net/gh/ryersondmp/sa11y@4.4.1/dist/css/sa11y.min.css');
+        await loadScriptOnce('https://cdn.jsdelivr.net/gh/ryersondmp/sa11y@4.4.1/dist/js/lang/en.umd.js', 'Sa11yLangEn');
+        await loadScriptOnce('https://cdn.jsdelivr.net/gh/ryersondmp/sa11y@4.4.1/dist/js/sa11y.umd.min.js', 'Sa11y');
+
+        if (!window.Sa11y || !window.Sa11yLangEn) {
+          throw new Error('Sa11y globals were not initialized.');
+        }
+
+        window.Sa11y.Lang.addI18n(window.Sa11yLangEn.strings);
+        const sa11y = new window.Sa11y.Sa11y({
+          checkRoot: 'body',
+          customChecks: 'listen',
+          externalDeveloperChecks: true,
+          containerIgnore: 'footer'
+        });
+
+        sa11yRuntime.instance = sa11y;
+        sa11yRuntime.enabled = true;
+        bindSa11yCustomChecks(sa11y);
+
+        window.a11yfirstSa11y = sa11y;
+        setSa11yStatus('Sa11y enabled. Use Alt + A to toggle annotations and panel.');
+        setStatus('image', 'Sa11y overlay enabled with custom image checks.');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        setSa11yStatus(`Sa11y failed to load: ${message}`);
+      } finally {
+        sa11yRuntime.loading = false;
+      }
     }
 
     function headingSequenceWarnings(html) {
@@ -354,6 +546,162 @@
       return { blocking, nonBlocking };
     }
 
+    function getSelectedImageModelElement(editor) {
+      const selection = editor.model.document.selection;
+      const selectedElement = selection.getSelectedElement();
+
+      if (selectedElement && selectedElement.is('element', 'imageBlock')) {
+        return selectedElement;
+      }
+
+      const firstPosition = selection.getFirstPosition();
+      if (!firstPosition) {
+        return null;
+      }
+
+      const parent = firstPosition.parent;
+      if (parent && parent.is && parent.is('element', 'imageBlock')) {
+        return parent;
+      }
+
+      return null;
+    }
+
+    function mapAlignmentToStyleOption(alignment) {
+      const styleMap = {
+        none: 'block',
+        left: 'alignLeft',
+        center: 'alignCenter',
+        right: 'alignRight'
+      };
+
+      return styleMap[alignment] || 'block';
+    }
+
+    function getImagePropertiesElements() {
+      return {
+        srcInput: document.getElementById('image-src-input'),
+        altInput: document.getElementById('image-alt-input'),
+        decorativeInput: document.getElementById('image-decorative-input'),
+        longDescSelect: document.getElementById('image-longdesc-select'),
+        widthInput: document.getElementById('image-width-input'),
+        alignSelect: document.getElementById('image-align-select'),
+        insertButton: document.getElementById('image-insert-url'),
+        metadataButton: document.getElementById('image-apply-metadata'),
+        captionButton: document.getElementById('image-toggle-caption'),
+        styleButton: document.getElementById('image-apply-style')
+      };
+    }
+
+    function syncImagePropertiesFromSelection(editor, controls) {
+      const selectedImage = getSelectedImageModelElement(editor);
+
+      if (!selectedImage) {
+        return;
+      }
+
+      const src = selectedImage.getAttribute('src') || '';
+      const alt = selectedImage.getAttribute('alt') || '';
+      const longDescPosition = selectedImage.getAttribute('a11yLongDescPosition') || 'nodesc';
+      const resizedWidth = selectedImage.getAttribute('resizedWidth') || '';
+
+      controls.srcInput.value = src;
+      controls.altInput.value = alt;
+      controls.decorativeInput.checked = alt.trim().length === 0;
+      controls.longDescSelect.value = String(longDescPosition);
+      controls.widthInput.value = String(resizedWidth);
+    }
+
+    function applyImageMetadata(editor, controls) {
+      const selectedImage = getSelectedImageModelElement(editor);
+      if (!selectedImage) {
+        setStatus('image', 'Select an image first to apply accessibility metadata.');
+        return;
+      }
+
+      const isDecorative = controls.decorativeInput.checked;
+      const altText = isDecorative ? '' : controls.altInput.value.trim();
+      const longDescPosition = controls.longDescSelect.value;
+
+      editor.model.change((writer) => {
+        writer.setAttribute('alt', altText, selectedImage);
+        writer.setAttribute('a11yLongDescPosition', longDescPosition, selectedImage);
+      });
+
+      setStatus('image', `Image metadata applied (${isDecorative ? 'decorative' : 'described'}, long desc: ${longDescPosition}).`);
+    }
+
+    function insertOrUpdateImageByUrl(editor, controls) {
+      const url = controls.srcInput.value.trim();
+
+      if (!url) {
+        setStatus('image', 'Enter an image URL first.');
+        return;
+      }
+
+      const selectedImage = getSelectedImageModelElement(editor);
+
+      if (selectedImage) {
+        editor.model.change((writer) => {
+          writer.setAttribute('src', url, selectedImage);
+        });
+        setStatus('image', 'Updated selected image URL.');
+        return;
+      }
+
+      const imageInsert = editor.commands.get('insertImage');
+      if (imageInsert && imageInsert.isEnabled) {
+        imageInsert.execute({ source: url });
+        setStatus('image', 'Inserted image from URL.');
+        return;
+      }
+
+      setStatus('image', 'Image insert command is not available in this build.');
+    }
+
+    function toggleImageCaption(editor) {
+      const command = editor.commands.get('toggleImageCaption');
+      if (!command || !command.isEnabled) {
+        setStatus('image', 'Caption toggle is not available for current selection.');
+        return;
+      }
+
+      command.execute();
+      setStatus('image', 'Caption toggled.');
+    }
+
+    function applyImageStyleAndSize(editor, controls) {
+      const selectedImage = getSelectedImageModelElement(editor);
+      if (!selectedImage) {
+        setStatus('image', 'Select an image first to apply alignment and width.');
+        return;
+      }
+
+      const alignment = controls.alignSelect.value;
+      const width = controls.widthInput.value.trim();
+      const styleCommand = editor.commands.get('imageStyle');
+      const resizeCommand = editor.commands.get('resizeImage');
+      const applied = [];
+
+      if (styleCommand && styleCommand.isEnabled) {
+        const styleOption = mapAlignmentToStyleOption(alignment);
+        styleCommand.execute({ value: styleOption });
+        applied.push(`alignment ${alignment}`);
+      }
+
+      if (resizeCommand && resizeCommand.isEnabled && width) {
+        resizeCommand.execute({ width });
+        applied.push(`width ${width}`);
+      }
+
+      if (!applied.length) {
+        setStatus('image', 'No compatible native style/resize commands are available in this CDN build.');
+        return;
+      }
+
+      setStatus('image', `Applied ${applied.join(' and ')}.`);
+    }
+
     ClassicEditor.create(document.querySelector('#editor-standard'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
       heading: {
@@ -452,15 +800,55 @@
     });
 
     ClassicEditor.create(document.querySelector('#editor-image'), {
-      toolbar: ['insertImage', '|', 'imageTextAlternative', 'toggleImageCaption', 'linkImage', '|', 'undo', 'redo'],
+      toolbar: ['bold', 'italic', 'link', '|', 'imageTextAlternative', 'toggleImageCaption', 'linkImage', '|', 'undo', 'redo'],
       image: {
-        toolbar: ['imageTextAlternative', 'toggleImageCaption', 'linkImage']
+        styles: [
+          'inline',
+          'alignLeft',
+          'alignCenter',
+          'alignRight',
+          'block',
+          'side'
+        ],
+        toolbar: [
+          'imageTextAlternative',
+          'toggleImageCaption',
+          'linkImage',
+          'imageStyle:alignLeft',
+          'imageStyle:alignCenter',
+          'imageStyle:alignRight',
+          'imageStyle:block',
+          'imageStyle:side',
+          'resizeImage'
+        ]
       }
     }).then((imageEditor) => {
       window.imageEditorInstance = imageEditor;
       setStatus('image', 'Image-focused mode ready. Use native CKEditor5 image tools, then run A11yFirst audit.');
 
       const auditButton = document.getElementById('image-audit');
+      const sa11yButton = document.getElementById('sa11y-enable');
+      const controls = getImagePropertiesElements();
+
+      controls.insertButton.addEventListener('click', () => insertOrUpdateImageByUrl(imageEditor, controls));
+      controls.metadataButton.addEventListener('click', () => applyImageMetadata(imageEditor, controls));
+      controls.captionButton.addEventListener('click', () => toggleImageCaption(imageEditor));
+      controls.styleButton.addEventListener('click', () => applyImageStyleAndSize(imageEditor, controls));
+
+      controls.decorativeInput.addEventListener('change', () => {
+        controls.altInput.disabled = controls.decorativeInput.checked;
+        if (controls.decorativeInput.checked) {
+          controls.altInput.value = '';
+        }
+      });
+
+      imageEditor.model.document.selection.on('change:range', () => {
+        syncImagePropertiesFromSelection(imageEditor, controls);
+      });
+
+      imageEditor.model.document.on('change:data', () => {
+        syncImagePropertiesFromSelection(imageEditor, controls);
+      });
 
       auditButton.addEventListener('click', async () => {
         const result = await runImageAxeAudit();
@@ -472,6 +860,17 @@
           setStatus('image', `axe-core audit blocked: ${result.blocking.length} issue(s) detected.`);
         }
       });
+
+      sa11yButton.addEventListener('click', async () => {
+        await enableSa11yOverlay();
+      });
+
+      const shouldAutoEnableSa11y = new URLSearchParams(window.location.search).get('sa11y') === '1';
+      if (shouldAutoEnableSa11y) {
+        enableSa11yOverlay();
+      }
+
+      syncImagePropertiesFromSelection(imageEditor, controls);
     });
   </script>
 </body>
