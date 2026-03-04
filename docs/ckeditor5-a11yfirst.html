@@ -38,6 +38,23 @@
     .image-context-menu.open { display: block; }
     .image-context-menu button { width: 100%; border: 0; background: transparent; text-align: left; padding: 0.45rem 0.7rem; font-size: 0.9rem; cursor: pointer; }
     .image-context-menu button:hover, .image-context-menu button:focus { background: #f2f6fc; outline: none; }
+    .link-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
+    .link-props-modal { position: fixed; inset: 0; z-index: 2200; display: none; align-items: center; justify-content: center; }
+    .link-props-modal.open { display: flex; }
+    .link-props-modal .backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); }
+    .link-props-modal .dialog { position: relative; background: #fff; width: min(700px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 0.9rem 1rem; }
+    .link-props-modal h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+    .link-props-modal .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 0.75rem; }
+    .link-props-modal .full { grid-column: 1 / -1; }
+    .link-props-modal label { font-size: 0.9rem; display: block; margin-bottom: 0.2rem; }
+    .link-props-modal input[type="text"], .link-props-modal select { width: 100%; padding: 0.3rem 0.4rem; box-sizing: border-box; }
+    .link-props-modal .actions { margin-top: 0.6rem; display: flex; gap: 0.45rem; }
+    .link-props-modal .actions button { padding: 0.3rem 0.6rem; cursor: pointer; }
+    .link-props-modal .dialog-close { margin-left: auto; }
+    .link-context-menu { position: fixed; z-index: 2250; min-width: 180px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18); padding: 0.25rem 0; display: none; }
+    .link-context-menu.open { display: block; }
+    .link-context-menu button { width: 100%; border: 0; background: transparent; text-align: left; padding: 0.45rem 0.7rem; font-size: 0.9rem; cursor: pointer; }
+    .link-context-menu button:hover, .link-context-menu button:focus { background: #f2f6fc; outline: none; }
     .image-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .image-results ul { margin: 0.2rem 0 0 1.1rem; }
     .image-results .ok { color: #0a6b1f; }
@@ -159,6 +176,52 @@
       <div id="status-image" class="status" aria-live="polite"></div>
       <div id="image-results" class="image-results" aria-live="polite"></div>
     </section>
+
+    <section id="demo4" class="panel">
+      <h2 id="demo4-heading">Demo 4: Link-Focused Mode</h2>
+      <p class="link-guidance">Select an existing link, then open A11yFirst Link Properties from the contextual toolbar button or right-click menu.</p>
+      <div id="editor-link" class="editor">
+        <p>Read our <a href="https://example.org/accessibility-guide">accessibility guide</a> before publishing.</p>
+        <h3 id="demo-link-anchor-about">About this document</h3>
+        <p>Use anchors for internal navigation where appropriate.</p>
+      </div>
+      <div id="link-context-menu" class="link-context-menu" role="menu" aria-label="Link actions">
+        <button id="link-context-open-props" type="button" role="menuitem">Link Properties</button>
+      </div>
+      <div id="link-props-modal" class="link-props-modal" role="dialog" aria-modal="true" aria-labelledby="link-props-title">
+        <div class="backdrop" data-close-link-props="true"></div>
+        <div class="dialog">
+          <h3 id="link-props-title">A11yFirst Link Properties</h3>
+          <div class="grid">
+            <div class="full">
+              <label for="link-display-input">Display text</label>
+              <input id="link-display-input" type="text" placeholder="Describe the destination clearly" />
+            </div>
+            <div>
+              <label for="link-type-select">Link type</label>
+              <select id="link-type-select">
+                <option value="url">URL</option>
+                <option value="email">Email</option>
+                <option value="anchor">Anchor in this document</option>
+              </select>
+            </div>
+            <div>
+              <label for="link-url-input">URL or email</label>
+              <input id="link-url-input" type="text" placeholder="https://example.org" />
+            </div>
+            <div class="full">
+              <label for="link-anchor-select">Anchor target</label>
+              <select id="link-anchor-select"></select>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="link-apply" type="button">Apply link properties</button>
+            <button id="link-props-close" type="button" class="dialog-close">Close</button>
+          </div>
+        </div>
+      </div>
+      <div id="status-link" class="status" aria-live="polite"></div>
+    </section>
   </div>
 
   <script src="./assets/ckeditor5/ckeditor.classic.41.4.2.js"></script>
@@ -167,7 +230,8 @@
     const status = {
       standard: document.getElementById('status-standard'),
       strict: document.getElementById('status-strict'),
-      image: document.getElementById('status-image')
+      image: document.getElementById('status-image'),
+      link: document.getElementById('status-link')
     };
 
     const sa11yRuntime = {
@@ -791,6 +855,299 @@
       setStatus('image', `Applied ${applied.join(' and ')}.`);
     }
 
+    function getLinkPropertiesElements() {
+      return {
+        modal: document.getElementById('link-props-modal'),
+        displayInput: document.getElementById('link-display-input'),
+        typeSelect: document.getElementById('link-type-select'),
+        urlInput: document.getElementById('link-url-input'),
+        anchorSelect: document.getElementById('link-anchor-select'),
+        applyButton: document.getElementById('link-apply'),
+        closeButton: document.getElementById('link-props-close')
+      };
+    }
+
+    function createLinkPropertiesToolbarButton(editor) {
+      const toolbarElement = editor.ui.view.toolbar.element;
+      if (!toolbarElement) {
+        return null;
+      }
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'link-props-open';
+      button.className = 'ck ck-button ck-off';
+      button.textContent = 'A11yFirst Link Properties';
+      button.style.display = 'none';
+      toolbarElement.appendChild(button);
+      return button;
+    }
+
+    function setLinkPropertiesButtonVisibility(button, visible) {
+      if (!button) {
+        return;
+      }
+
+      button.style.display = visible ? '' : 'none';
+      button.disabled = !visible;
+      button.setAttribute('aria-disabled', String(!visible));
+    }
+
+    function hideLinkContextMenu(contextMenu) {
+      if (!contextMenu) {
+        return;
+      }
+
+      contextMenu.classList.remove('open');
+      contextMenu.style.left = '0px';
+      contextMenu.style.top = '0px';
+    }
+
+    function showLinkContextMenu(contextMenu, event) {
+      if (!contextMenu) {
+        return;
+      }
+
+      contextMenu.style.left = `${event.clientX}px`;
+      contextMenu.style.top = `${event.clientY}px`;
+      contextMenu.classList.add('open');
+    }
+
+    function getSelectionLinkHref(editor) {
+      const selection = editor.model.document.selection;
+      const fromSelectionAttribute = selection.getAttribute('linkHref');
+      if (fromSelectionAttribute) {
+        return String(fromSelectionAttribute);
+      }
+
+      const firstRange = selection.getFirstRange();
+      if (!firstRange) {
+        return '';
+      }
+
+      for (const item of firstRange.getItems()) {
+        if (item.is && item.is('$textProxy')) {
+          const href = item.getAttribute('linkHref');
+          if (href) {
+            return String(href);
+          }
+        }
+      }
+
+      return '';
+    }
+
+    function hasLinkInSelection(editor) {
+      return Boolean(getSelectionLinkHref(editor));
+    }
+
+    function getSelectedText(editor) {
+      const selection = editor.model.document.selection;
+      const firstRange = selection.getFirstRange();
+      if (!firstRange || selection.isCollapsed) {
+        return '';
+      }
+
+      let combined = '';
+      for (const item of firstRange.getItems()) {
+        if (item.is && item.is('$textProxy')) {
+          combined += item.data;
+        }
+      }
+
+      return combined.trim();
+    }
+
+    function getAnchorOptionsFromEditorData(editor) {
+      const html = editor.getData();
+      const matches = Array.from(html.matchAll(/\sid=["']([^"']+)["']/gi));
+      const unique = [];
+
+      matches.forEach((match) => {
+        const id = String(match[1] || '').trim();
+        if (!id || unique.includes(id)) {
+          return;
+        }
+
+        unique.push(id);
+      });
+
+      return unique;
+    }
+
+    function refreshLinkAnchorOptions(editor, controls, selectedValue = '') {
+      const anchors = getAnchorOptionsFromEditorData(editor);
+      controls.anchorSelect.innerHTML = '';
+
+      if (!anchors.length) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No anchors available in this document';
+        controls.anchorSelect.appendChild(option);
+        return anchors;
+      }
+
+      anchors.forEach((anchorId) => {
+        const option = document.createElement('option');
+        option.value = anchorId;
+        option.textContent = `#${anchorId}`;
+        controls.anchorSelect.appendChild(option);
+      });
+
+      if (selectedValue && anchors.includes(selectedValue)) {
+        controls.anchorSelect.value = selectedValue;
+      }
+
+      return anchors;
+    }
+
+    function closeLinkPropertiesDialog(controls, options = {}) {
+      if (!controls.modal) {
+        return;
+      }
+
+      controls.modal.classList.remove('open');
+      if (!options.keepStatus) {
+        setStatus('link', 'Closed A11yFirst Link Properties dialog.');
+      }
+    }
+
+    function syncLinkPropertiesFromSelection(editor, controls) {
+      const href = getSelectionLinkHref(editor);
+      const selectedText = getSelectedText(editor);
+      const anchors = refreshLinkAnchorOptions(editor, controls);
+
+      if (selectedText) {
+        controls.displayInput.value = selectedText;
+      }
+
+      if (!href) {
+        return;
+      }
+
+      if (href.startsWith('#')) {
+        controls.typeSelect.value = 'anchor';
+        const targetAnchor = href.replace(/^#/, '');
+        if (anchors.includes(targetAnchor)) {
+          controls.anchorSelect.value = targetAnchor;
+        }
+        return;
+      }
+
+      if (href.startsWith('mailto:')) {
+        controls.typeSelect.value = 'email';
+        controls.urlInput.value = href.replace(/^mailto:/, '');
+        return;
+      }
+
+      controls.typeSelect.value = 'url';
+      controls.urlInput.value = href;
+    }
+
+    function normalizeLinkHrefFromControls(controls) {
+      const type = controls.typeSelect.value;
+
+      if (type === 'anchor') {
+        const selectedAnchor = String(controls.anchorSelect.value || '').trim();
+        if (!selectedAnchor) {
+          return { href: '', error: 'No anchors are available. Add an element with an id first.' };
+        }
+
+        return { href: `#${selectedAnchor}`, error: '' };
+      }
+
+      const raw = String(controls.urlInput.value || '').trim();
+      if (!raw) {
+        return { href: '', error: 'Enter a destination first.' };
+      }
+
+      if (type === 'email') {
+        const normalizedEmail = raw.replace(/^mailto:/i, '');
+        return { href: `mailto:${normalizedEmail}`, error: '' };
+      }
+
+      return { href: raw, error: '' };
+    }
+
+    function getLinkWarningMessage(displayText, href) {
+      const normalizedText = displayText.trim().toLowerCase();
+      const genericPhrases = ['click here', 'here', 'read more', 'more', 'link'];
+
+      if (genericPhrases.includes(normalizedText)) {
+        return 'Display text may be too generic for accessibility. Continue anyway?';
+      }
+
+      if (normalizedText === href.trim().toLowerCase()) {
+        return 'Display text matches destination exactly. Continue anyway?';
+      }
+
+      if (normalizedText.startsWith('click ') || normalizedText.startsWith('visit ')) {
+        return 'Display text starts with a discouraged phrase. Continue anyway?';
+      }
+
+      return '';
+    }
+
+    function openLinkPropertiesDialog(editor, controls) {
+      const hasLink = hasLinkInSelection(editor);
+      if (!hasLink) {
+        setStatus('link', 'Select a link first to open A11yFirst Link Properties.');
+        return;
+      }
+
+      syncLinkPropertiesFromSelection(editor, controls);
+      controls.modal.classList.add('open');
+      controls.displayInput.focus();
+      setStatus('link', 'A11yFirst Link Properties dialog opened for selected link.');
+    }
+
+    function applyLinkProperties(editor, controls) {
+      const displayText = String(controls.displayInput.value || '').trim();
+      if (!displayText) {
+        setStatus('link', 'Display text is required and should describe the destination.');
+        return;
+      }
+
+      const linkNormalization = normalizeLinkHrefFromControls(controls);
+      if (linkNormalization.error) {
+        setStatus('link', linkNormalization.error);
+        return;
+      }
+
+      const href = linkNormalization.href;
+      const warningMessage = getLinkWarningMessage(displayText, href);
+      if (warningMessage && !window.confirm(warningMessage)) {
+        setStatus('link', 'Link properties update cancelled by user.');
+        return;
+      }
+
+      const selection = editor.model.document.selection;
+      const existingHref = getSelectionLinkHref(editor);
+
+      if (selection.isCollapsed && existingHref) {
+        editor.execute('link', href);
+        closeLinkPropertiesDialog(controls, { keepStatus: true });
+        setStatus('link', 'Updated link destination. Select link text to change display wording.');
+        return;
+      }
+
+      editor.model.change((writer) => {
+        const firstRange = selection.getFirstRange();
+        const insertionPosition = firstRange ? firstRange.start : selection.getFirstPosition();
+
+        if (firstRange && !selection.isCollapsed) {
+          writer.remove(firstRange);
+        }
+
+        const textNode = writer.createText(displayText, { linkHref: href });
+        editor.model.insertContent(textNode, insertionPosition);
+        writer.setSelection(writer.createPositionAfter(textNode));
+      });
+
+      closeLinkPropertiesDialog(controls, { keepStatus: true });
+      setStatus('link', 'Link properties applied.');
+    }
+
     ClassicEditor.create(document.querySelector('#editor-standard'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
       heading: {
@@ -1027,6 +1384,113 @@
 
       syncImagePropertiesFromSelection(imageEditor, controls);
       setImagePropertiesButtonVisibility(imagePropsToolbarButton, false);
+    });
+
+    ClassicEditor.create(document.querySelector('#editor-link'), {
+      toolbar: ['bold', 'italic', 'link', 'unlink', '|', 'undo', 'redo']
+    }).then((linkEditor) => {
+      window.linkEditorInstance = linkEditor;
+      setStatus('link', 'Link-focused mode ready. Select a link to reveal A11yFirst Link Properties in the toolbar or right-click menu.');
+
+      const controls = getLinkPropertiesElements();
+      const linkPanel = document.getElementById('editor-link');
+      const linkContextMenu = document.getElementById('link-context-menu');
+      const linkContextOpenProps = document.getElementById('link-context-open-props');
+      const linkPropsToolbarButton = createLinkPropertiesToolbarButton(linkEditor);
+
+      const syncLinkTypeControls = () => {
+        const type = controls.typeSelect.value;
+        const useAnchor = type === 'anchor';
+        controls.anchorSelect.disabled = !useAnchor;
+        controls.urlInput.disabled = useAnchor;
+
+        if (useAnchor) {
+          const anchors = refreshLinkAnchorOptions(linkEditor, controls, controls.anchorSelect.value);
+          if (!anchors.length) {
+            setStatus('link', 'No anchors are available for anchor linking yet.');
+          }
+        }
+      };
+
+      controls.applyButton.addEventListener('click', () => applyLinkProperties(linkEditor, controls));
+      controls.closeButton.addEventListener('click', () => closeLinkPropertiesDialog(controls));
+      controls.typeSelect.addEventListener('change', syncLinkTypeControls);
+
+      controls.modal.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.dataset.closeLinkProps === 'true') {
+          closeLinkPropertiesDialog(controls);
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && controls.modal.classList.contains('open')) {
+          closeLinkPropertiesDialog(controls, { keepStatus: true });
+          setStatus('link', 'Closed A11yFirst Link Properties dialog.');
+        }
+      });
+
+      if (linkPropsToolbarButton) {
+        linkPropsToolbarButton.addEventListener('click', () => openLinkPropertiesDialog(linkEditor, controls));
+      }
+
+      if (linkPanel) {
+        linkPanel.addEventListener('contextmenu', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            hideLinkContextMenu(linkContextMenu);
+            return;
+          }
+
+          const linkElement = target.closest('a');
+          if (!linkElement) {
+            hideLinkContextMenu(linkContextMenu);
+            return;
+          }
+
+          event.preventDefault();
+          linkElement.click();
+          showLinkContextMenu(linkContextMenu, event);
+        });
+      }
+
+      linkContextOpenProps.addEventListener('click', () => {
+        hideLinkContextMenu(linkContextMenu);
+        openLinkPropertiesDialog(linkEditor, controls);
+      });
+
+      document.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.closest('#link-context-menu')) {
+          return;
+        }
+
+        hideLinkContextMenu(linkContextMenu);
+      });
+
+      linkEditor.model.document.selection.on('change:range', () => {
+        const hasLink = hasLinkInSelection(linkEditor);
+        setLinkPropertiesButtonVisibility(linkPropsToolbarButton, hasLink);
+
+        if (!hasLink && controls.modal.classList.contains('open')) {
+          closeLinkPropertiesDialog(controls, { keepStatus: true });
+        }
+
+        if (!hasLink) {
+          hideLinkContextMenu(linkContextMenu);
+        }
+
+        syncLinkPropertiesFromSelection(linkEditor, controls);
+        syncLinkTypeControls();
+      });
+
+      linkEditor.model.document.on('change:data', () => {
+        refreshLinkAnchorOptions(linkEditor, controls, controls.anchorSelect.value);
+      });
+
+      syncLinkPropertiesFromSelection(linkEditor, controls);
+      syncLinkTypeControls();
+      setLinkPropertiesButtonVisibility(linkPropsToolbarButton, false);
     });
   </script>
 </body>

@@ -205,4 +205,54 @@ test.describe('CKEditor5 demo site', () => {
     await expect(imageDialog).toHaveClass(/open/);
     await expect(page.locator('#status-image')).toContainText('dialog opened');
   });
+
+  test('link-focused mode opens properties from toolbar and validates display text', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const linkPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 4: Link-Focused Mode' }) });
+
+    const editorEditable = linkPanel.locator('.ck-editor__editable_inline');
+    await expect(editorEditable).toBeVisible();
+
+    const openPropsButton = linkPanel.locator('#link-props-open');
+    await expect(openPropsButton).toBeHidden();
+
+    await editorEditable.locator('a').first().click();
+    await expect(openPropsButton).toBeVisible();
+    await openPropsButton.click();
+
+    const linkDialog = linkPanel.locator('#link-props-modal');
+    await expect(linkDialog).toHaveClass(/open/);
+
+    await linkPanel.locator('#link-display-input').fill('');
+    await linkPanel.locator('#link-apply').click();
+    await expect(page.locator('#status-link')).toContainText('Display text is required');
+
+    await linkPanel.locator('#link-display-input').fill('Accessibility guide');
+    await linkPanel.locator('#link-url-input').fill('https://example.org/new-guide');
+    await linkPanel.locator('#link-apply').click();
+    await expect(page.locator('#status-link')).toContainText('Updated link destination');
+  });
+
+  test('link-focused mode opens properties from right-click link context action', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const linkPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 4: Link-Focused Mode' }) });
+
+    const editorEditable = linkPanel.locator('.ck-editor__editable_inline');
+    await expect(editorEditable).toBeVisible();
+
+    await editorEditable.locator('a').first().click({ button: 'right' });
+
+    const contextMenu = linkPanel.locator('#link-context-menu');
+    await expect(contextMenu).toHaveClass(/open/);
+    await linkPanel.locator('#link-context-open-props').click();
+
+    const linkDialog = linkPanel.locator('#link-props-modal');
+    await expect(linkDialog).toHaveClass(/open/);
+  });
 });
