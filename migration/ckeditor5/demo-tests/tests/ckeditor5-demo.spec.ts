@@ -184,4 +184,25 @@ test.describe('CKEditor5 demo site', () => {
     await expect(imageDialog).not.toHaveClass(/open/);
     await expect(openPropsButton).toBeHidden();
   });
+
+  test('image properties modal opens from right-click image context action', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const imagePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
+
+    const editorEditable = imagePanel.locator('.ck-editor__editable');
+    await expect(editorEditable).toBeVisible();
+
+    await editorEditable.locator('img').first().click({ button: 'right' });
+
+    const contextMenu = imagePanel.locator('#image-context-menu');
+    await expect(contextMenu).toHaveClass(/open/);
+    await imagePanel.locator('#image-context-open-props').click();
+
+    const imageDialog = imagePanel.locator('#image-props-modal');
+    await expect(imageDialog).toHaveClass(/open/);
+    await expect(page.locator('#status-image')).toContainText('dialog opened');
+  });
 });

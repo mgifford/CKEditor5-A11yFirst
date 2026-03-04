@@ -34,6 +34,10 @@
     .image-props-modal .actions button { padding: 0.3rem 0.6rem; cursor: pointer; }
     .image-props-modal .hint { font-size: 0.85rem; color: #555; margin-top: 0.45rem; }
     .image-props-modal .dialog-close { margin-left: auto; }
+    .image-context-menu { position: fixed; z-index: 2250; min-width: 180px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18); padding: 0.25rem 0; display: none; }
+    .image-context-menu.open { display: block; }
+    .image-context-menu button { width: 100%; border: 0; background: transparent; text-align: left; padding: 0.45rem 0.7rem; font-size: 0.9rem; cursor: pointer; }
+    .image-context-menu button:hover, .image-context-menu button:focus { background: #f2f6fc; outline: none; }
     .image-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .image-results ul { margin: 0.2rem 0 0 1.1rem; }
     .image-results .ok { color: #0a6b1f; }
@@ -94,6 +98,9 @@
           <img src="https://picsum.photos/640/280" alt="" />
           <figcaption>Sample image for accessibility review</figcaption>
         </figure>
+      </div>
+      <div id="image-context-menu" class="image-context-menu" role="menu" aria-label="Image actions">
+        <button id="image-context-open-props" type="button" role="menuitem">Image Properties</button>
       </div>
       <div id="image-props-modal" class="image-props-modal" role="dialog" aria-modal="true" aria-labelledby="image-props-title">
         <div class="backdrop" data-close-image-props="true"></div>
@@ -653,6 +660,26 @@
       setStatus('image', 'A11yFirst Image Properties dialog opened for selected image.');
     }
 
+    function hideImageContextMenu(contextMenu) {
+      if (!contextMenu) {
+        return;
+      }
+
+      contextMenu.classList.remove('open');
+      contextMenu.style.left = '0px';
+      contextMenu.style.top = '0px';
+    }
+
+    function showImageContextMenu(contextMenu, event) {
+      if (!contextMenu) {
+        return;
+      }
+
+      contextMenu.style.left = `${event.clientX}px`;
+      contextMenu.style.top = `${event.clientY}px`;
+      contextMenu.classList.add('open');
+    }
+
     function syncImagePropertiesFromSelection(editor, controls) {
       const selectedImage = getSelectedImageModelElement(editor);
 
@@ -889,6 +916,9 @@
       const auditButton = document.getElementById('image-audit');
       const sa11yButton = document.getElementById('sa11y-enable');
       const controls = getImagePropertiesElements();
+      const imagePanel = document.getElementById('editor-image');
+      const imageContextMenu = document.getElementById('image-context-menu');
+      const imageContextOpenProps = document.getElementById('image-context-open-props');
       const imagePropsToolbarButton = createImagePropertiesToolbarButton(imageEditor);
 
       controls.insertButton.addEventListener('click', () => insertOrUpdateImageByUrl(imageEditor, controls));
@@ -914,6 +944,40 @@
         imagePropsToolbarButton.addEventListener('click', () => openImagePropertiesDialog(imageEditor, controls));
       }
 
+      if (imagePanel) {
+        imagePanel.addEventListener('contextmenu', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            hideImageContextMenu(imageContextMenu);
+            return;
+          }
+
+          const imageElement = target.closest('img');
+          if (!imageElement) {
+            hideImageContextMenu(imageContextMenu);
+            return;
+          }
+
+          event.preventDefault();
+          imageElement.click();
+          showImageContextMenu(imageContextMenu, event);
+        });
+      }
+
+      imageContextOpenProps.addEventListener('click', () => {
+        hideImageContextMenu(imageContextMenu);
+        openImagePropertiesDialog(imageEditor, controls);
+      });
+
+      document.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.closest('#image-context-menu')) {
+          return;
+        }
+
+        hideImageContextMenu(imageContextMenu);
+      });
+
       controls.decorativeInput.addEventListener('change', () => {
         controls.altInput.disabled = controls.decorativeInput.checked;
         if (controls.decorativeInput.checked) {
@@ -927,6 +991,10 @@
 
         if (!hasSelectionImage && controls.modal.classList.contains('open')) {
           closeImagePropertiesDialog(controls, { keepStatus: true });
+        }
+
+        if (!hasSelectionImage) {
+          hideImageContextMenu(imageContextMenu);
         }
 
         syncImagePropertiesFromSelection(imageEditor, controls);
