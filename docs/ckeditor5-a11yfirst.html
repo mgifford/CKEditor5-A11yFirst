@@ -72,6 +72,14 @@
     .style-actions select { padding: 0.3rem 0.4rem; min-width: 220px; }
     .style-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
     .marker { background-color: #fff3a3; }
+    .list-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
+    .list-actions { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
+    .list-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
+    .list-results { margin-top: 0.6rem; font-size: 0.9rem; }
+    .list-results ul { margin: 0.2rem 0 0 1.1rem; }
+    .list-results .ok { color: #0a6b1f; }
+    .list-results .info { color: #0050a3; }
+    .list-results .warn { color: #7a2f00; }
     .image-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .image-results ul { margin: 0.2rem 0 0 1.1rem; }
     .image-results .ok { color: #0a6b1f; }
@@ -283,6 +291,41 @@
       </div>
       <div id="status-style" class="status" aria-live="polite"></div>
     </section>
+
+    <section id="demo6" class="panel">
+      <h2 id="demo6-heading">Demo 6: List Guidance Mode</h2>
+      <p class="list-guidance">Create accessible lists with proper structure. Use real list markup instead of manually typed bullets or numbers.</p>
+      <div class="list-actions">
+        <button id="list-validate" type="button">Validate Lists</button>
+        <button id="list-help" type="button">Help</button>
+      </div>
+      <div id="editor-list" class="editor">
+        <h2>Principles of Solar Punk Design</h2>
+        <p>Core values that guide sustainable community building:</p>
+        <ul>
+          <li>Prioritize renewable energy in all infrastructure decisions</li>
+          <li>Design for circular economy and zero-waste systems</li>
+          <li>Preserve and enhance biodiversity in urban spaces</li>
+          <li>Foster community ownership and democratic governance</li>
+        </ul>
+        <h3>Implementation Roadmap</h3>
+        <ol>
+          <li>Assess current energy sources and identify renewable alternatives</li>
+          <li>Map community resources and establish sharing networks</li>
+          <li>Create green spaces and wildlife corridors
+            <ul>
+              <li>Install pollinator gardens on rooftops</li>
+              <li>Convert parking lots to community parks</li>
+              <li>Establish urban forest zones</li>
+            </ul>
+          </li>
+          <li>Deploy distributed solar and wind power systems</li>
+          <li>Launch education programs on sustainable practices</li>
+        </ol>
+      </div>
+      <div id="status-list" class="status" aria-live="polite"></div>
+      <div id="list-results" class="list-results" aria-live="polite"></div>
+    </section>
   </div>
 
   <div id="a11yhelp-modal" class="a11yhelp-modal" role="dialog" aria-modal="true" aria-labelledby="a11yhelp-title">
@@ -309,7 +352,8 @@
       strict: document.getElementById('status-strict'),
       image: document.getElementById('status-image'),
       link: document.getElementById('status-link'),
-      style: document.getElementById('status-style')
+      style: document.getElementById('status-style'),
+      list: document.getElementById('status-list')
     };
 
     const sa11yRuntime = {
@@ -350,7 +394,7 @@
         },
         List: {
           title: 'List',
-          body: 'Use list markup for grouped items instead of manually typed bullets or numbers.'
+          body: 'Use proper list markup (ordered or unordered) for grouped items instead of manually typed bullets or numbers. Lists provide semantic structure that helps all users, especially those using assistive technologies, understand that items are related. Ordered lists (<ol>) indicate sequence or priority, while unordered lists (<ul>) show related items without ranking. Nested lists create hierarchical relationships. Screen readers announce the number of items and nesting level, making navigation easier.'
         },
         Image: {
           title: 'Image',
@@ -1488,6 +1532,54 @@
       setStatus('style', 'Removed inline character styles for current selection.');
     }
 
+    function validateLists(editor) {
+      const data = editor.getData();
+      const resultsDiv = document.getElementById('list-results');
+      const results = [];
+      
+      // Count lists
+      const olMatches = data.match(/<ol[^>]*>/gi) || [];
+      const ulMatches = data.match(/<ul[^>]*>/gi) || [];
+      const orderedCount = olMatches.length;
+      const unorderedCount = ulMatches.length;
+      
+      // Check for fake lists (manual bullets/numbers in paragraphs)
+      const fakeListPatterns = [
+        /^[\s]*[-•·*]\s+/m,  // bullet-like characters
+        /^[\s]*\d+[.)]\s+/m,  // numbered items
+        /^[\s]*[a-z][.)]\s+/mi  // lettered items
+      ];
+      
+      const paragraphContent = data.replace(/<\/?(?:ul|ol|li)[^>]*>/gi, '').replace(/<[^>]+>/g, ' ');
+      const hasFakeLists = fakeListPatterns.some(pattern => pattern.test(paragraphContent));
+      
+      // Check for nested lists
+      const nestedListMatch = data.match(/<li[^>]*>[\s\S]*?<(?:ul|ol)[^>]*>/gi);
+      const hasNestedLists = nestedListMatch && nestedListMatch.length > 0;
+      
+      // Build results
+      if (orderedCount === 0 && unorderedCount === 0) {
+        results.push('<span class="info">No lists found in document.</span>');
+      } else {
+        results.push(`<span class="ok">✓ Found ${orderedCount} ordered list(s) and ${unorderedCount} unordered list(s)</span>`);
+      }
+      
+      if (hasNestedLists) {
+        results.push('<span class="ok">✓ Nested lists detected (hierarchical structure)</span>');
+      }
+      
+      if (hasFakeLists) {
+        results.push('<span class="warn">⚠ Possible manual bullets or numbers detected. Consider using proper list markup for accessibility.</span>');
+      }
+      
+      if (orderedCount > 0 || unorderedCount > 0) {
+        results.push('<span class="info">Tip: Screen readers announce list type and item count automatically.</span>');
+      }
+      
+      resultsDiv.innerHTML = results.length > 0 ? '<ul>' + results.map(r => `<li>${r}</li>`).join('') + '</ul>' : '';
+      setStatus('list', `List validation complete. ${orderedCount + unorderedCount} list(s) found.`);
+    }
+
     ClassicEditor.create(document.querySelector('#editor-standard'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
       extraPlugins: [A11yFirst.HelpButton.plugin],
@@ -1867,6 +1959,37 @@
       controls.applyButton.addEventListener('click', () => applyCharacterStyle(styleEditor, controls));
       controls.removeButton.addEventListener('click', () => removeCharacterStyles(styleEditor));
       controls.helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'CharacterStyle', 'style'));
+    });
+
+    ClassicEditor.create(document.querySelector('#editor-list'), {
+      toolbar: ['heading', '|', 'bulletedList', 'numberedList', '|', 'outdent', 'indent', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      extraPlugins: [A11yFirst.HelpButton.plugin],
+      heading: {
+        options: [
+          { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+          { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+          { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
+          { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' }
+        ]
+      }
+    }).then((listEditor) => {
+      window.listEditorInstance = listEditor;
+      const helpControls = getHelpElements();
+
+      setStatus('list', 'List mode ready. Create ordered and unordered lists with proper structure.');
+
+      const validateButton = document.getElementById('list-validate');
+      const helpButton = document.getElementById('list-help');
+
+      validateButton.addEventListener('click', () => validateLists(listEditor));
+      helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'List', 'list'));
+
+      // Auto-validate on data change (debounced)
+      let validationTimeout;
+      listEditor.model.document.on('change:data', () => {
+        clearTimeout(validationTimeout);
+        validationTimeout = setTimeout(() => validateLists(listEditor), 500);
+      });
     });
 
     (() => {

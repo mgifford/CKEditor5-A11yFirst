@@ -473,4 +473,70 @@ test.describe('CKEditor5 demo site', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator('#a11yhelp-modal')).not.toHaveClass(/open/);
   });
+
+  test('list mode validates list structure', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const listPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 6: List Guidance Mode' }) });
+
+    const validateButton = listPanel.locator('#list-validate');
+    await validateButton.click();
+
+    const resultsDiv = page.locator('#list-results');
+    await expect(resultsDiv).toBeVisible();
+    await expect(resultsDiv).toContainText('ordered list');
+    await expect(resultsDiv).toContainText('unordered list');
+  });
+
+  test('list mode detects nested lists', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const listPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 6: List Guidance Mode' }) });
+
+    const validateButton = listPanel.locator('#list-validate');
+    await validateButton.click();
+
+    await expect(page.locator('#list-results')).toContainText('Nested lists detected');
+  });
+
+  test('list mode opens A11yFirst Help for lists', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const listPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 6: List Guidance Mode' }) });
+
+    await listPanel.locator('#list-help').click();
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+    await expect(page.locator('#a11yhelp-content')).toContainText('list markup');
+  });
+
+  test('list mode has toolbar with list controls', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const listPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 6: List Guidance Mode' }) });
+
+    const toolbar = listPanel.locator('.ck-toolbar');
+    
+    // Check for list buttons
+    await expect(toolbar.getByLabel(/Bulleted|Unordered/i)).toBeVisible();
+    await expect(toolbar.getByLabel(/Numbered|Ordered/i)).toBeVisible();
+    await expect(toolbar.getByLabel('A11yFirst Help')).toBeVisible();
+  });
+
+  test('list validation status updates correctly', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const validateButton = page.locator('#list-validate');
+    await validateButton.click();
+
+    await expect(page.locator('#status-list')).toContainText('List validation complete');
+    await expect(page.locator('#status-list')).toContainText('list(s) found');
+  });
 });
