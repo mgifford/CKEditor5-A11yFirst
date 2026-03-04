@@ -255,4 +255,65 @@ test.describe('CKEditor5 demo site', () => {
     const linkDialog = linkPanel.locator('#link-props-modal');
     await expect(linkDialog).toHaveClass(/open/);
   });
+
+  test('link-focused anchor mode continues when no anchors exist (with warnings)', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const dialogMessages: string[] = [];
+    page.on('dialog', async (dialog) => {
+      dialogMessages.push(dialog.message());
+      await dialog.accept();
+    });
+
+    await page.evaluate(() => {
+      const editor = (window as unknown as { linkEditorInstance?: { setData: (html: string) => void } }).linkEditorInstance;
+      if (!editor) {
+        throw new Error('link editor instance not found');
+      }
+
+      editor.setData('<p>Open <a href="https://example.org">this page</a> now.</p>');
+    });
+
+    const linkPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 4: Link-Focused Mode' }) });
+
+    const editorEditable = linkPanel.locator('.ck-editor__editable_inline');
+    await editorEditable.locator('a').first().click();
+    await linkPanel.locator('#link-props-open').click();
+
+    await linkPanel.locator('#link-type-select').selectOption('anchor');
+    await linkPanel.locator('#link-display-input').fill('Anchor destination');
+    await linkPanel.locator('#link-apply').click();
+
+    expect(dialogMessages.some((message) => message.includes('not associated with an anchor'))).toBeTruthy();
+    expect(dialogMessages.some((message) => message.includes('No anchors available in the document'))).toBeTruthy();
+
+    await expect(page.locator('#status-link')).toContainText('Link properties applied');
+  });
+
+  test('help system opens from Demo 5 panel and from link Help button', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const helpPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 5: A11yFirst Help System' }) });
+
+    await helpPanel.locator('#a11yhelp-open').click();
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+    await expect(page.locator('#a11yhelp-content')).toContainText('Getting Started');
+    await page.locator('#a11yhelp-close').click();
+
+    const linkPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 4: Link-Focused Mode' }) });
+
+    const editorEditable = linkPanel.locator('.ck-editor__editable_inline');
+    await editorEditable.locator('a').first().click();
+    await linkPanel.locator('#link-props-open').click();
+    await linkPanel.locator('#link-help').click();
+
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+    await expect(page.locator('#a11yhelp-content')).toContainText('Display Text should describe the target');
+  });
 });

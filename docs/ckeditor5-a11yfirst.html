@@ -55,6 +55,18 @@
     .link-context-menu.open { display: block; }
     .link-context-menu button { width: 100%; border: 0; background: transparent; text-align: left; padding: 0.45rem 0.7rem; font-size: 0.9rem; cursor: pointer; }
     .link-context-menu button:hover, .link-context-menu button:focus { background: #f2f6fc; outline: none; }
+    .help-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
+    .help-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
+    .a11yhelp-modal { position: fixed; inset: 0; z-index: 2300; display: none; align-items: center; justify-content: center; }
+    .a11yhelp-modal.open { display: flex; }
+    .a11yhelp-modal .backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); }
+    .a11yhelp-modal .dialog { position: relative; background: #fff; width: min(760px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 0.9rem 1rem; }
+    .a11yhelp-modal h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+    .a11yhelp-modal .topic-row { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; }
+    .a11yhelp-modal select { width: 100%; padding: 0.3rem 0.4rem; }
+    .a11yhelp-modal .content { border: 1px solid #ddd; border-radius: 6px; padding: 0.6rem; min-height: 120px; }
+    .a11yhelp-modal .actions { margin-top: 0.7rem; display: flex; justify-content: flex-end; }
+    .a11yhelp-modal .actions button { padding: 0.3rem 0.6rem; cursor: pointer; }
     .image-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .image-results ul { margin: 0.2rem 0 0 1.1rem; }
     .image-results .ok { color: #0a6b1f; }
@@ -168,6 +180,7 @@
             <button id="image-apply-metadata" type="button">Apply accessibility metadata</button>
             <button id="image-toggle-caption" type="button">Toggle caption</button>
             <button id="image-apply-style" type="button">Apply alignment + width</button>
+            <button id="image-help" type="button">Help</button>
             <button id="image-props-close" type="button" class="dialog-close">Close</button>
           </div>
           <p class="hint">This dialog is available when an image is selected in the editor.</p>
@@ -223,6 +236,30 @@
       </div>
       <div id="status-link" class="status" aria-live="polite"></div>
     </section>
+
+    <section id="demo5" class="panel">
+      <h2 id="demo5-heading">Demo 5: A11yFirst Help System</h2>
+      <p class="help-guidance">Help topics mirror A11yFirst guidance areas and are launched from feature dialogs or directly from this panel.</p>
+      <div class="help-actions">
+        <button id="a11yhelp-open" type="button">Open A11yFirst Help</button>
+      </div>
+      <div id="status-help" class="status" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <div id="a11yhelp-modal" class="a11yhelp-modal" role="dialog" aria-modal="true" aria-labelledby="a11yhelp-title">
+    <div class="backdrop" data-close-a11yhelp="true"></div>
+    <div class="dialog">
+      <h3 id="a11yhelp-title">A11yFirst Help</h3>
+      <div class="topic-row">
+        <select id="a11yhelp-topic"></select>
+        <button id="a11yhelp-load" type="button">Load topic</button>
+      </div>
+      <div id="a11yhelp-content" class="content"></div>
+      <div class="actions">
+        <button id="a11yhelp-close" type="button">Close</button>
+      </div>
+    </div>
   </div>
 
   <script src="./assets/ckeditor5/ckeditor.classic.41.4.2.js"></script>
@@ -232,7 +269,8 @@
       standard: document.getElementById('status-standard'),
       strict: document.getElementById('status-strict'),
       image: document.getElementById('status-image'),
-      link: document.getElementById('status-link')
+      link: document.getElementById('status-link'),
+      help: document.getElementById('status-help')
     };
 
     const sa11yRuntime = {
@@ -258,6 +296,40 @@
       helpNotFound: 'The A11yFirst Help system is not installed. Please contact your CMS or CKEditor administrator for more information.',
       a11yFirstInvalidStartText: ['link to', 'link'],
       a11yFirstInvalidDisplayText: ['add', 'click', 'click here', 'clone', 'delete', 'download', 'go to', 'here', 'image', 'link to', 'link', 'more', 'order', 'read', 'read more', 'view']
+    };
+
+    const helpRuntime = {
+      enabled: true,
+      topics: {
+        GettingStarted: {
+          title: 'Getting Started',
+          body: 'Use heading structure first, write descriptive links, and provide meaningful alternative text for informative images.'
+        },
+        HeadingParagraph: {
+          title: 'Heading / Paragraph',
+          body: 'Headings should form a logical structure. Avoid skipped heading levels and keep one clear top-level heading where required by site policy.'
+        },
+        List: {
+          title: 'List',
+          body: 'Use list markup for grouped items instead of manually typed bullets or numbers.'
+        },
+        Image: {
+          title: 'Image',
+          body: 'Provide concise alternative text for informative images. Mark decorative images when no equivalent text is needed. Add long descriptions for complex visuals.'
+        },
+        CharacterStyle: {
+          title: 'Character Style',
+          body: 'Use character styles to add semantic emphasis and inline meaning, not purely visual decoration.'
+        },
+        Link: {
+          title: 'Link',
+          body: 'Display Text should describe the target. Avoid generic phrases like "click here" and avoid using raw URLs as visible link text when possible.'
+        },
+        AboutA11yFirst: {
+          title: 'About A11yFirst',
+          body: 'A11yFirst extends editor workflows with accessibility guidance so authors receive support while creating content.'
+        }
+      }
     };
 
     function setStatus(target, message) {
@@ -310,6 +382,54 @@
         link.onerror = () => reject(new Error(`Failed to load ${href}`));
         document.head.appendChild(link);
       });
+    }
+
+    function getHelpElements() {
+      return {
+        modal: document.getElementById('a11yhelp-modal'),
+        topicSelect: document.getElementById('a11yhelp-topic'),
+        content: document.getElementById('a11yhelp-content'),
+        loadButton: document.getElementById('a11yhelp-load'),
+        closeButton: document.getElementById('a11yhelp-close')
+      };
+    }
+
+    function renderHelpTopic(helpControls, topicKey) {
+      const topic = helpRuntime.topics[topicKey] || helpRuntime.topics.GettingStarted;
+      helpControls.content.innerHTML = `<strong>${topic.title}</strong><p>${topic.body}</p>`;
+    }
+
+    function ensureHelpTopicsLoaded(helpControls) {
+      if (helpControls.topicSelect.options.length > 0) {
+        return;
+      }
+
+      Object.entries(helpRuntime.topics).forEach(([key, topic]) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = topic.title;
+        helpControls.topicSelect.appendChild(option);
+      });
+    }
+
+    function closeHelpDialog(helpControls, options = {}) {
+      helpControls.modal.classList.remove('open');
+      if (!options.keepStatus) {
+        setStatus('help', 'Closed A11yFirst Help.');
+      }
+    }
+
+    function openHelpDialog(helpControls, topicKey = 'GettingStarted', statusTarget = 'help') {
+      if (!helpRuntime.enabled) {
+        setStatus(statusTarget, linkLang.helpNotFound);
+        return;
+      }
+
+      ensureHelpTopicsLoaded(helpControls);
+      helpControls.topicSelect.value = helpRuntime.topics[topicKey] ? topicKey : 'GettingStarted';
+      renderHelpTopic(helpControls, helpControls.topicSelect.value);
+      helpControls.modal.classList.add('open');
+      setStatus(statusTarget, 'A11yFirst Help opened.');
     }
 
     function bindSa11yCustomChecks(sa11y) {
@@ -691,6 +811,7 @@
         metadataButton: document.getElementById('image-apply-metadata'),
         captionButton: document.getElementById('image-toggle-caption'),
         styleButton: document.getElementById('image-apply-style'),
+        helpButton: document.getElementById('image-help'),
         closeButton: document.getElementById('image-props-close')
       };
     }
@@ -1176,8 +1297,7 @@
       if (linkType === 'anchor') {
         const anchors = getAnchorOptionsFromEditorData(editor);
         if (!anchors.length) {
-          setStatus('link', linkLang.msgNoAnchors);
-          return;
+          window.alert(linkLang.msgNoAnchors);
         }
       }
 
@@ -1346,6 +1466,7 @@
       const auditButton = document.getElementById('image-audit');
       const sa11yButton = document.getElementById('sa11y-enable');
       const controls = getImagePropertiesElements();
+      const helpControls = getHelpElements();
       const imagePanel = document.getElementById('editor-image');
       const imageContextMenu = document.getElementById('image-context-menu');
       const imageContextOpenProps = document.getElementById('image-context-open-props');
@@ -1355,6 +1476,7 @@
       controls.metadataButton.addEventListener('click', () => applyImageMetadata(imageEditor, controls));
       controls.captionButton.addEventListener('click', () => toggleImageCaption(imageEditor));
       controls.styleButton.addEventListener('click', () => applyImageStyleAndSize(imageEditor, controls));
+      controls.helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'Image', 'image'));
       controls.closeButton.addEventListener('click', () => closeImagePropertiesDialog(controls));
       controls.modal.addEventListener('click', (event) => {
         const target = event.target;
@@ -1465,6 +1587,7 @@
       setStatus('link', 'Link-focused mode ready. Select a link to reveal Edit Link in the toolbar or right-click menu.');
 
       const controls = getLinkPropertiesElements();
+      const helpControls = getHelpElements();
       const linkPanel = document.getElementById('editor-link');
       const linkContextMenu = document.getElementById('link-context-menu');
       const linkContextOpenProps = document.getElementById('link-context-open-props');
@@ -1488,7 +1611,7 @@
 
       controls.applyButton.addEventListener('click', () => applyLinkProperties(linkEditor, controls));
       controls.helpButton.addEventListener('click', () => {
-        setStatus('link', linkLang.helpNotFound);
+        openHelpDialog(helpControls, 'Link', 'link');
       });
       controls.closeButton.addEventListener('click', () => closeLinkPropertiesDialog(controls));
       controls.typeSelect.addEventListener('change', syncLinkTypeControls);
@@ -1569,6 +1692,33 @@
       syncLinkTypeControls();
       setLinkPropertiesButtonVisibility(linkPropsToolbarButton, false);
     });
+
+    (() => {
+      const helpControls = getHelpElements();
+      const openHelpButton = document.getElementById('a11yhelp-open');
+
+      ensureHelpTopicsLoaded(helpControls);
+      renderHelpTopic(helpControls, 'GettingStarted');
+      setStatus('help', 'Help system ready.');
+
+      openHelpButton.addEventListener('click', () => openHelpDialog(helpControls, helpControls.topicSelect.value || 'GettingStarted', 'help'));
+      helpControls.loadButton.addEventListener('click', () => renderHelpTopic(helpControls, helpControls.topicSelect.value));
+      helpControls.topicSelect.addEventListener('change', () => renderHelpTopic(helpControls, helpControls.topicSelect.value));
+      helpControls.closeButton.addEventListener('click', () => closeHelpDialog(helpControls));
+      helpControls.modal.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.dataset.closeA11yhelp === 'true') {
+          closeHelpDialog(helpControls);
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && helpControls.modal.classList.contains('open')) {
+          closeHelpDialog(helpControls, { keepStatus: true });
+          setStatus('help', 'Closed A11yFirst Help.');
+        }
+      });
+    })();
   </script>
 </body>
 </html>
