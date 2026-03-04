@@ -322,7 +322,7 @@ test.describe('CKEditor5 demo site', () => {
 
     const stylePanel = page
       .locator('section.panel')
-      .filter({ has: page.getByRole('heading', { name: 'Demo 6: Character Style Mode' }) });
+      .filter({ has: page.getByRole('heading', { name: 'Demo 5: Character Style Mode' }) });
 
     const editorEditable = stylePanel.locator('.ck-editor__editable_inline');
     await expect(editorEditable).toBeVisible();
@@ -375,10 +375,102 @@ test.describe('CKEditor5 demo site', () => {
 
     const stylePanel = page
       .locator('section.panel')
-      .filter({ has: page.getByRole('heading', { name: 'Demo 6: Character Style Mode' }) });
+      .filter({ has: page.getByRole('heading', { name: 'Demo 5: Character Style Mode' }) });
 
     await stylePanel.locator('#style-help').click();
     await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
     await expect(page.locator('#a11yhelp-content')).toContainText('character styles');
+  });
+
+  test('A11yFirst Help button appears in all editor toolbars', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    // Check Demo 1 (Standard)
+    const demo1Panel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 1: Standard A11yFirst Configuration' }) });
+    const demo1Toolbar = demo1Panel.locator('.ck-toolbar');
+    await expect(demo1Toolbar.getByLabel('A11yFirst Help')).toBeVisible();
+
+    // Check Demo 2 (Strict)
+    const demo2Panel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 2: High-Restriction Heading Mode' }) });
+    const demo2Toolbar = demo2Panel.locator('.ck-toolbar');
+    await expect(demo2Toolbar.getByLabel('A11yFirst Help')).toBeVisible();
+
+    // Check Demo 3 (Image)
+    const demo3Panel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
+    const demo3Toolbar = demo3Panel.locator('.ck-toolbar');
+    await expect(demo3Toolbar.getByLabel('A11yFirst Help')).toBeVisible();
+
+    // Check Demo 4 (Link)
+    const demo4Panel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 4: Link-Focused Mode' }) });
+    const demo4Toolbar = demo4Panel.locator('.ck-toolbar');
+    await expect(demo4Toolbar.getByLabel('A11yFirst Help')).toBeVisible();
+
+    // Check Demo 5 (Character Style)
+    const demo5Panel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 5: Character Style Mode' }) });
+    const demo5Toolbar = demo5Panel.locator('.ck-toolbar');
+    await expect(demo5Toolbar.getByLabel('A11yFirst Help')).toBeVisible();
+  });
+
+  test('A11yFirst Help toolbar button opens Help modal', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const demo1Panel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 1: Standard A11yFirst Configuration' }) });
+    
+    const helpButton = demo1Panel.locator('.ck-toolbar').getByLabel('A11yFirst Help');
+    await helpButton.click();
+
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+    await expect(page.locator('#a11yhelp-content')).toBeVisible();
+    await expect(page.locator('#a11yhelp-topic')).toBeVisible();
+  });
+
+  test('Help modal can be closed and reopened', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const demo2Panel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 2: High-Restriction Heading Mode' }) });
+    
+    const helpButton = demo2Panel.locator('.ck-toolbar').getByLabel('A11yFirst Help');
+    
+    // Open Help
+    await helpButton.click();
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+
+    // Close Help
+    await page.locator('#a11yhelp-close').click();
+    await expect(page.locator('#a11yhelp-modal')).not.toHaveClass(/open/);
+
+    // Reopen Help
+    await helpButton.click();
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+  });
+
+  test('Help modal closes on Escape key', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const demo3Panel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
+    
+    const helpButton = demo3Panel.locator('.ck-toolbar').getByLabel('A11yFirst Help');
+    await helpButton.click();
+
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#a11yhelp-modal')).not.toHaveClass(/open/);
   });
 });
