@@ -92,7 +92,16 @@
     <section id="demo1" class="panel">
       <h2 id="demo1-heading">Demo 1: Standard A11yFirst Configuration</h2>
       <div id="editor-standard" class="editor">
-        <p>Standard mode content.</p>
+        <h1>Building Tomorrow's Green Cities</h1>
+        <p>Solar punk envisions a future where renewable energy, sustainable architecture, and thriving ecosystems coexist with human innovation. In these urban landscapes, <strong>solar panels</strong> cover rooftops, <em>vertical gardens</em> climb building facades, and community spaces flourish with life.</p>
+        <h2>Core Principles</h2>
+        <ul>
+          <li>Renewable energy integration in all infrastructure</li>
+          <li>Circular economy practices and zero-waste systems</li>
+          <li>Biodiversity preservation within urban environments</li>
+        </ul>
+        <h3>Community-Driven Design</h3>
+        <p>Solar punk communities prioritize accessible public transportation, shared resources, and open-source technology that empowers everyone to participate in building a sustainable future.</p>
       </div>
       <div id="status-standard" class="status" aria-live="polite"></div>
     </section>
@@ -129,11 +138,13 @@
         <div id="sa11y-status" class="tool-status" aria-live="polite">Sa11y is disabled (opt-in).</div>
       </div>
       <div id="editor-image" class="editor">
-        <p>Select an image and use the CKEditor5 image toolbar controls to set text alternatives and caption.</p>
+        <h2>Solar Punk Architecture</h2>
+        <p>Buildings in solar punk cities blend seamlessly with nature, featuring <strong>living walls</strong>, transparent solar glass, and modular designs that adapt to community needs.</p>
         <figure class="image">
-          <img src="https://picsum.photos/640/280" alt="" />
-          <figcaption>Sample image for accessibility review</figcaption>
+          <img src="https://picsum.photos/640/280" alt="Futuristic building with vertical gardens cascading down glass walls" />
+          <figcaption>Vertical garden integration in modern solar punk architecture</figcaption>
         </figure>
+        <p>Rooftop gardens provide insulation, food production, and peaceful gathering spaces. Public transit hubs powered by renewable energy connect neighborhoods through efficient rail networks.</p>
       </div>
       <div id="image-context-menu" class="image-context-menu" role="menu" aria-label="Image actions">
         <button id="image-context-open-props" type="button" role="menuitem">Image Properties</button>
@@ -199,9 +210,11 @@
       <h2 id="demo4-heading">Demo 4: Link-Focused Mode</h2>
       <p class="link-guidance">Select an existing link, then open A11yFirst Link Properties from the contextual toolbar button or right-click menu.</p>
       <div id="editor-link" class="editor">
-        <p>Read our <a href="https://example.org/accessibility-guide">accessibility guide</a> before publishing.</p>
-        <h3 id="demo-link-anchor-about">About this document</h3>
-        <p>Use anchors for internal navigation where appropriate.</p>
+        <h2 id="energy-networks">Open Source Energy Networks</h2>
+        <p>Solar punk communities share power through <a href="https://en.wikipedia.org/wiki/Microgrid">decentralized microgrids</a> that balance renewable generation across neighborhoods.</p>
+        <h3 id="community-solar">Community Solar Projects</h3>
+        <p>Learn more about <a href="https://en.wikipedia.org/wiki/Community_solar">community solar initiatives</a> and how they democratize access to clean energy for all residents.</p>
+        <p>Join local <a href="mailto:solarpunk@example.org">solar punk networks</a> to participate in building sustainable infrastructure from the ground up.</p>
       </div>
       <div id="link-context-menu" class="link-context-menu" role="menu" aria-label="Link actions">
         <button id="link-context-open-props" type="button" role="menuitem">Edit Link</button>
@@ -243,16 +256,7 @@
     </section>
 
     <section id="demo5" class="panel">
-      <h2 id="demo5-heading">Demo 5: A11yFirst Help System</h2>
-      <p class="help-guidance">Help topics mirror A11yFirst guidance areas and are launched from feature dialogs or directly from this panel.</p>
-      <div class="help-actions">
-        <button id="a11yhelp-open" type="button">Open A11yFirst Help</button>
-      </div>
-      <div id="status-help" class="status" aria-live="polite"></div>
-    </section>
-
-    <section id="demo6" class="panel">
-      <h2 id="demo6-heading">Demo 6: Character Style Mode</h2>
+      <h2 id="demo5-heading">Demo 5: Character Style Mode</h2>
       <p class="style-guidance">Apply inline character styles separately from structural heading controls, then remove styles or open Help.</p>
       <div class="style-actions">
         <select id="style-choice" aria-label="Character style choice">
@@ -272,7 +276,10 @@
         <button id="style-help" type="button">Help</button>
       </div>
       <div id="editor-style" class="editor">
-        <p>Select text and apply a character style. This demo prioritizes inline semantics and styling guidance.</p>
+        <h2>Technology and Nature in Harmony</h2>
+        <p>Solar punk reimagines our relationship with technology, moving from <del>extractive industrial practices</del> toward <ins>regenerative systems</ins> that restore ecosystems while meeting human needs.</p>
+        <p>As author Rebecca Solnit writes in <cite>Hope in the Dark</cite>, change happens when communities come together around shared visions. The solar punk movement embraces <q>optimism in action</q> as a guiding principle.</p>
+        <p>Key technologies include <code>open-source 3D printing</code> for decentralized manufacturing, biotech innovations for sustainable materials, and AI systems designed for resource optimization rather than profit extraction.</p>
       </div>
       <div id="status-style" class="status" aria-live="polite"></div>
     </section>
@@ -302,7 +309,6 @@
       strict: document.getElementById('status-strict'),
       image: document.getElementById('status-image'),
       link: document.getElementById('status-link'),
-      help: document.getElementById('status-help'),
       style: document.getElementById('status-style')
     };
 
@@ -1483,7 +1489,8 @@
     }
 
     ClassicEditor.create(document.querySelector('#editor-standard'), {
-      toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
+      toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      extraPlugins: [A11yFirst.HelpButton.plugin],
       heading: {
         options: [
           { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
@@ -1495,7 +1502,8 @@
     }).then(() => setStatus('standard', 'Editor ready.'));
 
     ClassicEditor.create(document.querySelector('#editor-strict'), {
-      toolbar: ['heading', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo'],
+      toolbar: ['heading', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      extraPlugins: [A11yFirst.HelpButton.plugin],
       heading: {
         options: [
           { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
@@ -1579,7 +1587,8 @@
     });
 
     ClassicEditor.create(document.querySelector('#editor-image'), {
-      toolbar: ['bold', 'italic', 'link', '|', 'imageTextAlternative', 'toggleImageCaption', 'linkImage', '|', 'undo', 'redo'],
+      toolbar: ['bold', 'italic', 'link', '|', 'imageTextAlternative', 'toggleImageCaption', 'linkImage', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      extraPlugins: [A11yFirst.HelpButton.plugin],
       image: {
         styles: [
           'inline',
@@ -1729,7 +1738,8 @@
     });
 
     ClassicEditor.create(document.querySelector('#editor-link'), {
-      toolbar: ['bold', 'italic', 'link', 'unlink', '|', 'undo', 'redo']
+      toolbar: ['bold', 'italic', 'link', 'unlink', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      extraPlugins: [A11yFirst.HelpButton.plugin]
     }).then((linkEditor) => {
       window.linkEditorInstance = linkEditor;
       setStatus('link', 'Link-focused mode ready. Select a link to reveal Edit Link in the toolbar or right-click menu.');
@@ -1845,8 +1855,8 @@
     });
 
     ClassicEditor.create(document.querySelector('#editor-style'), {
-      toolbar: ['bold', 'italic', 'link', '|', 'undo', 'redo'],
-      extraPlugins: [A11yFirst.CharacterStyles.plugin]
+      toolbar: ['bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      extraPlugins: [A11yFirst.CharacterStyles.plugin, A11yFirst.HelpButton.plugin]
     }).then((styleEditor) => {
       window.styleEditorInstance = styleEditor;
       const controls = getCharacterStyleElements();
@@ -1861,13 +1871,14 @@
 
     (() => {
       const helpControls = getHelpElements();
-      const openHelpButton = document.getElementById('a11yhelp-open');
 
       ensureHelpTopicsLoaded(helpControls);
       renderHelpTopic(helpControls, 'GettingStarted');
-      setStatus('help', 'Help system ready.');
 
-      openHelpButton.addEventListener('click', () => openHelpDialog(helpControls, helpControls.topicSelect.value || 'GettingStarted', 'help'));
+      document.addEventListener('a11yFirstHelpRequested', (event) => {
+        openHelpDialog(helpControls, 'GettingStarted', 'help');
+      });
+
       helpControls.loadButton.addEventListener('click', () => renderHelpTopic(helpControls, helpControls.topicSelect.value));
       helpControls.topicSelect.addEventListener('change', () => renderHelpTopic(helpControls, helpControls.topicSelect.value));
       helpControls.closeButton.addEventListener('click', () => closeHelpDialog(helpControls));
@@ -1881,9 +1892,9 @@
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && helpControls.modal.classList.contains('open')) {
           closeHelpDialog(helpControls, { keepStatus: true });
-          setStatus('help', 'Closed A11yFirst Help.');
         }
       });
+    })();
     })();
   </script>
 </body>
