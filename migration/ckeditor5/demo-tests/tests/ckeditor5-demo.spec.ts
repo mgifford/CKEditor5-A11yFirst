@@ -29,7 +29,7 @@ test.describe('CKEditor5 demo site', () => {
       .locator('section.panel')
       .filter({ has: page.getByRole('heading', { name: 'Demo 2: High-Restriction Heading Mode' }) });
 
-    const strictEditor = strictPanel.locator('#editor-strict');
+    const strictEditor = strictPanel.locator('.ck-editor__editable');
     await expect(strictEditor).toBeVisible();
 
     await strictEditor.locator('h2').first().click();
@@ -58,16 +58,17 @@ test.describe('CKEditor5 demo site', () => {
     await page.goto('/ckeditor5-a11yfirst.html');
 
     await page.evaluate(() => {
-      const editor = (window as unknown as { strictEditorInstance?: { setData: (html: string) => Promise<void> } }).strictEditorInstance;
+      const editor = (window as unknown as { strictEditorInstance?: { setData: (html: string) => void } }).strictEditorInstance;
       if (!editor) {
         throw new Error('strict editor instance not found');
       }
-      return editor.setData('<h1>Bad H1</h1><h4>Jump</h4>');
+
+      editor.setData('<h1>Bad H1</h1><h4>Jump</h4>');
     });
 
     await expect(page.locator('#status-strict')).toContainText('normalized disallowed heading levels');
 
-    const strictHtml = await page.locator('#editor-strict').innerHTML();
+    const strictHtml = await page.locator('.ck-editor__editable').nth(1).innerHTML();
     expect(strictHtml).not.toContain('<h1');
     expect(strictHtml).toContain('<h2');
   });
@@ -88,5 +89,22 @@ test.describe('CKEditor5 demo site', () => {
     const blocking = violations.filter((violation) => violation.impact === 'serious' || violation.impact === 'critical');
 
     expect(blocking, JSON.stringify(blocking, null, 2)).toHaveLength(0);
+  });
+
+  test('image-focused mode blocks insert when informative alt text is missing', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const imagePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
+
+    await imagePanel.locator('#image-src').fill('https://example.org/diagram.png');
+    await imagePanel.locator('#image-alt').fill('');
+    await imagePanel.locator('#image-decorative').uncheck();
+
+    await imagePanel.locator('#image-validate').click();
+
+    await expect(imagePanel.locator('#image-results')).toContainText('Alternative text is required for informative images.');
+    await expect(page.locator('#status-image')).toContainText('Validation blocked');
   });
 });
