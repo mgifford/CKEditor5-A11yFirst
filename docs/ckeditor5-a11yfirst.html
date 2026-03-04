@@ -21,15 +21,19 @@
     .image-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
     .image-actions .secondary { margin-left: 0.4rem; }
     .tool-status { margin-top: 0.4rem; font-size: 0.85rem; color: #555; }
-    .image-props { border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem; margin: 0.6rem 0 0.7rem; }
-    .image-props h3 { margin: 0 0 0.5rem; font-size: 1rem; }
-    .image-props .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 0.75rem; }
-    .image-props .full { grid-column: 1 / -1; }
-    .image-props label { font-size: 0.9rem; display: block; margin-bottom: 0.2rem; }
-    .image-props input[type="text"], .image-props select { width: 100%; padding: 0.3rem 0.4rem; box-sizing: border-box; }
-    .image-props .actions { margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.45rem; }
-    .image-props .actions button { padding: 0.3rem 0.6rem; cursor: pointer; }
-    .image-props .hint { font-size: 0.85rem; color: #555; margin-top: 0.45rem; }
+    .image-props-modal { position: fixed; inset: 0; z-index: 2200; display: none; align-items: center; justify-content: center; }
+    .image-props-modal.open { display: flex; }
+    .image-props-modal .backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); }
+    .image-props-modal .dialog { position: relative; background: #fff; width: min(820px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 0.9rem 1rem; }
+    .image-props-modal h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+    .image-props-modal .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 0.75rem; }
+    .image-props-modal .full { grid-column: 1 / -1; }
+    .image-props-modal label { font-size: 0.9rem; display: block; margin-bottom: 0.2rem; }
+    .image-props-modal input[type="text"], .image-props-modal select { width: 100%; padding: 0.3rem 0.4rem; box-sizing: border-box; }
+    .image-props-modal .actions { margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.45rem; }
+    .image-props-modal .actions button { padding: 0.3rem 0.6rem; cursor: pointer; }
+    .image-props-modal .hint { font-size: 0.85rem; color: #555; margin-top: 0.45rem; }
+    .image-props-modal .dialog-close { margin-left: auto; }
     .image-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .image-results ul { margin: 0.2rem 0 0 1.1rem; }
     .image-results .ok { color: #0a6b1f; }
@@ -84,60 +88,64 @@
         <button id="sa11y-enable" class="secondary" type="button">Enable Sa11y overlay</button>
         <div id="sa11y-status" class="tool-status" aria-live="polite">Sa11y is disabled (opt-in).</div>
       </div>
-      <div class="image-props" aria-labelledby="image-props-title">
-        <h3 id="image-props-title">A11yFirst Image Properties (MVP)</h3>
-        <div class="grid">
-          <div class="full">
-            <label for="image-src-input">Image URL</label>
-            <input id="image-src-input" type="text" placeholder="https://example.com/image.jpg" />
-          </div>
-          <div class="full">
-            <label for="image-alt-input">Alternative text (spoken by screen reader)</label>
-            <input id="image-alt-input" type="text" placeholder="Short, meaningful description" />
-          </div>
-          <div class="full">
-            <label>
-              <input id="image-decorative-input" type="checkbox" />
-              Image does not require alternative text
-            </label>
-          </div>
-          <div class="full">
-            <label for="image-longdesc-select">Is a long description needed, and if so, where will it be located?</label>
-            <select id="image-longdesc-select">
-              <option value="nodesc">No, the alternative text is adequate</option>
-              <option value="before">Yes; in the document before the image</option>
-              <option value="after">Yes; in the document after the image</option>
-              <option value="both">Yes; in the document before and after the image</option>
-            </select>
-          </div>
-          <div>
-            <label for="image-width-input">Width (e.g. 50%)</label>
-            <input id="image-width-input" type="text" placeholder="50%" />
-          </div>
-          <div>
-            <label for="image-align-select">Alignment</label>
-            <select id="image-align-select">
-              <option value="none">None</option>
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
-            </select>
-          </div>
-        </div>
-        <div class="actions">
-          <button id="image-insert-url" type="button">Insert / update image URL</button>
-          <button id="image-apply-metadata" type="button">Apply accessibility metadata</button>
-          <button id="image-toggle-caption" type="button">Toggle caption</button>
-          <button id="image-apply-style" type="button">Apply alignment + width</button>
-        </div>
-        <p class="hint">Select an existing image to edit it. If no image is selected, URL insert creates a new image.</p>
-      </div>
       <div id="editor-image" class="editor">
         <p>Select an image and use the CKEditor5 image toolbar controls to set text alternatives and caption.</p>
         <figure class="image">
           <img src="https://picsum.photos/640/280" alt="" />
           <figcaption>Sample image for accessibility review</figcaption>
         </figure>
+      </div>
+      <div id="image-props-modal" class="image-props-modal" role="dialog" aria-modal="true" aria-labelledby="image-props-title">
+        <div class="backdrop" data-close-image-props="true"></div>
+        <div class="dialog">
+          <h3 id="image-props-title">A11yFirst Image Properties</h3>
+          <div class="grid">
+            <div class="full">
+              <label for="image-src-input">Image URL</label>
+              <input id="image-src-input" type="text" placeholder="https://example.com/image.jpg" />
+            </div>
+            <div class="full">
+              <label for="image-alt-input">Alternative text (spoken by screen reader)</label>
+              <input id="image-alt-input" type="text" placeholder="Short, meaningful description" />
+            </div>
+            <div class="full">
+              <label>
+                <input id="image-decorative-input" type="checkbox" />
+                Image does not require alternative text
+              </label>
+            </div>
+            <div class="full">
+              <label for="image-longdesc-select">Is a long description needed, and if so, where will it be located?</label>
+              <select id="image-longdesc-select">
+                <option value="nodesc">No, the alternative text is adequate</option>
+                <option value="before">Yes; in the document before the image</option>
+                <option value="after">Yes; in the document after the image</option>
+                <option value="both">Yes; in the document before and after the image</option>
+              </select>
+            </div>
+            <div>
+              <label for="image-width-input">Width (e.g. 50%)</label>
+              <input id="image-width-input" type="text" placeholder="50%" />
+            </div>
+            <div>
+              <label for="image-align-select">Alignment</label>
+              <select id="image-align-select">
+                <option value="none">None</option>
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="image-insert-url" type="button">Insert / update image URL</button>
+            <button id="image-apply-metadata" type="button">Apply accessibility metadata</button>
+            <button id="image-toggle-caption" type="button">Toggle caption</button>
+            <button id="image-apply-style" type="button">Apply alignment + width</button>
+            <button id="image-props-close" type="button" class="dialog-close">Close</button>
+          </div>
+          <p class="hint">This dialog is available when an image is selected in the editor.</p>
+        </div>
       </div>
       <div id="status-image" class="status" aria-live="polite"></div>
       <div id="image-results" class="image-results" aria-live="polite"></div>
@@ -580,6 +588,7 @@
 
     function getImagePropertiesElements() {
       return {
+        modal: document.getElementById('image-props-modal'),
         srcInput: document.getElementById('image-src-input'),
         altInput: document.getElementById('image-alt-input'),
         decorativeInput: document.getElementById('image-decorative-input'),
@@ -589,8 +598,59 @@
         insertButton: document.getElementById('image-insert-url'),
         metadataButton: document.getElementById('image-apply-metadata'),
         captionButton: document.getElementById('image-toggle-caption'),
-        styleButton: document.getElementById('image-apply-style')
+        styleButton: document.getElementById('image-apply-style'),
+        closeButton: document.getElementById('image-props-close')
       };
+    }
+
+    function createImagePropertiesToolbarButton(editor) {
+      const toolbarElement = editor.ui.view.toolbar.element;
+      if (!toolbarElement) {
+        return null;
+      }
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'image-props-open';
+      button.className = 'ck ck-button ck-off';
+      button.textContent = 'A11yFirst Image Properties';
+      button.style.display = 'none';
+      toolbarElement.appendChild(button);
+      return button;
+    }
+
+    function setImagePropertiesButtonVisibility(button, visible) {
+      if (!button) {
+        return;
+      }
+
+      button.style.display = visible ? '' : 'none';
+      button.disabled = !visible;
+      button.setAttribute('aria-disabled', String(!visible));
+    }
+
+    function closeImagePropertiesDialog(controls, options = {}) {
+      if (!controls.modal) {
+        return;
+      }
+
+      controls.modal.classList.remove('open');
+      if (!options.keepStatus) {
+        setStatus('image', 'Closed A11yFirst Image Properties dialog.');
+      }
+    }
+
+    function openImagePropertiesDialog(editor, controls) {
+      const selectedImage = getSelectedImageModelElement(editor);
+      if (!selectedImage) {
+        setStatus('image', 'Select an image first to open A11yFirst Image Properties.');
+        return;
+      }
+
+      syncImagePropertiesFromSelection(editor, controls);
+      controls.modal.classList.add('open');
+      controls.srcInput.focus();
+      setStatus('image', 'A11yFirst Image Properties dialog opened for selected image.');
     }
 
     function syncImagePropertiesFromSelection(editor, controls) {
@@ -824,16 +884,35 @@
       }
     }).then((imageEditor) => {
       window.imageEditorInstance = imageEditor;
-      setStatus('image', 'Image-focused mode ready. Use native CKEditor5 image tools, then run A11yFirst audit.');
+      setStatus('image', 'Image-focused mode ready. Select an image to reveal A11yFirst Image Properties in the editor toolbar.');
 
       const auditButton = document.getElementById('image-audit');
       const sa11yButton = document.getElementById('sa11y-enable');
       const controls = getImagePropertiesElements();
+      const imagePropsToolbarButton = createImagePropertiesToolbarButton(imageEditor);
 
       controls.insertButton.addEventListener('click', () => insertOrUpdateImageByUrl(imageEditor, controls));
       controls.metadataButton.addEventListener('click', () => applyImageMetadata(imageEditor, controls));
       controls.captionButton.addEventListener('click', () => toggleImageCaption(imageEditor));
       controls.styleButton.addEventListener('click', () => applyImageStyleAndSize(imageEditor, controls));
+      controls.closeButton.addEventListener('click', () => closeImagePropertiesDialog(controls));
+      controls.modal.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.dataset.closeImageProps === 'true') {
+          closeImagePropertiesDialog(controls);
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && controls.modal.classList.contains('open')) {
+          closeImagePropertiesDialog(controls, { keepStatus: true });
+          setStatus('image', 'Closed A11yFirst Image Properties dialog.');
+        }
+      });
+
+      if (imagePropsToolbarButton) {
+        imagePropsToolbarButton.addEventListener('click', () => openImagePropertiesDialog(imageEditor, controls));
+      }
 
       controls.decorativeInput.addEventListener('change', () => {
         controls.altInput.disabled = controls.decorativeInput.checked;
@@ -843,6 +922,13 @@
       });
 
       imageEditor.model.document.selection.on('change:range', () => {
+        const hasSelectionImage = Boolean(getSelectedImageModelElement(imageEditor));
+        setImagePropertiesButtonVisibility(imagePropsToolbarButton, hasSelectionImage);
+
+        if (!hasSelectionImage && controls.modal.classList.contains('open')) {
+          closeImagePropertiesDialog(controls, { keepStatus: true });
+        }
+
         syncImagePropertiesFromSelection(imageEditor, controls);
       });
 
@@ -871,6 +957,7 @@
       }
 
       syncImagePropertiesFromSelection(imageEditor, controls);
+      setImagePropertiesButtonVisibility(imagePropsToolbarButton, false);
     });
   </script>
 </body>

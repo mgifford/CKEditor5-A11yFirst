@@ -117,11 +117,20 @@ test.describe('CKEditor5 demo site', () => {
     const editorEditable = imagePanel.locator('.ck-editor__editable');
     await expect(editorEditable).toBeVisible();
 
+    const openPropsButton = imagePanel.locator('#image-props-open');
+    await expect(openPropsButton).toBeHidden();
+
+    await editorEditable.locator('img').first().click();
+    await expect(openPropsButton).toBeVisible();
+    await openPropsButton.click();
+
+    const imageDialog = page.locator('#image-props-modal');
+    await expect(imageDialog).toHaveClass(/open/);
+
     await imagePanel.locator('#image-src-input').fill('https://picsum.photos/420/210');
     await imagePanel.locator('#image-insert-url').click();
     await expect(page.locator('#status-image')).toContainText('image URL');
 
-    await editorEditable.locator('img').first().click();
     await imagePanel.locator('#image-alt-input').fill('A mountain lake at sunrise');
     await imagePanel.locator('#image-longdesc-select').selectOption('after');
     await imagePanel.locator('#image-apply-metadata').click();
