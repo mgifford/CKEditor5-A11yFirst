@@ -32,7 +32,7 @@ test.describe('CKEditor5 demo site', () => {
     const strictEditor = strictPanel.locator('.ck-editor__editable');
     await expect(strictEditor).toBeVisible();
 
-    await strictEditor.locator('h2').first().click();
+    await strictEditor.locator('h2').nth(1).click();
 
     const allowedText = page.locator('#status-strict');
     await expect(allowedText).toContainText('Allowed now: Paragraph, Heading 2, Heading 3');

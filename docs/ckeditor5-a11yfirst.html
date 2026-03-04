@@ -24,7 +24,7 @@
     .image-results .ok { color: #0a6b1f; }
     .image-results .warn { color: #7a2f00; }
     .image-results .block { color: #8a1c1c; }
-    a { color: #0b57d0; text-decoration: none; }
+    a { color: #0b57d0; }
     a:hover { text-decoration: underline; }
   </style>
 </head>
@@ -432,7 +432,6 @@
           setTimeout(() => {
             isNormalizingStrictHeadings = false;
             setStatus('strict', 'Strict mode normalized disallowed heading levels (no H1, no skipped levels).');
-            renderStrictStatus(editor);
             updateStrictDropdownAvailability(editor);
           }, 0);
           return;
