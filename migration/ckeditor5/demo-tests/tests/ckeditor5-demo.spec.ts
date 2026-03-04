@@ -91,20 +91,16 @@ test.describe('CKEditor5 demo site', () => {
     expect(blocking, JSON.stringify(blocking, null, 2)).toHaveLength(0);
   });
 
-  test('image-focused mode blocks insert when informative alt text is missing', async ({ page }) => {
+  test('image-focused mode runs native-image audit checks', async ({ page }) => {
     await page.goto('/ckeditor5-a11yfirst.html');
 
     const imagePanel = page
       .locator('section.panel')
       .filter({ has: page.getByRole('heading', { name: 'Demo 3: Image-Focused Mode' }) });
 
-    await imagePanel.locator('#image-src').fill('https://example.org/diagram.png');
-    await imagePanel.locator('#image-alt').fill('');
-    await imagePanel.locator('#image-decorative').uncheck();
+    await imagePanel.locator('#image-audit').click();
 
-    await imagePanel.locator('#image-validate').click();
-
-    await expect(imagePanel.locator('#image-results')).toContainText('Alternative text is required for informative images.');
-    await expect(page.locator('#status-image')).toContainText('Validation blocked');
+    await expect(imagePanel.locator('#image-results')).toContainText('Warnings');
+    await expect(page.locator('#status-image')).toContainText('Image audit complete');
   });
 });

@@ -16,14 +16,8 @@
     .strict-tests { margin-top: 0.75rem; font-size: 0.9rem; color: #1f2328; }
     .strict-tests.pass { color: #0a6b1f; }
     .strict-tests.fail { color: #8a1c1c; }
-    .image-controls { margin-bottom: 0.75rem; display: grid; gap: 0.5rem; grid-template-columns: repeat(2, minmax(220px, 1fr)); }
-    .image-controls label { font-size: 0.92rem; display: grid; gap: 0.25rem; }
-    .image-controls input,
-    .image-controls select,
-    .image-controls textarea { padding: 0.35rem 0.5rem; font: inherit; }
-    .image-controls .full { grid-column: 1 / -1; }
-    .image-controls .check { display: flex; align-items: center; gap: 0.4rem; }
-    .image-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .image-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
+    .image-actions { margin-bottom: 0.7rem; }
     .image-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
     .image-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .image-results ul { margin: 0.2rem 0 0 1.1rem; }
@@ -67,42 +61,19 @@
 
     <section class="panel">
       <h2>Demo 3: Image-Focused Mode</h2>
-      <div class="image-controls" id="image-controls">
-        <label>Image URL
-          <input id="image-src" type="url" placeholder="https://example.org/image.jpg" />
-        </label>
-
-        <label>Long description location
-          <select id="image-longdesc-location">
-            <option value="nodesc">No long description</option>
-            <option value="before">Before image</option>
-            <option value="after">After image</option>
-            <option value="both">Before and after image</option>
-          </select>
-        </label>
-
-        <label class="full">Alternative text
-          <textarea id="image-alt" rows="2" placeholder="Describe the image purpose and content."></textarea>
-        </label>
-
-        <label class="full">Long description text
-          <textarea id="image-longdesc" rows="2" placeholder="Provide extended context when needed."></textarea>
-        </label>
-
-        <label class="check"><input id="image-decorative" type="checkbox" /> Decorative image</label>
-        <label class="check"><input id="image-caption-enabled" type="checkbox" /> Include caption</label>
-
-        <label class="full">Caption text
-          <input id="image-caption" type="text" placeholder="Caption (optional)" />
-        </label>
-
-        <div class="image-actions full">
-          <button id="image-validate" type="button">Validate image metadata</button>
-          <button id="image-insert" type="button">Insert image snippet</button>
-        </div>
+      <p class="image-guidance">
+        Uses CKEditor5 native image tools (insert image, text alternative, caption, and image styles),
+        then applies A11yFirst audit checks inspired by We4Authors and ATAG guidance.
+      </p>
+      <div class="image-actions">
+        <button id="image-audit" type="button">Run image accessibility audit</button>
       </div>
       <div id="editor-image" class="editor">
-        <p>Insert images and provide alt text as part of workflow testing.</p>
+        <p>Select an image and use the CKEditor5 image toolbar controls to set text alternatives and caption.</p>
+        <figure class="image">
+          <img src="https://picsum.photos/640/280" alt="" />
+          <figcaption>Sample image for accessibility review</figcaption>
+        </figure>
       </div>
       <div id="status-image" class="status" aria-live="polite"></div>
       <div id="image-results" class="image-results" aria-live="polite"></div>
@@ -322,73 +293,65 @@
       });
     }
 
-    function getImageFormValues() {
-      return {
-        src: document.getElementById('image-src').value.trim(),
-        alt: document.getElementById('image-alt').value.trim(),
-        decorative: document.getElementById('image-decorative').checked,
-        longDescriptionLocation: document.getElementById('image-longdesc-location').value,
-        longDescriptionText: document.getElementById('image-longdesc').value.trim(),
-        captionEnabled: document.getElementById('image-caption-enabled').checked,
-        captionText: document.getElementById('image-caption').value.trim()
-      };
-    }
-
     function isFilenameLikeAlt(altText) {
       return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(altText) || /^(img|image|photo|picture)[-_ ]?\d+/i.test(altText);
     }
 
-    function evaluateImageMetadata(values) {
+    function evaluateImageData(html) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+      const images = Array.from(doc.querySelectorAll('img'));
+
       const blocks = [];
       const warns = [];
-      const confirms = [];
 
-      if (!values.src) {
-        blocks.push('Image URL is required.');
+      if (!images.length) {
+        warns.push('No images found in content. Insert an image to test image-focused behavior.');
       }
 
-      if (values.decorative) {
-        if (values.alt) {
-          warns.push('Decorative images should usually have empty alt text.');
-        }
-      } else {
-        if (!values.alt) {
-          blocks.push('Alternative text is required for informative images.');
+      images.forEach((image, index) => {
+        const alt = (image.getAttribute('alt') || '').trim();
+        const figure = image.closest('figure');
+        const captionText = figure?.querySelector('figcaption')?.textContent?.trim() || '';
+
+        if (!image.getAttribute('src')) {
+          blocks.push(`Image ${index + 1}: missing src.`);
         }
 
-        if (values.alt.length > 150) {
-          warns.push('Alternative text is long; consider simplifying to concise purpose-driven text.');
+        if (!alt) {
+          warns.push(`Image ${index + 1}: missing alt text (may be decorative only if intentionally empty).`);
+        } else {
+          if (alt.length > 150) {
+            warns.push(`Image ${index + 1}: alt text is long; consider shortening.`);
+          }
+
+          if (/^(image|photo|picture|graphic)\s+of\b/i.test(alt)) {
+            warns.push(`Image ${index + 1}: avoid starting alt with “image/photo/picture of”.`);
+          }
+
+          if (isFilenameLikeAlt(alt)) {
+            blocks.push(`Image ${index + 1}: alt text looks like a filename or placeholder.`);
+          }
         }
 
-        if (/^(image|photo|picture|graphic)\s+of\b/i.test(values.alt)) {
-          warns.push('Avoid starting alt text with “image/photo/picture of” unless required for context.');
+        if (figure && !captionText) {
+          warns.push(`Image ${index + 1}: figure is present but caption is empty.`);
         }
+      });
 
-        if (isFilenameLikeAlt(values.alt)) {
-          blocks.push('Alternative text appears to be a filename or generic placeholder.');
-        }
+      const hasLongDescriptionReference = /long description/i.test(doc.body.textContent || '');
+      if (!hasLongDescriptionReference && images.length > 1) {
+        warns.push('Consider adding long-description context for complex or data-dense visuals.');
       }
 
-      if (values.longDescriptionLocation !== 'nodesc' && !values.longDescriptionText) {
-        blocks.push('Long description text is required when a long description location is selected.');
-      }
-
-      if (values.longDescriptionLocation === 'nodesc' && values.longDescriptionText) {
-        confirms.push('Long description text is present but location is set to “No long description”.');
-      }
-
-      if (values.captionEnabled && !values.captionText) {
-        warns.push('Caption is enabled but caption text is empty.');
-      }
-
-      return { blocks, warns, confirms };
+      return { blocks, warns };
     }
 
     function renderImageResults(result) {
       const resultsEl = document.getElementById('image-results');
 
-      if (!result.blocks.length && !result.warns.length && !result.confirms.length) {
-        resultsEl.innerHTML = '<div class="ok">Validation: PASS. Image metadata matches accessibility-first defaults.</div>';
+      if (!result.blocks.length && !result.warns.length) {
+        resultsEl.innerHTML = '<div class="ok">Audit: PASS. Image content satisfies current accessibility checks.</div>';
         return;
       }
 
@@ -402,36 +365,7 @@
         sections.push(`<div class="warn"><strong>Warnings</strong><ul>${result.warns.map((item) => `<li>${item}</li>`).join('')}</ul></div>`);
       }
 
-      if (result.confirms.length) {
-        sections.push(`<div class="warn"><strong>Confirmations</strong><ul>${result.confirms.map((item) => `<li>${item}</li>`).join('')}</ul></div>`);
-      }
-
       resultsEl.innerHTML = sections.join('');
-    }
-
-    function insertImageSnippet(editor, values) {
-      const altValue = values.decorative ? '' : values.alt.replace(/"/g, '&quot;');
-      const captionMarkup = values.captionEnabled && values.captionText
-        ? `<figcaption>${values.captionText}</figcaption>`
-        : '';
-
-      const figure = `<figure class="a11yfirst-image"><img src="${values.src}" alt="${altValue}">${captionMarkup}</figure>`;
-      const longDesc = values.longDescriptionText
-        ? `<p class="a11yfirst-longdesc">Long description: ${values.longDescriptionText}</p>`
-        : '';
-
-      let html = figure;
-
-      if (values.longDescriptionLocation === 'before') {
-        html = `${longDesc}${figure}`;
-      } else if (values.longDescriptionLocation === 'after') {
-        html = `${figure}${longDesc}`;
-      } else if (values.longDescriptionLocation === 'both') {
-        html = `${longDesc}${figure}${longDesc}`;
-      }
-
-      const nextData = `${editor.getData()}<p></p>${html}`;
-      editor.setData(nextData);
     }
 
     ClassicEditor.create(document.querySelector('#editor-standard'), {
@@ -508,12 +442,13 @@
         const normalizedData = normalizeStrictHeadings(editor.getData());
         if (normalizedData !== editor.getData()) {
           isNormalizingStrictHeadings = true;
-          editor.setData(normalizedData).then(() => {
+          editor.setData(normalizedData);
+          setTimeout(() => {
             isNormalizingStrictHeadings = false;
             setStatus('strict', 'Strict mode normalized disallowed heading levels (no H1, no skipped levels).');
             renderStrictStatus(editor);
             updateStrictDropdownAvailability(editor);
-          });
+          }, 0);
           return;
         }
 
@@ -531,38 +466,30 @@
     });
 
     ClassicEditor.create(document.querySelector('#editor-image'), {
-      toolbar: ['heading', '|', 'bold', 'italic', 'link', 'insertTable', '|', 'undo', 'redo']
+      toolbar: ['insertImage', '|', 'imageTextAlternative', 'toggleImageCaption', 'linkImage', '|', 'undo', 'redo'],
+      image: {
+        toolbar: ['imageTextAlternative', 'toggleImageCaption', 'linkImage']
+      }
     }).then((imageEditor) => {
       window.imageEditorInstance = imageEditor;
-      setStatus('image', 'Image-focused mode ready. WP05 prototype: alt/decorative/long-description validation is active.');
+      setStatus('image', 'Image-focused mode ready. Use native CKEditor5 image tools, then run A11yFirst audit.');
 
-      const validateButton = document.getElementById('image-validate');
-      const insertButton = document.getElementById('image-insert');
+      const auditButton = document.getElementById('image-audit');
 
-      validateButton.addEventListener('click', () => {
-        const values = getImageFormValues();
-        const result = evaluateImageMetadata(values);
+      auditButton.addEventListener('click', () => {
+        const result = evaluateImageData(imageEditor.getData());
         renderImageResults(result);
 
         if (!result.blocks.length) {
-          setStatus('image', 'Validation complete: no blocking issues.');
+          setStatus('image', 'Image audit complete: no blocking issues.');
         } else {
-          setStatus('image', `Validation blocked: ${result.blocks.length} issue(s) must be fixed.`);
+          setStatus('image', `Image audit blocked: ${result.blocks.length} issue(s) detected.`);
         }
       });
 
-      insertButton.addEventListener('click', () => {
-        const values = getImageFormValues();
-        const result = evaluateImageMetadata(values);
+      imageEditor.model.document.on('change:data', () => {
+        const result = evaluateImageData(imageEditor.getData());
         renderImageResults(result);
-
-        if (result.blocks.length) {
-          setStatus('image', 'Insert blocked until image metadata issues are resolved.');
-          return;
-        }
-
-        insertImageSnippet(imageEditor, values);
-        setStatus('image', 'Accessible image snippet inserted into Demo 3 editor.');
       });
     });
   </script>
