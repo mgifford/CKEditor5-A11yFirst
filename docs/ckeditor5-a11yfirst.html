@@ -63,10 +63,12 @@
       <h2>Demo 3: Image-Focused Mode</h2>
       <p class="image-guidance">
         Uses CKEditor5 native image tools (insert image, text alternative, caption, and image styles),
-        then applies A11yFirst audit checks inspired by We4Authors and ATAG guidance.
+        then runs external checker audits (axe-core).
+        Integration targets: <a href="https://sa11y.netlify.app/" target="_blank" rel="noreferrer">sa11y</a>
+        and <a href="https://www.drupal.org/project/editoria11y" target="_blank" rel="noreferrer">editoria11y (Drupal)</a>.
       </p>
       <div class="image-actions">
-        <button id="image-audit" type="button">Run image accessibility audit</button>
+        <button id="image-audit" type="button">Run axe-core image audit</button>
       </div>
       <div id="editor-image" class="editor">
         <p>Select an image and use the CKEditor5 image toolbar controls to set text alternatives and caption.</p>
@@ -81,6 +83,7 @@
   </div>
 
   <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.11.1/axe.min.js"></script>
   <script>
     const status = {
       standard: document.getElementById('status-standard'),
@@ -293,79 +296,62 @@
       });
     }
 
-    function isFilenameLikeAlt(altText) {
-      return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(altText) || /^(img|image|photo|picture)[-_ ]?\d+/i.test(altText);
-    }
-
-    function evaluateImageData(html) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
-      const images = Array.from(doc.querySelectorAll('img'));
-
-      const blocks = [];
-      const warns = [];
-
-      if (!images.length) {
-        warns.push('No images found in content. Insert an image to test image-focused behavior.');
-      }
-
-      images.forEach((image, index) => {
-        const alt = (image.getAttribute('alt') || '').trim();
-        const figure = image.closest('figure');
-        const captionText = figure?.querySelector('figcaption')?.textContent?.trim() || '';
-
-        if (!image.getAttribute('src')) {
-          blocks.push(`Image ${index + 1}: missing src.`);
-        }
-
-        if (!alt) {
-          warns.push(`Image ${index + 1}: missing alt text (may be decorative only if intentionally empty).`);
-        } else {
-          if (alt.length > 150) {
-            warns.push(`Image ${index + 1}: alt text is long; consider shortening.`);
-          }
-
-          if (/^(image|photo|picture|graphic)\s+of\b/i.test(alt)) {
-            warns.push(`Image ${index + 1}: avoid starting alt with “image/photo/picture of”.`);
-          }
-
-          if (isFilenameLikeAlt(alt)) {
-            blocks.push(`Image ${index + 1}: alt text looks like a filename or placeholder.`);
-          }
-        }
-
-        if (figure && !captionText) {
-          warns.push(`Image ${index + 1}: figure is present but caption is empty.`);
-        }
-      });
-
-      const hasLongDescriptionReference = /long description/i.test(doc.body.textContent || '');
-      if (!hasLongDescriptionReference && images.length > 1) {
-        warns.push('Consider adding long-description context for complex or data-dense visuals.');
-      }
-
-      return { blocks, warns };
-    }
-
     function renderImageResults(result) {
       const resultsEl = document.getElementById('image-results');
 
-      if (!result.blocks.length && !result.warns.length) {
-        resultsEl.innerHTML = '<div class="ok">Audit: PASS. Image content satisfies current accessibility checks.</div>';
+      if (!result.blocking.length && !result.nonBlocking.length) {
+        resultsEl.innerHTML = '<div class="ok">axe-core audit: PASS (0 blocking, 0 non-blocking issues in image panel).</div>';
         return;
       }
 
       const sections = [];
 
-      if (result.blocks.length) {
-        sections.push(`<div class="block"><strong>Blocking issues</strong><ul>${result.blocks.map((item) => `<li>${item}</li>`).join('')}</ul></div>`);
+      sections.push(`<div class="${result.blocking.length ? 'block' : 'ok'}"><strong>axe-core audit</strong>: ${result.blocking.length} blocking, ${result.nonBlocking.length} non-blocking issue(s).</div>`);
+
+      if (result.blocking.length) {
+        sections.push(`<div class="block"><strong>Blocking issues</strong><ul>${result.blocking.map((item) => `<li>${item}</li>`).join('')}</ul></div>`);
       }
 
-      if (result.warns.length) {
-        sections.push(`<div class="warn"><strong>Warnings</strong><ul>${result.warns.map((item) => `<li>${item}</li>`).join('')}</ul></div>`);
+      if (result.nonBlocking.length) {
+        sections.push(`<div class="warn"><strong>Non-blocking issues</strong><ul>${result.nonBlocking.map((item) => `<li>${item}</li>`).join('')}</ul></div>`);
       }
 
       resultsEl.innerHTML = sections.join('');
+    }
+
+    async function runImageAxeAudit() {
+      if (!window.axe) {
+        return {
+          blocking: ['axe-core is not available in this environment.'],
+          nonBlocking: []
+        };
+      }
+
+      const panel = document.querySelector('#editor-image')?.closest('section.panel');
+      if (!panel) {
+        return {
+          blocking: ['Image panel not found for audit scope.'],
+          nonBlocking: []
+        };
+      }
+
+      const results = await window.axe.run(panel, {
+        runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] }
+      });
+
+      const blocking = [];
+      const nonBlocking = [];
+
+      results.violations.forEach((violation) => {
+        const summary = `${violation.id}: ${violation.help}`;
+        if (violation.impact === 'critical' || violation.impact === 'serious') {
+          blocking.push(summary);
+        } else {
+          nonBlocking.push(summary);
+        }
+      });
+
+      return { blocking, nonBlocking };
     }
 
     ClassicEditor.create(document.querySelector('#editor-standard'), {
@@ -476,20 +462,15 @@
 
       const auditButton = document.getElementById('image-audit');
 
-      auditButton.addEventListener('click', () => {
-        const result = evaluateImageData(imageEditor.getData());
+      auditButton.addEventListener('click', async () => {
+        const result = await runImageAxeAudit();
         renderImageResults(result);
 
-        if (!result.blocks.length) {
-          setStatus('image', 'Image audit complete: no blocking issues.');
+        if (!result.blocking.length) {
+          setStatus('image', 'axe-core audit complete: no blocking issues.');
         } else {
-          setStatus('image', `Image audit blocked: ${result.blocks.length} issue(s) detected.`);
+          setStatus('image', `axe-core audit blocked: ${result.blocking.length} issue(s) detected.`);
         }
-      });
-
-      imageEditor.model.document.on('change:data', () => {
-        const result = evaluateImageData(imageEditor.getData());
-        renderImageResults(result);
       });
     });
   </script>

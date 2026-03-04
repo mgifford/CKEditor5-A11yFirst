@@ -91,7 +91,7 @@ test.describe('CKEditor5 demo site', () => {
     expect(blocking, JSON.stringify(blocking, null, 2)).toHaveLength(0);
   });
 
-  test('image-focused mode runs native-image audit checks', async ({ page }) => {
+  test('image-focused mode runs axe-core audit checks', async ({ page }) => {
     await page.goto('/ckeditor5-a11yfirst.html');
 
     const imagePanel = page
@@ -100,7 +100,7 @@ test.describe('CKEditor5 demo site', () => {
 
     await imagePanel.locator('#image-audit').click();
 
-    await expect(imagePanel.locator('#image-results')).toContainText('Warnings');
-    await expect(page.locator('#status-image')).toContainText('Image audit complete');
+    await expect(imagePanel.locator('#image-results')).toContainText('axe-core audit');
+    await expect(page.locator('#status-image')).toContainText('axe-core audit');
   });
 });
