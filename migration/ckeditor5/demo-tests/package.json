@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "test:e2e": "playwright test",
+    "test:e2e:chromium": "PLAYWRIGHT_BROWSER=chromium playwright test",
+    "test:e2e:firefox": "PLAYWRIGHT_BROWSER=firefox playwright test",
     "test:e2e:headed": "playwright test --headed",
+    "pw:install:chromium": "playwright install --with-deps chromium",
+    "pw:install:firefox": "playwright install --with-deps firefox",
     "serve:docs": "http-server ../../../docs -p 4173 -c-1"
   },
   "devDependencies": {

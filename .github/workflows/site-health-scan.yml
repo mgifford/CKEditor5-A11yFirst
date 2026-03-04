@@ -1,0 +1,21 @@
+name: Site Health Accessibility Scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 8 * * 1'
+
+jobs:
+  accessibility-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run GitHub accessibility scanner
+        uses: github/accessibility-scanner@v2
+        with:
+          urls: |
+            https://mgifford.github.io/plugins-dev/
+            https://mgifford.github.io/plugins-dev/ckeditor5-a11yfirst.html
+          repository: ${{ github.repository }}
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: plugins-dev-site-health
+          skip_copilot_assignment: true

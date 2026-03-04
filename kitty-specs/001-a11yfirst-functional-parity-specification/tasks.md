@@ -158,6 +158,8 @@
 ### Implementation Notes
 - Preserve current phrase/pattern checks, length warning behavior, and user confirmation dialogs.
 - Ensure output-equivalence checks cover informative and decorative image branches.
+- Defer advanced long-description linkage enhancements (for example explicit `aria-describedby` wiring) until after higher-priority core parity elements are completed; current parity accepts adjacency/proximity semantics.
+- Use University of Illinois A11yFirst Images documentation as explicit acceptance-scenario input for WP05 test coverage, while preserving repository runtime behavior as canonical if differences are found.
 
 ### Parallel Opportunities
 - T030 can start in parallel with T031 after T025–T029 behaviors are stabilized.
@@ -226,6 +228,8 @@
 ### Implementation Notes
 - Treat checker as first-class module, not auxiliary dependency.
 - Ensure rule-category compatibility with parity-run orchestration contract.
+- Prioritize external-checker integration using Sa11y (with axe-core custom checks support) for single-page deployment compatibility; do not add pa11y to the core migration path.
+- Align delivery with GitHub Pages + Actions architecture: lightweight in-page checker UX plus CI axe validation gates.
 
 ### Parallel Opportunities
 - T043 can run in parallel with T040/T041 once baseline inventory T039 is complete.
@@ -246,7 +250,7 @@
 **Independent Test**: End-to-end parity pipeline executes across all modules, gates enforce prerequisites, and readiness report supports phased production enablement.  
 **Prompt**: `tasks/WP08-e2e-parity-gates-and-readiness.md`  
 **Estimated prompt size**: ~370 lines
-**Requirement Refs**: FR-022, FR-023, FR-024, FR-027, FR-028, FR-029
+**Requirement Refs**: FR-022, FR-023, FR-024, FR-027, FR-028, FR-029, FR-031, FR-032
 
 ### Included Subtasks
 - [ ] T046 Implement baseline conflict resolver with explicit local-runtime-wins policy.
@@ -256,10 +260,14 @@
 - [ ] T050 Execute documentation coverage audit and unresolved-gap report.
 - [ ] T051 Execute quickstart validation dry run and rollout checklist.
 - [ ] T052 Produce migration readiness report and go/no-go criteria package.
+- [ ] T053 Produce CKEditor4-to-CKEditor5 configuration mapping guide (toolbar, heading constraints, language, style options, feature flags).
+- [ ] T054 Produce CKEditor5 installation guide replacing CKEditor4 builder/manual plugin-copy flows with package/build integration steps.
+- [ ] T055 Add configuration/installation verification checklist and CI-aligned validation notes.
 
 ### Implementation Notes
 - Ensure orchestration supports phased module enablement and rollback safeguards.
 - Readiness report must include unresolved gaps and baseline conflict outcomes.
+- Include explicit traceability to wiki sources: Configuring CKEditor, Using CKEditor Builder, and Installing A11yFirst Plugins.
 
 ### Parallel Opportunities
 - T050 can run in parallel with T049 after core orchestrator logic exists.
@@ -341,3 +349,6 @@
 | T050 | Documentation coverage audit | WP08 | P2 | Yes |
 | T051 | Quickstart dry-run validation | WP08 | P2 | No |
 | T052 | Migration readiness report | WP08 | P2 | No |
+| T053 | CKEditor4→CKEditor5 configuration mapping guide | WP08 | P2 | Yes |
+| T054 | CKEditor5 installation migration guide | WP08 | P2 | Yes |
+| T055 | Config/install verification checklist | WP08 | P2 | No |
