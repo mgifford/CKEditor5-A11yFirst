@@ -1,0 +1,51 @@
+body {
+  margin: 0;
+  background: #f8fafc;
+  color: #111827;
+  font-family: "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+}
+
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+.doc-header {
+  margin-bottom: 1rem;
+}
+
+.doc-header a {
+  color: #0b57d0;
+  text-decoration: none;
+}
+
+.doc-header a:hover {
+  text-decoration: underline;
+}
+
+.doc-shell {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+}
+
+.markdown-body table {
+  display: block;
+  overflow-x: auto;
+}
+
+.render-error {
+  border: 1px solid #b91c1c;
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+}
