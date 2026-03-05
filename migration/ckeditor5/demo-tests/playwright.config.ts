@@ -18,7 +18,8 @@ export default defineConfig({
   retries: 1,
   use: {
     browserName,
-    baseURL: process.env.DEMO_BASE_URL || 'http://127.0.0.1:4173'
+    baseURL: process.env.DEMO_BASE_URL || 'http://127.0.0.1:4173',
+    actionTimeout: 30000
   },
   webServer: process.env.DEMO_BASE_URL
     ? undefined

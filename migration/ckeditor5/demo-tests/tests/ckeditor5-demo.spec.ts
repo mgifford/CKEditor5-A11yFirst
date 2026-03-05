@@ -1,6 +1,28 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
+/**
+ * Navigate to the CKEditor5 demo page and wait for all 9 editors to fully
+ * initialize before returning.  Without this wait, tests that interact with
+ * editor-generated DOM (toolbars, editables, panel buttons) race against
+ * the async ClassicEditor.create() calls and fail in CI.
+ */
+async function gotoDemo(page: Page): Promise<void> {
+  await page.goto('/ckeditor5-a11yfirst.html');
+  const timeout = 30000;
+  await Promise.all([
+    expect(page.locator('#status-standard')).not.toBeEmpty({ timeout }),
+    expect(page.locator('#status-strict')).not.toBeEmpty({ timeout }),
+    expect(page.locator('#status-image')).not.toBeEmpty({ timeout }),
+    expect(page.locator('#status-link')).not.toBeEmpty({ timeout }),
+    expect(page.locator('#status-style')).not.toBeEmpty({ timeout }),
+    expect(page.locator('#status-list')).not.toBeEmpty({ timeout }),
+    expect(page.locator('#status-format')).not.toBeEmpty({ timeout }),
+    expect(page.locator('#status-table')).not.toBeEmpty({ timeout }),
+    expect(page.locator('#status-checker')).not.toBeEmpty({ timeout }),
+  ]);
+}
 
 const axeSource = readFileSync(
   join(process.cwd(), 'node_modules', 'axe-core', 'axe.min.js'),
@@ -22,7 +44,7 @@ test.describe('CKEditor5 demo site', () => {
       }
     });
 
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     await expect(page.locator('#status-standard')).toContainText('Editor ready');
     await expect(page.locator('#status-strict')).toContainText('Strict mode ready');
@@ -55,7 +77,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('strict mode heading ladder behavior is exposed in selector', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const strictPanel = page
       .locator('section.panel')
@@ -87,7 +109,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('strict mode normalizes disallowed H1 headings', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     await page.evaluate(() => {
       const editor = (window as unknown as { strictEditorInstance?: { setData: (html: string) => void } }).strictEditorInstance;
@@ -106,7 +128,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('axe check has no serious or critical issues on demo page shell', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     await page.evaluate(axeSource);
 
@@ -124,7 +146,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('image-focused mode runs axe-core audit checks', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const imagePanel = page
       .locator('section.panel')
@@ -140,7 +162,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('image-focused mode supports URL insert and accessibility metadata', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const imagePanel = page
       .locator('section.panel')
@@ -192,7 +214,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('image properties modal auto-closes when image selection is cleared', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const imagePanel = page
       .locator('section.panel')
@@ -218,7 +240,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('image properties modal opens from right-click image context action', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const imagePanel = page
       .locator('section.panel')
@@ -239,7 +261,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('link-focused mode opens properties from toolbar and validates display text', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const linkPanel = page
       .locator('section.panel')
@@ -269,7 +291,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('link-focused mode opens properties from right-click link context action', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const linkPanel = page
       .locator('section.panel')
@@ -289,7 +311,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('link-focused anchor mode continues when no anchors exist (with warnings)', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const dialogMessages: string[] = [];
     page.on('dialog', async (dialog) => {
@@ -325,13 +347,16 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('help system opens from Demo 5 panel and from link Help button', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
-    const helpPanel = page
+    // Open A11yFirst Help via the toolbar button in Demo 1; this dispatches
+    // the a11yFirstHelpRequested event which opens the modal with the
+    // Getting Started topic.
+    const demo1Panel = page
       .locator('section.panel')
-      .filter({ has: page.getByRole('heading', { name: 'Demo 5: A11yFirst Help System' }) });
+      .filter({ has: page.getByRole('heading', { name: 'Demo 1: Standard A11yFirst Configuration' }) });
 
-    await helpPanel.locator('#a11yhelp-open').click();
+    await demo1Panel.locator('.ck-toolbar').getByLabel('A11yFirst Help').click();
     await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
     await expect(page.locator('#a11yhelp-content')).toContainText('Getting Started');
     await page.locator('#a11yhelp-close').click();
@@ -350,7 +375,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('character style mode applies and removes inline styles', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const stylePanel = page
       .locator('section.panel')
@@ -403,7 +428,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('character style mode opens A11yFirst Help topic', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const stylePanel = page
       .locator('section.panel')
@@ -415,7 +440,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('A11yFirst Help button appears in all editor toolbars', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     // Check Demo 1 (Standard)
     const demo1Panel = page
@@ -454,7 +479,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('A11yFirst Help toolbar button opens Help modal', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const demo1Panel = page
       .locator('section.panel')
@@ -469,7 +494,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('Help modal can be closed and reopened', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const demo2Panel = page
       .locator('section.panel')
@@ -491,7 +516,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('Help modal closes on Escape key', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const demo3Panel = page
       .locator('section.panel')
@@ -507,7 +532,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('list mode validates list structure', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const listPanel = page
       .locator('section.panel')
@@ -523,7 +548,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('list mode detects nested lists', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const listPanel = page
       .locator('section.panel')
@@ -536,7 +561,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('list mode opens A11yFirst Help for lists', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const listPanel = page
       .locator('section.panel')
@@ -548,7 +573,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('list mode has toolbar with list controls', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const listPanel = page
       .locator('section.panel')
@@ -563,7 +588,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('list validation status updates correctly', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const validateButton = page.locator('#list-validate');
     await validateButton.click();
@@ -573,7 +598,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('paragraph format mode validates semantic blocks', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const formatPanel = page
       .locator('section.panel')
@@ -588,7 +613,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('paragraph format mode detects blockquote with attribution', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const formatPanel = page
       .locator('section.panel')
@@ -601,7 +626,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('paragraph format mode detects code in pre blocks', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const formatPanel = page
       .locator('section.panel')
@@ -614,7 +639,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('paragraph format mode opens A11yFirst Help for formats', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const formatPanel = page
       .locator('section.panel')
@@ -626,7 +651,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('paragraph format mode has toolbar with blockquote', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const formatPanel = page
       .locator('section.panel')
@@ -640,7 +665,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('paragraph format validation status updates correctly', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const validateButton = page.locator('#format-validate');
     await validateButton.click();
@@ -650,7 +675,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('table mode validates captions and headers', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const tablePanel = page
       .locator('section.panel')
@@ -665,7 +690,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('table mode opens A11yFirst Help for tables', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const tablePanel = page
       .locator('section.panel')
@@ -677,7 +702,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('table mode has toolbar insert table and help controls', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const tablePanel = page
       .locator('section.panel')
@@ -689,7 +714,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('checker summary mode runs and reports status', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const checkerPanel = page
       .locator('section.panel')
@@ -701,7 +726,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('checker summary catches non-descriptive link text (parity hardening)', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     await page.evaluate(() => {
       const editor = (window as unknown as { checkerEditorInstance?: { setData: (html: string) => void } }).checkerEditorInstance;
@@ -721,7 +746,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('checker summary catches table without headers (parity hardening)', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     await page.evaluate(() => {
       const editor = (window as unknown as { checkerEditorInstance?: { setData: (html: string) => void } }).checkerEditorInstance;
@@ -741,7 +766,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('checker summary help opens dedicated topic', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const checkerPanel = page
       .locator('section.panel')
@@ -753,7 +778,7 @@ test.describe('CKEditor5 demo site', () => {
   });
 
   test('checker summary can be cleared', async ({ page }) => {
-    await page.goto('/ckeditor5-a11yfirst.html');
+    await gotoDemo(page);
 
     const checkerPanel = page
       .locator('section.panel')

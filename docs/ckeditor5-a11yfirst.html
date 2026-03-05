@@ -2054,7 +2054,13 @@
           { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
         ]
       }
-    }).then(() => setStatus('standard', 'Editor ready.'));
+    }).then((standardEditor) => {
+      const standardEditable = standardEditor.ui.view.editable.element;
+      if (standardEditable) {
+        standardEditable.setAttribute('aria-labelledby', 'demo1-heading');
+      }
+      setStatus('standard', 'Editor ready.');
+    });
 
     ClassicEditor.create(document.querySelector('#editor-strict'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
@@ -2072,6 +2078,11 @@
     }).then((editor) => {
       let isNormalizingStrictHeadings = false;
       window.strictEditorInstance = editor;
+
+      const strictEditable = editor.ui.view.editable.element;
+      if (strictEditable) {
+        strictEditable.setAttribute('aria-labelledby', 'demo2-heading');
+      }
 
       const headingCommand = editor.commands.get('heading');
       const originalExecute = headingCommand.execute.bind(headingCommand);
@@ -2173,6 +2184,12 @@
       }
     }).then((imageEditor) => {
       window.imageEditorInstance = imageEditor;
+
+      const imageEditable = imageEditor.ui.view.editable.element;
+      if (imageEditable) {
+        imageEditable.setAttribute('aria-labelledby', 'demo3-heading');
+      }
+
       setStatus('image', 'Image-focused mode ready. Select an image to reveal A11yFirst Image Properties in the editor toolbar.');
 
       const auditButton = document.getElementById('image-audit');
@@ -2303,6 +2320,12 @@
       extraPlugins: [A11yFirst.Link.plugin, A11yFirst.HelpButton.plugin]
     }).then((linkEditor) => {
       window.linkEditorInstance = linkEditor;
+
+      const linkEditable = linkEditor.ui.view.editable.element;
+      if (linkEditable) {
+        linkEditable.setAttribute('aria-labelledby', 'demo4-heading');
+      }
+
       setStatus('link', 'Link-focused mode ready. Select a link to reveal Edit Link in the toolbar or right-click menu.');
 
       const controls = getLinkPropertiesElements();
@@ -2420,6 +2443,12 @@
       extraPlugins: [A11yFirst.CharacterStyles.plugin, A11yFirst.HelpButton.plugin]
     }).then((styleEditor) => {
       window.styleEditorInstance = styleEditor;
+
+      const styleEditable = styleEditor.ui.view.editable.element;
+      if (styleEditable) {
+        styleEditable.setAttribute('aria-labelledby', 'demo5-heading');
+      }
+
       const controls = getCharacterStyleElements();
       const helpControls = getHelpElements();
 
@@ -2443,6 +2472,12 @@
       }
     }).then((listEditor) => {
       window.listEditorInstance = listEditor;
+
+      const listEditable = listEditor.ui.view.editable.element;
+      if (listEditable) {
+        listEditable.setAttribute('aria-labelledby', 'demo6-heading');
+      }
+
       const helpControls = getHelpElements();
 
       setStatus('list', 'List mode ready. Create ordered and unordered lists with proper structure.');
@@ -2474,6 +2509,12 @@
       }
     }).then((formatEditor) => {
       window.formatEditorInstance = formatEditor;
+
+      const formatEditable = formatEditor.ui.view.editable.element;
+      if (formatEditable) {
+        formatEditable.setAttribute('aria-labelledby', 'demo7-heading');
+      }
+
       const helpControls = getHelpElements();
 
       setStatus('format', 'Paragraph Format mode ready. Use semantic formats for quoted content, code, and addresses.');
@@ -2500,6 +2541,12 @@
       }
     }).then((tableEditor) => {
       window.tableEditorInstance = tableEditor;
+
+      const tableEditable = tableEditor.ui.view.editable.element;
+      if (tableEditable) {
+        tableEditable.setAttribute('aria-labelledby', 'demo8-heading');
+      }
+
       const helpControls = getHelpElements();
 
       setStatus('table', 'Table mode ready. Add captions and headers to improve data table accessibility.');
@@ -2594,6 +2641,12 @@
       }
     }).then((checkerEditor) => {
       window.checkerEditorInstance = checkerEditor;
+
+      const checkerEditable = checkerEditor.ui.view.editable.element;
+      if (checkerEditable) {
+        checkerEditable.setAttribute('aria-labelledby', 'demo9-heading');
+      }
+
       const helpControls = getHelpElements();
       const runButton = document.getElementById('checker-run');
       const clearButton = document.getElementById('checker-clear');
