@@ -343,8 +343,9 @@
         advisory: []
       };
       
-      // Aggregate findings from all validators
-      Object.values(findings).forEach(categoryFindings => {
+      // Aggregate findings from all validators (skip 'checker' which stores a summary object, not an array)
+      Object.entries(findings).forEach(([category, categoryFindings]) => {
+        if (category === 'checker' || !Array.isArray(categoryFindings)) return;
         categoryFindings.forEach(finding => {
           if (finding.level === 'error') {
             summary.blocking.push(finding.message);
