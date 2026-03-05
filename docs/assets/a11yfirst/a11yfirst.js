@@ -367,10 +367,30 @@
     editor.ui.componentFactory.add('a11yFirstHelp', (locale) => {
       try {
         const CK5 = global.CKEDITOR5 || {};
-        const ButtonViewCtor =
+        let ButtonViewCtor =
           (CK5.ui && CK5.ui.ButtonView) ||
           (CK5.ui && CK5.ui.button && CK5.ui.button.ButtonView) ||
           null;
+
+        // Fallback: extract ButtonView constructor from an existing toolbar component.
+        // This handles classic CKEditor5 builds that do not expose a CKEDITOR5 global.
+        if (!ButtonViewCtor) {
+          const fallbackNames = ['undo', 'redo', 'bold', 'italic'];
+          for (const name of fallbackNames) {
+            try {
+              const sample = editor.ui.componentFactory.create(name);
+              if (sample && typeof sample.constructor === 'function' && sample.constructor !== Object) {
+                ButtonViewCtor = sample.constructor;
+                if (typeof sample.destroy === 'function') {
+                  sample.destroy();
+                }
+                break;
+              }
+            } catch (_e) {
+              // try next fallback
+            }
+          }
+        }
 
         if (!ButtonViewCtor) {
           console.warn('A11yFirst Help: ButtonView not available in this CKEditor5 build. Help button will not be displayed.');

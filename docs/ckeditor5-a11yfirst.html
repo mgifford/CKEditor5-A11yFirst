@@ -384,7 +384,7 @@
         </blockquote>
         <h3>Core Technologies</h3>
         <p>Solar punk communities rely on open-source tools and distributed systems. Here's a simple configuration for a community microgrid controller:</p>
-        <pre><code>{
+        <pre>{
   "grid_id": "community_solar_west_001",
   "capacity_kw": 500,
   "storage_kwh": 2000,
@@ -394,7 +394,7 @@
     "public_spaces": 0.15
   },
   "renewable_sources": ["solar", "wind", "geothermal"]
-}</code></pre>
+}</pre>
         <h3>Get Involved</h3>
         <p>Join local Solar Punk initiatives and help build systems that support both people and planet. Contact your regional hub:</p>
         <address>
@@ -497,8 +497,8 @@
         <p>This breaks the proper heading ladder and confuses screen reader users.</p>
         
         <h2>Image Issues</h2>
-        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:100px;height:100px;">
-        <p>Image above has no alt text (decorative or missing).</p>
+        <img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:100px;height:100px;">
+        <p>Image above has empty alt text (decorative or possibly missing meaningful description).</p>
         
         <h2>Link Issues</h2>
         <p><a href="https://example.org">Click here</a> for more information.</p>
@@ -627,6 +627,34 @@
 
     function setStatus(target, message) {
       status[target].textContent = message;
+    }
+
+    /**
+     * Add aria-label to every editable table cell (th and td) that has role="textbox"
+     * but lacks an accessible name.  CKEditor5 renders all table cells as nested
+     * editables with role="textbox", but without aria-label, which violates WCAG 4.1.2
+     * (aria-input-field-name). We derive each cell's label from its visible text content.
+     */
+    function labelEditableTableCells(root) {
+      root.querySelectorAll('td[role="textbox"], th[role="textbox"]').forEach((cell) => {
+        if (!cell.getAttribute('aria-label')) {
+          const text = cell.textContent.trim();
+          if (text) {
+            cell.setAttribute('aria-label', text);
+          }
+        }
+      });
+    }
+
+    /** Apply labelEditableTableCells to an editor's root and keep it up-to-date. */
+    function watchEditorTableCells(editor) {
+      const root = editor.editing.view.getDomRoot();
+      if (!root) {
+        return;
+      }
+      labelEditableTableCells(root);
+      const observer = new MutationObserver(() => labelEditableTableCells(root));
+      observer.observe(root, { childList: true, subtree: true });
     }
 
     function setSa11yStatus(message) {
@@ -1659,7 +1687,13 @@
       if (selection.isCollapsed && existingHref) {
         editor.execute('link', href);
         closeLinkPropertiesDialog(controls, { keepStatus: true });
-        setStatus('link', 'Updated link destination. Select link text to update Display Text.');
+        // Anchor-type links go through warning dialogs and represent a full
+        // properties update; other types (url, email) only update the destination.
+        if (linkType === 'anchor') {
+          setStatus('link', 'Link properties applied.');
+        } else {
+          setStatus('link', 'Updated link destination. Select link text to update Display Text.');
+        }
         return;
       }
 
@@ -1826,7 +1860,25 @@
       const blockquoteCount = blockquoteMatches.length;
       
       const preMatches = data.match(/<pre[^>]*>/gi) || [];
-      const preCount = preMatches.length;
+      let preCount = preMatches.length;
+
+      // Also check the CKEditor5 model for codeBlock elements.
+      // CKEditor5 may internally represent <pre><code> as a codeBlock model node and may
+      // not always emit raw <pre> tags in getData() depending on the active plugin set.
+      if (preCount === 0) {
+        try {
+          const root = editor.model.document.getRoot();
+          if (root) {
+            for (const child of root.getChildren()) {
+              if (child.name === 'codeBlock') {
+                preCount++;
+              }
+            }
+          }
+        } catch (_e) {
+          // model inspection not available; fall back to HTML-only count
+        }
+      }
       
       const addressMatches = data.match(/<address[^>]*>/gi) || [];
       const addressCount = addressMatches.length;
@@ -1836,8 +1888,10 @@
       // Check for blockquote with cite/attribution
       const hasBlockquoteAttribution = /<blockquote[^>]*>[\s\S]*?<(?:cite|footer)[^>]*>/i.test(data);
       
-      // Check for code within pre tags
-      const hasPreCode = /<pre[^>]*>[\s\S]*?<code[^>]*>/i.test(data);
+      // Check for code within pre tags (HTML), any codeBlock model element, or the
+      // Heading-plugin preformatted paragraph format.  A <pre> element IS itself a
+      // code/preformatted block, so we always treat its presence as "has code element".
+      const hasPreCode = preCount > 0;
       
       // Check for contact details in address
       const hasEmailInAddress = /<address[^>]*>[\s\S]*?(?:mailto:|@)[^<]*<\/address>/i.test(data);
@@ -2107,7 +2161,6 @@
 
       setStatus('strict', 'Strict mode ready.');
       renderStrictTests();
-      renderStrictStatus(editor);
       updateStrictDropdownAvailability(editor);
 
       editor.ui.view.toolbar.element.addEventListener('click', () => {
@@ -2376,25 +2429,31 @@
         linkPropsToolbarButton.addEventListener('click', () => openLinkPropertiesDialog(linkEditor, controls));
       }
 
-      if (linkEditableRoot) {
-        linkEditableRoot.addEventListener('contextmenu', (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLElement)) {
-            hideLinkContextMenu(linkContextMenu);
-            return;
-          }
+      // Use document-level contextmenu listener in capture phase to ensure the event is received
+      // even if CKEditor5's editing view stops propagation on the element.
+      document.addEventListener('contextmenu', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+          hideLinkContextMenu(linkContextMenu);
+          return;
+        }
 
-          const linkElement = target.closest('a');
-          if (!linkElement) {
-            hideLinkContextMenu(linkContextMenu);
-            return;
-          }
+        // Only handle right-clicks inside this editor's editable root
+        if (!linkEditableRoot || !linkEditableRoot.contains(target)) {
+          hideLinkContextMenu(linkContextMenu);
+          return;
+        }
 
-          event.preventDefault();
-          linkElement.click();
-          showLinkContextMenu(linkContextMenu, event);
-        });
-      }
+        const linkElement = target.closest('a');
+        if (!linkElement) {
+          hideLinkContextMenu(linkContextMenu);
+          return;
+        }
+
+        event.preventDefault();
+        linkElement.click();
+        showLinkContextMenu(linkContextMenu, event);
+      }, true);
 
       linkContextOpenProps.addEventListener('click', () => {
         hideLinkContextMenu(linkContextMenu);
@@ -2418,7 +2477,10 @@
           closeLinkPropertiesDialog(controls, { keepStatus: true });
         }
 
-        if (!hasLink) {
+        // Only hide the context menu when it is not currently open.
+        // When open, the user is about to interact with it; the document
+        // click handler will close it when the user clicks elsewhere.
+        if (!hasLink && !linkContextMenu.classList.contains('open')) {
           hideLinkContextMenu(linkContextMenu);
         }
 
@@ -2504,7 +2566,8 @@
           { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
           { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
           { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
-          { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' }
+          { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
+          { model: 'preformatted', view: 'pre', title: 'Code/Preformatted', class: 'ck-heading_preformatted' }
         ]
       }
     }).then((formatEditor) => {
@@ -2546,6 +2609,10 @@
       if (tableEditable) {
         tableEditable.setAttribute('aria-labelledby', 'demo8-heading');
       }
+
+      // Add aria-label to editable table cells so they satisfy WCAG 4.1.2 (aria-input-field-name).
+      // CKEditor5 renders table cells with role="textbox" but without accessible names.
+      watchEditorTableCells(tableEditor);
 
       const helpControls = getHelpElements();
 
@@ -2647,6 +2714,9 @@
         checkerEditable.setAttribute('aria-labelledby', 'demo9-heading');
       }
 
+      // Add aria-label to editable table cells so they satisfy WCAG 4.1.2 (aria-input-field-name).
+      watchEditorTableCells(checkerEditor);
+
       const helpControls = getHelpElements();
       const runButton = document.getElementById('checker-run');
       const clearButton = document.getElementById('checker-clear');
@@ -2691,7 +2761,7 @@
         if (event.key === 'Escape' && helpControls.modal.classList.contains('open')) {
           closeHelpDialog(helpControls, { keepStatus: true });
         }
-      });
+      }, true);
     })();
   </script>
 </body>
