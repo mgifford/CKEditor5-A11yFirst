@@ -616,4 +616,43 @@ test.describe('CKEditor5 demo site', () => {
     await expect(page.locator('#status-format')).toContainText('Format validation complete');
     await expect(page.locator('#status-format')).toContainText(/semantic block/i);
   });
+
+  test('table mode validates captions and headers', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const tablePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 8: Table Accessibility Mode' }) });
+
+    await tablePanel.locator('#table-validate').click();
+
+    const resultsDiv = page.locator('#table-results');
+    await expect(resultsDiv).toBeVisible();
+    await expect(resultsDiv).toContainText(/table\(s\)|caption|header/i);
+    await expect(page.locator('#status-table')).toContainText('Table validation complete');
+  });
+
+  test('table mode opens A11yFirst Help for tables', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const tablePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 8: Table Accessibility Mode' }) });
+
+    await tablePanel.locator('#table-help').click();
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+    await expect(page.locator('#a11yhelp-content')).toContainText(/tables|header|caption/i);
+  });
+
+  test('table mode has toolbar insert table and help controls', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const tablePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 8: Table Accessibility Mode' }) });
+
+    const toolbar = tablePanel.locator('.ck-toolbar');
+    await expect(toolbar.getByLabel(/Insert table|Table/i)).toBeVisible();
+    await expect(toolbar.getByLabel('A11yFirst Help')).toBeVisible();
+  });
 });
