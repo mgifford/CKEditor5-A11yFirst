@@ -86,32 +86,38 @@
 
   function A11yFirstHelpButtonPlugin(editor) {
     editor.ui.componentFactory.add('a11yFirstHelp', (locale) => {
-      const CK5 = global.CKEDITOR5 || {};
-      const ButtonViewCtor =
-        (CK5.ui && CK5.ui.ButtonView) ||
-        (CK5.ui && CK5.ui.button && CK5.ui.button.ButtonView) ||
-        null;
+      try {
+        const CK5 = global.CKEDITOR5 || {};
+        const ButtonViewCtor =
+          (CK5.ui && CK5.ui.ButtonView) ||
+          (CK5.ui && CK5.ui.button && CK5.ui.button.ButtonView) ||
+          null;
 
-      if (!ButtonViewCtor) {
-        throw new Error('A11yFirst Help button cannot initialize: ButtonView is unavailable in this CKEditor5 build.');
-      }
+        if (!ButtonViewCtor) {
+          console.warn('A11yFirst Help: ButtonView not available in this CKEditor5 build. Help button will not be displayed.');
+          return null;
+        }
 
-      const view = new ButtonViewCtor(locale);
+        const view = new ButtonViewCtor(locale);
 
-      view.set({
-        label: 'A11yFirst Help',
-        icon: '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9.5 7.5h1v5h-1z" fill="currentColor"/><circle cx="10" cy="14.5" r="0.8" fill="currentColor"/></svg>',
-        tooltip: true
-      });
-
-      view.on('execute', () => {
-        const event = new CustomEvent('a11yFirstHelpRequested', {
-          detail: { source: 'toolbar', editor }
+        view.set({
+          label: 'A11yFirst Help',
+          icon: '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9.5 7.5h1v5h-1z" fill="currentColor"/><circle cx="10" cy="14.5" r="0.8" fill="currentColor"/></svg>',
+          tooltip: true
         });
-        document.dispatchEvent(event);
-      });
 
-      return view;
+        view.on('execute', () => {
+          const event = new CustomEvent('a11yFirstHelpRequested', {
+            detail: { source: 'toolbar', editor }
+          });
+          document.dispatchEvent(event);
+        });
+
+        return view;
+      } catch (err) {
+        console.warn('A11yFirst Help button initialization failed:', err.message);
+        return null;
+      }
     });
   }
 
