@@ -2012,7 +2012,7 @@
 
     ClassicEditor.create(document.querySelector('#editor-standard'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
-      extraPlugins: [A11yFirst.HelpButton.plugin],
+      extraPlugins: [A11yFirst.Heading.plugin, A11yFirst.Image.plugin, A11yFirst.Link.plugin, A11yFirst.List.plugin, A11yFirst.Table.plugin, A11yFirst.CharacterStyles.plugin, A11yFirst.HelpButton.plugin],
       heading: {
         options: [
           { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
@@ -2025,7 +2025,7 @@
 
     ClassicEditor.create(document.querySelector('#editor-strict'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
-      extraPlugins: [A11yFirst.HelpButton.plugin],
+      extraPlugins: [A11yFirst.Heading.plugin, A11yFirst.HelpButton.plugin],
       heading: {
         options: [
           { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
@@ -2117,7 +2117,7 @@
 
     ClassicEditor.create(document.querySelector('#editor-image'), {
       toolbar: ['bold', 'italic', 'link', '|', 'imageTextAlternative', 'toggleImageCaption', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
-      extraPlugins: [A11yFirst.HelpButton.plugin],
+      extraPlugins: [A11yFirst.Image.plugin, A11yFirst.HelpButton.plugin],
       image: {
         styles: [
           'inline',
@@ -2267,7 +2267,7 @@
 
     ClassicEditor.create(document.querySelector('#editor-link'), {
       toolbar: ['bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
-      extraPlugins: [A11yFirst.HelpButton.plugin]
+      extraPlugins: [A11yFirst.Link.plugin, A11yFirst.HelpButton.plugin]
     }).then((linkEditor) => {
       window.linkEditorInstance = linkEditor;
       setStatus('link', 'Link-focused mode ready. Select a link to reveal Edit Link in the toolbar or right-click menu.');
@@ -2399,7 +2399,7 @@
 
     ClassicEditor.create(document.querySelector('#editor-list'), {
       toolbar: ['heading', '|', 'bulletedList', 'numberedList', '|', 'outdent', 'indent', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
-      extraPlugins: [A11yFirst.HelpButton.plugin],
+      extraPlugins: [A11yFirst.List.plugin, A11yFirst.HelpButton.plugin],
       heading: {
         options: [
           { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
@@ -2430,7 +2430,7 @@
 
     ClassicEditor.create(document.querySelector('#editor-format'), {
       toolbar: ['heading', '|', 'blockQuote', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
-      extraPlugins: [A11yFirst.HelpButton.plugin],
+      extraPlugins: [A11yFirst.CharacterStyles.plugin, A11yFirst.HelpButton.plugin],
       heading: {
         options: [
           { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
@@ -2461,7 +2461,7 @@
 
     ClassicEditor.create(document.querySelector('#editor-table'), {
       toolbar: ['insertTable', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
-      extraPlugins: [A11yFirst.HelpButton.plugin],
+      extraPlugins: [A11yFirst.Table.plugin, A11yFirst.HelpButton.plugin],
       table: {
         contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
       }
@@ -2486,7 +2486,7 @@
 
     ClassicEditor.create(document.querySelector('#editor-checker'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'insertTable', 'blockQuote', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
-      extraPlugins: [A11yFirst.HelpButton.plugin],
+      extraPlugins: [A11yFirst.Heading.plugin, A11yFirst.Image.plugin, A11yFirst.Link.plugin, A11yFirst.List.plugin, A11yFirst.Table.plugin, A11yFirst.A11yChecker.plugin, A11yFirst.HelpButton.plugin],
       heading: {
         options: [
           { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
