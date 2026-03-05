@@ -86,7 +86,17 @@
 
   function A11yFirstHelpButtonPlugin(editor) {
     editor.ui.componentFactory.add('a11yFirstHelp', (locale) => {
-      const view = new editor.ui.ButtonView(locale);
+      const CK5 = global.CKEDITOR5 || {};
+      const ButtonViewCtor =
+        (CK5.ui && CK5.ui.ButtonView) ||
+        (CK5.ui && CK5.ui.button && CK5.ui.button.ButtonView) ||
+        null;
+
+      if (!ButtonViewCtor) {
+        throw new Error('A11yFirst Help button cannot initialize: ButtonView is unavailable in this CKEditor5 build.');
+      }
+
+      const view = new ButtonViewCtor(locale);
 
       view.set({
         label: 'A11yFirst Help',

@@ -8,6 +8,38 @@ const axeSource = readFileSync(
 );
 
 test.describe('CKEditor5 demo site', () => {
+  test('all CKEditor text interfaces initialize without critical runtime errors', async ({ page }) => {
+    const criticalLogs: string[] = [];
+
+    page.on('pageerror', (error) => {
+      criticalLogs.push(error.message);
+    });
+
+    page.on('console', (msg) => {
+      const text = msg.text();
+      if (/toolbarview-item-unavailable|ButtonView is not a constructor|cannot initialize: ButtonView/i.test(text)) {
+        criticalLogs.push(text);
+      }
+    });
+
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    await expect(page.locator('#status-standard')).toContainText('Editor ready');
+    await expect(page.locator('#status-strict')).toContainText('Strict mode ready');
+    await expect(page.locator('#status-image')).toContainText('Image-focused mode ready');
+    await expect(page.locator('#status-link')).toContainText('Link-focused mode ready');
+    await expect(page.locator('#status-style')).toContainText('Character Style mode ready');
+    await expect(page.locator('#status-list')).toContainText('List mode ready');
+    await expect(page.locator('#status-format')).toContainText('Paragraph Format mode ready');
+    await expect(page.locator('#status-table')).toContainText('Table mode ready');
+    await expect(page.locator('#status-checker')).toContainText('Checker mode ready');
+
+    const editableCount = await page.locator('.ck-editor__editable_inline').count();
+    expect(editableCount).toBeGreaterThanOrEqual(9);
+
+    expect(criticalLogs, criticalLogs.join('\n')).toHaveLength(0);
+  });
+
   test('hub links include CKEditor5 and baseline URLs', async ({ page }) => {
     await page.goto('/index.html');
 
