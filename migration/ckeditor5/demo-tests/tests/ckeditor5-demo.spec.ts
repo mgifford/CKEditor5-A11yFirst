@@ -655,4 +655,82 @@ test.describe('CKEditor5 demo site', () => {
     await expect(toolbar.getByLabel(/Insert table|Table/i)).toBeVisible();
     await expect(toolbar.getByLabel('A11yFirst Help')).toBeVisible();
   });
+
+  test('checker summary mode runs and reports status', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const checkerPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 9: A11y Checker Summary Mode' }) });
+
+    await checkerPanel.locator('#checker-run').click();
+    await expect(page.locator('#status-checker')).toContainText('Checker summary complete');
+    await expect(page.locator('#checker-results')).toBeVisible();
+  });
+
+  test('checker summary catches non-descriptive link text (parity hardening)', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    await page.evaluate(() => {
+      const editor = (window as unknown as { checkerEditorInstance?: { setData: (html: string) => void } }).checkerEditorInstance;
+      if (!editor) {
+        throw new Error('checker editor instance not found');
+      }
+
+      editor.setData('<p>Bad link example: <a href="https://example.org">click here</a></p>');
+    });
+
+    const checkerPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 9: A11y Checker Summary Mode' }) });
+
+    await checkerPanel.locator('#checker-run').click();
+    await expect(page.locator('#checker-results')).toContainText('not descriptive');
+  });
+
+  test('checker summary catches table without headers (parity hardening)', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    await page.evaluate(() => {
+      const editor = (window as unknown as { checkerEditorInstance?: { setData: (html: string) => void } }).checkerEditorInstance;
+      if (!editor) {
+        throw new Error('checker editor instance not found');
+      }
+
+      editor.setData('<table><tbody><tr><td>One</td><td>Two</td></tr></tbody></table>');
+    });
+
+    const checkerPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 9: A11y Checker Summary Mode' }) });
+
+    await checkerPanel.locator('#checker-run').click();
+    await expect(page.locator('#checker-results')).toContainText('no header cells');
+  });
+
+  test('checker summary help opens dedicated topic', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const checkerPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 9: A11y Checker Summary Mode' }) });
+
+    await checkerPanel.locator('#checker-help').click();
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+    await expect(page.locator('#a11yhelp-content')).toContainText(/Summary mode combines automated scanning/i);
+  });
+
+  test('checker summary can be cleared', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const checkerPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 9: A11y Checker Summary Mode' }) });
+
+    await checkerPanel.locator('#checker-run').click();
+    await expect(page.locator('#checker-results')).not.toBeEmpty();
+
+    await checkerPanel.locator('#checker-clear').click();
+    await expect(page.locator('#status-checker')).toContainText('summary cleared');
+  });
 });

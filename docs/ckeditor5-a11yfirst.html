@@ -96,6 +96,15 @@
     .table-results .ok { color: #0a6b1f; }
     .table-results .info { color: #0050a3; }
     .table-results .warn { color: #7a2f00; }
+    .checker-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
+    .checker-actions { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
+    .checker-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
+    .checker-results { margin-top: 0.7rem; border: 1px solid #d0d7de; border-radius: 6px; padding: 0.7rem; background: #fafcff; }
+    .checker-results h3 { margin: 0 0 0.5rem; font-size: 0.95rem; }
+    .checker-results ul { margin: 0.25rem 0 0 1.1rem; }
+    .checker-results .ok { color: #0a6b1f; }
+    .checker-results .warn { color: #7a2f00; }
+    .checker-results .block { color: #8a1c1c; }
     .editor blockquote { border-left: 4px solid #0050a3; padding-left: 1rem; margin: 1rem 0; font-style: italic; color: #444; }
     .editor blockquote footer { font-style: normal; font-size: 0.9rem; margin-top: 0.5rem; }
     .editor pre { background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; padding: 0.8rem; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 0.9rem; }
@@ -436,6 +445,29 @@
       <div id="status-table" class="status" aria-live="polite"></div>
       <div id="table-results" class="table-results" aria-live="polite"></div>
     </section>
+
+    <section id="demo9" class="panel">
+      <h2 id="demo9-heading">Demo 9: A11y Checker Summary Mode</h2>
+      <p class="checker-guidance">Run an in-editor accessibility summary that combines axe-core results with A11yFirst-specific authoring checks. This works while focused in editor mode without relying on page overlays.</p>
+      <div class="checker-actions">
+        <button id="checker-run" type="button">Run Checker Summary</button>
+        <button id="checker-clear" type="button">Clear Summary</button>
+        <button id="checker-help" type="button">Help</button>
+      </div>
+      <div id="editor-checker" class="editor">
+        <h2>Accessible, Inclusive Solar Punk Planning Memo</h2>
+        <p>This draft proposes infrastructure upgrades that improve equitable access while lowering environmental impact.</p>
+        <h3>Priority Actions</h3>
+        <ul>
+          <li>Deploy step-free electric transit routes with multilingual wayfinding support.</li>
+          <li>Fund neighborhood energy co-ops for resilience during outages and heat waves.</li>
+          <li>Create cooling corridors that improve safety for older adults and disabled residents.</li>
+        </ul>
+        <p><a href="https://example.org/inclusive-climate-plan">Read the inclusive climate plan</a> for implementation details.</p>
+      </div>
+      <div id="status-checker" class="status" aria-live="polite"></div>
+      <div id="checker-results" class="checker-results" aria-live="polite"></div>
+    </section>
   </div>
 
   <div id="a11yhelp-modal" class="a11yhelp-modal" role="dialog" aria-modal="true" aria-labelledby="a11yhelp-title">
@@ -465,7 +497,8 @@
       style: document.getElementById('status-style'),
       list: document.getElementById('status-list'),
       format: document.getElementById('status-format'),
-      table: document.getElementById('status-table')
+      table: document.getElementById('status-table'),
+      checker: document.getElementById('status-checker')
     };
 
     const sa11yRuntime = {
@@ -523,6 +556,10 @@
         Table: {
           title: 'Table',
           body: 'Use tables for tabular data with row/column relationships. Add a descriptive caption, define header cells (<th>) for rows and columns, and use scope attributes when possible. Avoid tables for layout. Clear headers help screen reader users understand each data cell in context.'
+        },
+        A11yCheckerSummary: {
+          title: 'A11y Checker Summary',
+          body: 'Summary mode combines automated scanning (axe-core) with A11yFirst authoring checks like heading sequence, meaningful link text, image alt text, and table structure. Run it while editing to get quick blocking and advisory findings before publishing.'
         },
         Link: {
           title: 'Link',
@@ -1808,6 +1845,125 @@
       setStatus('table', `Table validation complete. ${tableMatches.length} table(s) found.`);
     }
 
+    function summarizeA11yFindings(findings) {
+      const blocking = findings.filter((item) => item.severity === 'blocking');
+      const advisory = findings.filter((item) => item.severity !== 'blocking');
+      return { blocking, advisory };
+    }
+
+    function renderCheckerSummary(findings) {
+      const resultsEl = document.getElementById('checker-results');
+      const { blocking, advisory } = summarizeA11yFindings(findings);
+
+      if (!blocking.length && !advisory.length) {
+        resultsEl.innerHTML = '<h3>Summary</h3><div class="ok">PASS: No blocking or advisory issues found in current editor content.</div>';
+        return;
+      }
+
+      const blocks = [];
+      blocks.push(`<h3>Summary</h3><div class="${blocking.length ? 'block' : 'ok'}"><strong>${blocking.length}</strong> blocking issue(s), <strong>${advisory.length}</strong> advisory issue(s)</div>`);
+
+      if (blocking.length) {
+        blocks.push(`<div class="block"><strong>Blocking</strong><ul>${blocking.map((issue) => `<li>${issue.message}</li>`).join('')}</ul></div>`);
+      }
+
+      if (advisory.length) {
+        blocks.push(`<div class="warn"><strong>Advisory</strong><ul>${advisory.map((issue) => `<li>${issue.message}</li>`).join('')}</ul></div>`);
+      }
+
+      resultsEl.innerHTML = blocks.join('');
+    }
+
+    function runCustomCheckerRules(editorData) {
+      const findings = [];
+
+      const headingLevels = Array.from(editorData.matchAll(/<h([1-6])\b/gi)).map((match) => Number(match[1]));
+      for (let i = 1; i < headingLevels.length; i += 1) {
+        if (headingLevels[i] > headingLevels[i - 1] + 1) {
+          findings.push({
+            severity: 'blocking',
+            message: `Heading sequence skips from H${headingLevels[i - 1]} to H${headingLevels[i]}.`
+          });
+          break;
+        }
+      }
+
+      const links = Array.from(editorData.matchAll(/<a[^>]*>([\s\S]*?)<\/a>/gi)).map((match) => String(match[1] || '').replace(/<[^>]+>/g, '').trim());
+      const badLinkText = ['click here', 'read more', 'more', 'link', 'here'];
+      links.forEach((text) => {
+        if (badLinkText.includes(text.toLowerCase())) {
+          findings.push({
+            severity: 'blocking',
+            message: `Link text "${text}" is not descriptive.`
+          });
+        }
+      });
+
+      const imageTags = Array.from(editorData.matchAll(/<img\b[^>]*>/gi)).map((match) => match[0]);
+      imageTags.forEach((img) => {
+        const altMatch = img.match(/\salt=("([^"]*)"|'([^']*)')/i);
+        const altText = altMatch ? (altMatch[2] ?? altMatch[3] ?? '').trim() : '';
+        if (!altMatch) {
+          findings.push({ severity: 'blocking', message: 'Image missing alt attribute.' });
+          return;
+        }
+        if (!altText) {
+          findings.push({ severity: 'advisory', message: 'Image has empty alt text. Confirm it is decorative.' });
+        }
+      });
+
+      const tables = Array.from(editorData.matchAll(/<table[\s>][\s\S]*?<\/table>/gi)).map((match) => match[0]);
+      tables.forEach((table) => {
+        if (!/<caption[\s>][\s\S]*?<\/caption>/i.test(table)) {
+          findings.push({ severity: 'advisory', message: 'Table is missing a caption.' });
+        }
+        if (!/<th[\s>]/i.test(table)) {
+          findings.push({ severity: 'blocking', message: 'Table has no header cells (<th>).'});
+        }
+      });
+
+      return findings;
+    }
+
+    async function runAxeForChecker(editor) {
+      const findings = [];
+
+      if (!window.axe) {
+        findings.push({ severity: 'advisory', message: 'axe-core not available in this environment.' });
+        return findings;
+      }
+
+      const editableRoot = editor.ui.getEditableElement();
+      if (!editableRoot) {
+        findings.push({ severity: 'advisory', message: 'Editable region not available for scan.' });
+        return findings;
+      }
+
+      const results = await window.axe.run(editableRoot, {
+        runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] }
+      });
+
+      results.violations.forEach((violation) => {
+        findings.push({
+          severity: (violation.impact === 'critical' || violation.impact === 'serious') ? 'blocking' : 'advisory',
+          message: `axe: ${violation.id} - ${violation.help}`
+        });
+      });
+
+      return findings;
+    }
+
+    async function runCheckerSummary(editor) {
+      const data = editor.getData();
+      const customFindings = runCustomCheckerRules(data);
+      const axeFindings = await runAxeForChecker(editor);
+      const findings = [...axeFindings, ...customFindings];
+
+      renderCheckerSummary(findings);
+      const summary = summarizeA11yFindings(findings);
+      setStatus('checker', `Checker summary complete. ${summary.blocking.length} blocking, ${summary.advisory.length} advisory issue(s).`);
+    }
+
     ClassicEditor.create(document.querySelector('#editor-standard'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
       extraPlugins: [A11yFirst.HelpButton.plugin],
@@ -2274,6 +2430,38 @@
         clearTimeout(validationTimeout);
         validationTimeout = setTimeout(() => validateTables(tableEditor), 500);
       });
+    });
+
+    ClassicEditor.create(document.querySelector('#editor-checker'), {
+      toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'insertTable', 'blockQuote', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      extraPlugins: [A11yFirst.HelpButton.plugin],
+      heading: {
+        options: [
+          { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+          { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+          { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+        ]
+      }
+    }).then((checkerEditor) => {
+      window.checkerEditorInstance = checkerEditor;
+      const helpControls = getHelpElements();
+      const runButton = document.getElementById('checker-run');
+      const clearButton = document.getElementById('checker-clear');
+      const helpButton = document.getElementById('checker-help');
+      const resultsEl = document.getElementById('checker-results');
+
+      setStatus('checker', 'Checker mode ready. Run summary to review blocking and advisory issues in-editor.');
+
+      runButton.addEventListener('click', async () => {
+        await runCheckerSummary(checkerEditor);
+      });
+
+      clearButton.addEventListener('click', () => {
+        resultsEl.innerHTML = '';
+        setStatus('checker', 'Checker summary cleared.');
+      });
+
+      helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'A11yCheckerSummary', 'checker'));
     });
 
     (() => {
