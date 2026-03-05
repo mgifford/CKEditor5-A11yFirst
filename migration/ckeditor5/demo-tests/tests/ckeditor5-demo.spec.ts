@@ -539,4 +539,81 @@ test.describe('CKEditor5 demo site', () => {
     await expect(page.locator('#status-list')).toContainText('List validation complete');
     await expect(page.locator('#status-list')).toContainText('list(s) found');
   });
+
+  test('paragraph format mode validates semantic blocks', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const formatPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 7: Paragraph Format Mode' }) });
+
+    const validateButton = formatPanel.locator('#format-validate');
+    await validateButton.click();
+
+    const resultsDiv = page.locator('#format-results');
+    await expect(resultsDiv).toBeVisible();
+    await expect(resultsDiv).toContainText(/blockquote|preformatted|address/i);
+  });
+
+  test('paragraph format mode detects blockquote with attribution', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const formatPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 7: Paragraph Format Mode' }) });
+
+    const validateButton = formatPanel.locator('#format-validate');
+    await validateButton.click();
+
+    await expect(page.locator('#format-results')).toContainText(/attribution|citation/i);
+  });
+
+  test('paragraph format mode detects code in pre blocks', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const formatPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 7: Paragraph Format Mode' }) });
+
+    const validateButton = formatPanel.locator('#format-validate');
+    await validateButton.click();
+
+    await expect(page.locator('#format-results')).toContainText(/code element/i);
+  });
+
+  test('paragraph format mode opens A11yFirst Help for formats', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const formatPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 7: Paragraph Format Mode' }) });
+
+    await formatPanel.locator('#format-help').click();
+    await expect(page.locator('#a11yhelp-modal')).toHaveClass(/open/);
+    await expect(page.locator('#a11yhelp-content')).toContainText(/blockquote|paragraph format/i);
+  });
+
+  test('paragraph format mode has toolbar with blockquote', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const formatPanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 7: Paragraph Format Mode' }) });
+
+    const toolbar = formatPanel.locator('.ck-toolbar');
+    
+    // Check for blockquote button and help
+    await expect(toolbar.getByLabel(/Block quote|Quote/i)).toBeVisible();
+    await expect(toolbar.getByLabel('A11yFirst Help')).toBeVisible();
+  });
+
+  test('paragraph format validation status updates correctly', async ({ page }) => {
+    await page.goto('/ckeditor5-a11yfirst.html');
+
+    const validateButton = page.locator('#format-validate');
+    await validateButton.click();
+
+    await expect(page.locator('#status-format')).toContainText('Format validation complete');
+    await expect(page.locator('#status-format')).toContainText(/semantic block/i);
+  });
 });

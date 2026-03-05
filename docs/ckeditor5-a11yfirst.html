@@ -80,6 +80,18 @@
     .list-results .ok { color: #0a6b1f; }
     .list-results .info { color: #0050a3; }
     .list-results .warn { color: #7a2f00; }
+    .format-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
+    .format-actions { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
+    .format-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
+    .format-results { margin-top: 0.6rem; font-size: 0.9rem; }
+    .format-results ul { margin: 0.2rem 0 0 1.1rem; }
+    .format-results .ok { color: #0a6b1f; }
+    .format-results .info { color: #0050a3; }
+    .format-results .warn { color: #7a2f00; }
+    .editor blockquote { border-left: 4px solid #0050a3; padding-left: 1rem; margin: 1rem 0; font-style: italic; color: #444; }
+    .editor blockquote footer { font-style: normal; font-size: 0.9rem; margin-top: 0.5rem; }
+    .editor pre { background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; padding: 0.8rem; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 0.9rem; }
+    .editor address { font-style: normal; background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 4px; padding: 0.8rem; margin: 1rem 0; line-height: 1.6; }
     .image-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .image-results ul { margin: 0.2rem 0 0 1.1rem; }
     .image-results .ok { color: #0a6b1f; }
@@ -94,14 +106,14 @@
 <body>
   <p><a href="./index.html">← Back to demo hub</a></p>
   <h1>A11yFirst CKEditor 5 Migration Preview</h1>
-  <p class="note">This is an interim preview page to validate deployment and UX direction while WP03+ modules are implemented.</p>
+  <p class="note">This preview demonstrates accessibility-first authoring patterns for inclusive Solar Punk content that works for both people and planet.</p>
 
   <div class="row">
     <section id="demo1" class="panel">
       <h2 id="demo1-heading">Demo 1: Standard A11yFirst Configuration</h2>
       <div id="editor-standard" class="editor">
         <h1>Building Tomorrow's Green Cities</h1>
-        <p>Solar punk envisions a future where renewable energy, sustainable architecture, and thriving ecosystems coexist with human innovation. In these urban landscapes, <strong>solar panels</strong> cover rooftops, <em>vertical gardens</em> climb building facades, and community spaces flourish with life.</p>
+        <p>Accessible and inclusive Solar Punk envisions a future where renewable energy, sustainable architecture, and thriving ecosystems coexist with social equity. In these urban landscapes, <strong>solar panels</strong> cover rooftops, <em>vertical gardens</em> climb building facades, and community spaces are designed for people of all abilities.</p>
         <h2>Core Principles</h2>
         <ul>
           <li>Renewable energy integration in all infrastructure</li>
@@ -109,7 +121,7 @@
           <li>Biodiversity preservation within urban environments</li>
         </ul>
         <h3>Community-Driven Design</h3>
-        <p>Solar punk communities prioritize accessible public transportation, shared resources, and open-source technology that empowers everyone to participate in building a sustainable future.</p>
+        <p>Solar Punk communities prioritize accessible transit, inclusive governance, shared resources, and open-source tools so we can build systems that support both people and planet.</p>
       </div>
       <div id="status-standard" class="status" aria-live="polite"></div>
     </section>
@@ -326,6 +338,48 @@
       <div id="status-list" class="status" aria-live="polite"></div>
       <div id="list-results" class="list-results" aria-live="polite"></div>
     </section>
+
+    <section id="demo7" class="panel">
+      <h2 id="demo7-heading">Demo 7: Paragraph Format Mode</h2>
+      <p class="format-guidance">Use semantic paragraph formats to add meaning to content blocks. Choose blockquote for citations, preformatted for code, and address for contact information.</p>
+      <div class="format-actions">
+        <button id="format-validate" type="button">Validate Formats</button>
+        <button id="format-help" type="button">Help</button>
+      </div>
+      <div id="editor-format" class="editor">
+        <h2>Solar Punk Manifesto</h2>
+        <p>The Solar Punk movement envisions an accessible and inclusive future where communities thrive in harmony with nature. This philosophy merges ecological wisdom with civic participation and technology that works for everyone.</p>
+        <blockquote>
+          <p>"We stand at a crossroads. One path leads to despair and destruction. The other leads to hope, renewal, and a world where green cities flourish. The choice is ours to make, together."</p>
+          <footer>— Kim Stanley Robinson, <cite>The Ministry for the Future</cite></footer>
+        </blockquote>
+        <h3>Core Technologies</h3>
+        <p>Solar punk communities rely on open-source tools and distributed systems. Here's a simple configuration for a community microgrid controller:</p>
+        <pre><code>{
+  "grid_id": "community_solar_west_001",
+  "capacity_kw": 500,
+  "storage_kwh": 2000,
+  "distribution": {
+    "residential": 0.6,
+    "commercial": 0.25,
+    "public_spaces": 0.15
+  },
+  "renewable_sources": ["solar", "wind", "geothermal"]
+}</code></pre>
+        <h3>Get Involved</h3>
+        <p>Join local Solar Punk initiatives and help build systems that support both people and planet. Contact your regional hub:</p>
+        <address>
+          Solar Punk Community Network<br>
+          Pacific Northwest Hub<br>
+          1234 Green Avenue<br>
+          Portland, OR 97201<br>
+          Email: <a href="mailto:northwest@solarpunk.community">northwest@solarpunk.community</a><br>
+          Phone: (503) 555-0142
+        </address>
+      </div>
+      <div id="status-format" class="status" aria-live="polite"></div>
+      <div id="format-results" class="format-results" aria-live="polite"></div>
+    </section>
   </div>
 
   <div id="a11yhelp-modal" class="a11yhelp-modal" role="dialog" aria-modal="true" aria-labelledby="a11yhelp-title">
@@ -353,7 +407,8 @@
       image: document.getElementById('status-image'),
       link: document.getElementById('status-link'),
       style: document.getElementById('status-style'),
-      list: document.getElementById('status-list')
+      list: document.getElementById('status-list'),
+      format: document.getElementById('status-format')
     };
 
     const sa11yRuntime = {
@@ -403,6 +458,10 @@
         CharacterStyle: {
           title: 'Character Style',
           body: 'Use character styles to add semantic emphasis and inline meaning, not purely visual decoration.'
+        },
+        ParagraphFormat: {
+          title: 'Paragraph Format',
+          body: 'Use semantic paragraph formats to add structural meaning to content blocks. Blockquote (<blockquote>) identifies quoted content with proper attribution. Preformatted (<pre>) preserves spacing and line breaks for code or poetry. Address (<address>) marks contact information. These formats provide semantic structure that assistive technologies can announce and navigate, helping users understand the purpose of each content block. Choose formats based on content meaning, not visual appearance.'
         },
         Link: {
           title: 'Link',
@@ -1580,6 +1639,67 @@
       setStatus('list', `List validation complete. ${orderedCount + unorderedCount} list(s) found.`);
     }
 
+    function validateParagraphFormats(editor) {
+      const data = editor.getData();
+      const resultsDiv = document.getElementById('format-results');
+      const results = [];
+      
+      // Count semantic paragraph formats
+      const blockquoteMatches = data.match(/<blockquote[^>]*>/gi) || [];
+      const blockquoteCount = blockquoteMatches.length;
+      
+      const preMatches = data.match(/<pre[^>]*>/gi) || [];
+      const preCount = preMatches.length;
+      
+      const addressMatches = data.match(/<address[^>]*>/gi) || [];
+      const addressCount = addressMatches.length;
+      
+      const totalSemanticBlocks = blockquoteCount + preCount + addressCount;
+      
+      // Check for blockquote with cite/attribution
+      const hasBlockquoteAttribution = /<blockquote[^>]*>[\s\S]*?<(?:cite|footer)[^>]*>/i.test(data);
+      
+      // Check for code within pre tags
+      const hasPreCode = /<pre[^>]*>[\s\S]*?<code[^>]*>/i.test(data);
+      
+      // Check for contact details in address
+      const hasEmailInAddress = /<address[^>]*>[\s\S]*?(?:mailto:|@)[^<]*<\/address>/i.test(data);
+      
+      // Build results
+      if (totalSemanticBlocks === 0) {
+        results.push('<span class="info">No semantic paragraph formats found. Standard paragraphs detected.</span>');
+      } else {
+        const formatList = [];
+        if (blockquoteCount > 0) formatList.push(`${blockquoteCount} blockquote(s)`);
+        if (preCount > 0) formatList.push(`${preCount} preformatted block(s)`);
+        if (addressCount > 0) formatList.push(`${addressCount} address block(s)`);
+        results.push(`<span class="ok">✓ Found ${formatList.join(', ')}</span>`);
+      }
+      
+      if (blockquoteCount > 0 && hasBlockquoteAttribution) {
+        results.push('<span class="ok">✓ Blockquote includes proper attribution or citation</span>');
+      } else if (blockquoteCount > 0 && !hasBlockquoteAttribution) {
+        results.push('<span class="info">Tip: Consider adding attribution (cite or footer) to blockquotes</span>');
+      }
+      
+      if (preCount > 0 && hasPreCode) {
+        results.push('<span class="ok">✓ Preformatted block contains code element for syntax</span>');
+      } else if (preCount > 0 && !hasPreCode) {
+        results.push('<span class="info">Tip: Wrap code inside &lt;code&gt; tags within &lt;pre&gt; blocks</span>');
+      }
+      
+      if (addressCount > 0 && hasEmailInAddress) {
+        results.push('<span class="ok">✓ Address block contains contact information</span>');
+      }
+      
+      if (totalSemanticBlocks > 0) {
+        results.push('<span class="info">Tip: Screen readers announce format type, helping users navigate content.</span>');
+      }
+      
+      resultsDiv.innerHTML = results.length > 0 ? '<ul>' + results.map(r => `<li>${r}</li>`).join('') + '</ul>' : '';
+      setStatus('format', `Format validation complete. ${totalSemanticBlocks} semantic block(s) found.`);
+    }
+
     ClassicEditor.create(document.querySelector('#editor-standard'), {
       toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
       extraPlugins: [A11yFirst.HelpButton.plugin],
@@ -1992,6 +2112,37 @@
       });
     });
 
+    ClassicEditor.create(document.querySelector('#editor-format'), {
+      toolbar: ['heading', '|', 'blockQuote', '|', 'bold', 'italic', 'code', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      extraPlugins: [A11yFirst.HelpButton.plugin],
+      heading: {
+        options: [
+          { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+          { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+          { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
+          { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' }
+        ]
+      }
+    }).then((formatEditor) => {
+      window.formatEditorInstance = formatEditor;
+      const helpControls = getHelpElements();
+
+      setStatus('format', 'Paragraph Format mode ready. Use semantic formats for quoted content, code, and addresses.');
+
+      const validateButton = document.getElementById('format-validate');
+      const helpButton = document.getElementById('format-help');
+
+      validateButton.addEventListener('click', () => validateParagraphFormats(formatEditor));
+      helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'ParagraphFormat', 'format'));
+
+      // Auto-validate on data change (debounced)
+      let validationTimeout;
+      formatEditor.model.document.on('change:data', () => {
+        clearTimeout(validationTimeout);
+        validationTimeout = setTimeout(() => validateParagraphFormats(formatEditor), 500);
+      });
+    });
+
     (() => {
       const helpControls = getHelpElements();
 
@@ -2017,7 +2168,6 @@
           closeHelpDialog(helpControls, { keepStatus: true });
         }
       });
-    })();
     })();
   </script>
 </body>
