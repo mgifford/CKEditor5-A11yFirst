@@ -2063,7 +2063,7 @@
     });
 
     ClassicEditor.create(document.querySelector('#editor-image'), {
-      toolbar: ['bold', 'italic', 'link', '|', 'imageTextAlternative', 'toggleImageCaption', 'linkImage', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      toolbar: ['bold', 'italic', 'link', '|', 'imageTextAlternative', 'toggleImageCaption', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
       extraPlugins: [A11yFirst.HelpButton.plugin],
       image: {
         styles: [
@@ -2077,7 +2077,6 @@
         toolbar: [
           'imageTextAlternative',
           'toggleImageCaption',
-          'linkImage',
           'imageStyle:alignLeft',
           'imageStyle:alignCenter',
           'imageStyle:alignRight',
@@ -2214,7 +2213,7 @@
     });
 
     ClassicEditor.create(document.querySelector('#editor-link'), {
-      toolbar: ['bold', 'italic', 'link', 'unlink', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      toolbar: ['bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
       extraPlugins: [A11yFirst.HelpButton.plugin]
     }).then((linkEditor) => {
       window.linkEditorInstance = linkEditor;
@@ -2377,7 +2376,7 @@
     });
 
     ClassicEditor.create(document.querySelector('#editor-format'), {
-      toolbar: ['heading', '|', 'blockQuote', '|', 'bold', 'italic', 'code', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
+      toolbar: ['heading', '|', 'blockQuote', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
       extraPlugins: [A11yFirst.HelpButton.plugin],
       heading: {
         options: [
