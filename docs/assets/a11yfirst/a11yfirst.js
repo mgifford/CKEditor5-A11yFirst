@@ -387,7 +387,7 @@
                 break;
               }
             } catch (_e) {
-              // try next fallback
+              console.debug('A11yFirst Help: failed to create fallback component', name, _e);
             }
           }
         }

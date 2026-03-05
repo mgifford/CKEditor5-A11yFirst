@@ -653,7 +653,13 @@
         return;
       }
       labelEditableTableCells(root);
-      const observer = new MutationObserver(() => labelEditableTableCells(root));
+      let pending = false;
+      const observer = new MutationObserver(() => {
+        if (!pending) {
+          pending = true;
+          requestAnimationFrame(() => { pending = false; labelEditableTableCells(root); });
+        }
+      });
       observer.observe(root, { childList: true, subtree: true });
     }
 
@@ -1877,6 +1883,7 @@
           }
         } catch (_e) {
           // model inspection not available; fall back to HTML-only count
+          console.debug('A11yFirst: model inspection failed for codeBlock count', _e);
         }
       }
       
@@ -2567,7 +2574,7 @@
           { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
           { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
           { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
-          { model: 'preformatted', view: 'pre', title: 'Code/Preformatted', class: 'ck-heading_preformatted' }
+          { model: 'preformatted', view: 'pre', title: 'Preformatted Text', class: 'ck-heading_preformatted' }
         ]
       }
     }).then((formatEditor) => {
