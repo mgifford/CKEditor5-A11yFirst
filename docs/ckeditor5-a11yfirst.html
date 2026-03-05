@@ -455,15 +455,35 @@
         <button id="checker-help" type="button">Help</button>
       </div>
       <div id="editor-checker" class="editor">
-        <h2>Accessible, Inclusive Solar Punk Planning Memo</h2>
-        <p>This draft proposes infrastructure upgrades that improve equitable access while lowering environmental impact.</p>
-        <h3>Priority Actions</h3>
-        <ul>
-          <li>Deploy step-free electric transit routes with multilingual wayfinding support.</li>
-          <li>Fund neighborhood energy co-ops for resilience during outages and heat waves.</li>
-          <li>Create cooling corridors that improve safety for older adults and disabled residents.</li>
-        </ul>
-        <p><a href="https://example.org/inclusive-climate-plan">Read the inclusive climate plan</a> for implementation details.</p>
+        <h1>A11y Checker Test Content</h1>
+        <p>This editor contains intentional accessibility issues to test the checker's ability to detect and report problems.</p>
+        
+        <h2>Heading Hierarchy Issues</h2>
+        <p>The next heading jumps two levels (should be h3):</p>
+        <h5>This skips h3 and h4</h5>
+        <p>This breaks the proper heading ladder and confuses screen reader users.</p>
+        
+        <h2>Image Issues</h2>
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:100px;height:100px;">
+        <p>Image above has no alt text (decorative or missing).</p>
+        
+        <h2>Link Issues</h2>
+        <p><a href="https://example.org">Click here</a> for more information.</p>
+        <p><a href="https://example.org"></a></p>
+        <p>Empty link above should have descriptive text.</p>
+        
+        <h2>Table Issues</h2>
+        <table border="1">
+          <tr><td>Name</td><td>Age</td></tr>
+          <tr><td>Alice</td><td>30</td></tr>
+          <tr><td>Bob</td><td>25</td></tr>
+        </table>
+        <p>Table above has data cells without proper header identification.</p>
+        
+        <h2>Good Content Example</h2>
+        <p>This section demonstrates proper structure:</p>
+        <img alt="Solar panels on a community building" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+        <p><a href="https://example.org/solar-guide">Read the solar installation guide</a> for details.</p>
       </div>
       <div id="status-checker" class="status" aria-live="polite"></div>
       <div id="checker-results" class="checker-results" aria-live="polite"></div>
@@ -755,6 +775,32 @@
           return `Heading sequence warning: found H${current} after H${previous}.`;
         }
         previous = current;
+      }
+      return '';
+    }
+
+    function detectDownstreamSequenceBreak(html) {
+      // Detects when inserting a heading breaks the sequence of following headings
+      const headingMatches = Array.from(html.matchAll(/<h([1-6])\b/gi)).map((m) => ({ level: Number(m[1]), index: m.index }));
+      
+      if (headingMatches.length < 3) {
+        return '';
+      }
+
+      for (let i = 1; i < headingMatches.length - 1; i++) {
+        const prev = headingMatches[i - 1].level;
+        const curr = headingMatches[i].level;
+        const next = headingMatches[i + 1].level;
+
+        // Check if current heading is lower level (higher number) than expected
+        // and causes the next heading to break proper hierarchy
+        if (curr > prev && next < curr && next !== prev) {
+          // e.g., H2 → H3 → H2 is fine (H3 is sub-level, H2 closes it)
+          // e.g., H2 → H4 → H3 is bad (H4 skips H3, then H3 appears)
+          if (next > prev || curr > next + 1) {
+            return `Warning: H${curr} (after H${prev}) creates a sequence break. The following H${next} may not be in the proper hierarchy relative to this heading.`;
+          }
+        }
       }
       return '';
     }
@@ -2052,6 +2098,13 @@
         const warning = headingSequenceWarnings(editor.getData());
         if (warning) {
           setStatus('strict', `${warning} Adjust heading levels to continue.`);
+          renderStrictTests();
+          return;
+        }
+
+        const downstreamWarning = detectDownstreamSequenceBreak(editor.getData());
+        if (downstreamWarning) {
+          setStatus('strict', `${downstreamWarning} Consider adjusting heading levels for clarity.`);
           renderStrictTests();
           return;
         }
