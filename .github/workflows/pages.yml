@@ -32,6 +32,13 @@ jobs:
         with:
           enablement: true
 
+      - name: Verify required assets exist
+        run: |
+          # Keep this list in sync with the rsync commands in the next step.
+          for item in CKEditor4 ckeditor.js contents.css styles.js adapters core lang plugins skins vendor; do
+            test -e "$item" || { echo "ERROR: required asset '$item' not found in repo root"; exit 1; }
+          done
+
       - name: Sync CKEditor4 archive into docs
         run: |
           rm -rf docs/CKEditor4
