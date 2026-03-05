@@ -114,10 +114,22 @@
     .image-results .ok { color: #0a6b1f; }
     .image-results .warn { color: #7a2f00; }
     .image-results .block { color: #8a1c1c; }
+    .table-caption-dialog { position: fixed; inset: 0; z-index: 2200; display: none; align-items: center; justify-content: center; pointer-events: none; }
+    .table-caption-dialog.open { display: flex; }
+    .table-caption-dialog .backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); cursor: pointer; }
+    .table-caption-dialog .dialog { position: relative; background: #fff; width: min(600px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 1.2rem; pointer-events: auto; }
+    .table-caption-dialog h3 { margin: 0 0 0.5rem; font-size: 1.1rem; font-weight: 600; }
+    .table-caption-dialog .guidance-text { margin: 0.5rem 0 1rem; font-size: 0.9rem; color: #555; }
+    .table-caption-dialog .form-group { margin-bottom: 1rem; }
+    .table-caption-dialog label { display: block; margin-bottom: 0.35rem; font-weight: 500; font-size: 0.95rem; }
+    .table-caption-dialog textarea { width: 100%; padding: 0.6rem; border: 1px solid #d0d7de; border-radius: 6px; font-family: inherit; font-size: 0.95rem; min-height: 60px; line-height: 1.4; }
+    .table-caption-dialog textarea:focus { outline: none; border-color: #0050a3; box-shadow: 0 0 0 3px rgba(0, 80, 163, 0.1); }
+    .table-caption-dialog .form-actions { display: flex; gap: 0.5rem; margin-top: 1.2rem; }
+    .table-caption-dialog button { padding: 0.5rem 1rem; border: 1px solid #d0d7de; border-radius: 6px; background: #fff; cursor: pointer; font-size: 0.95rem; }
+    .table-caption-dialog #table-caption-save { background: #0050a3; color: #fff; border-color: #0050a3; font-weight: 500; }
+    .table-caption-dialog #table-caption-save:hover { background: #003d82; }
     a { color: #0b57d0; }
     a:hover { text-decoration: underline; }
-    a { color: #0050a3; text-decoration: underline; text-underline-offset: 2px; }
-    a:hover { text-decoration-thickness: 2px; }
   </style>
 </head>
 <body>
@@ -402,8 +414,29 @@
       <h2 id="demo8-heading">Demo 8: Table Accessibility Mode</h2>
       <p class="table-guidance">Use tables for real tabular data, not layout. Add a caption, define headers, and keep structure clear for screen reader navigation.</p>
       <div class="table-actions">
+        <button id="table-caption-edit" type="button">Edit Caption</button>
         <button id="table-validate" type="button">Validate Tables</button>
         <button id="table-help" type="button">Help</button>
+      </div>
+      <div id="table-caption-dialog" class="table-caption-dialog" role="dialog" aria-modal="true" aria-labelledby="table-caption-title" style="display: none;">
+        <div class="backdrop" data-close-table-caption="true"></div>
+        <div class="dialog">
+          <h3 id="table-caption-title">Edit Table Caption</h3>
+          <p class="guidance-text">A caption describes what the table contains. It appears with the table and is read aloud by screen readers.</p>
+          <div class="form-group">
+            <label for="table-caption-input">Caption text:</label>
+            <textarea id="table-caption-input" placeholder="e.g., Community investment priorities for inclusive Solar Punk neighborhoods"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="table-summary-input">Summary (optional, for complex tables):</label>
+            <textarea id="table-summary-input" placeholder="e.g., This table compares accessibility and environmental benefits of three initiatives. Initiative column lists the project name, with corresponding accessibility and environmental benefits, and priority level." style="font-size: 0.9em; color: #666;"></textarea>
+            <p style="font-size: 0.85em; margin-top: 0.5em;">Use a summary for complex tables with multiple levels or difficult structures. Keep under 200 characters if possible.</p>
+          </div>
+          <div class="form-actions">
+            <button id="table-caption-save" type="button">Save Caption</button>
+            <button id="table-caption-close" type="button">Close</button>
+          </div>
+        </div>
       </div>
       <div id="editor-table" class="editor">
         <h2>Inclusive Solar Punk Infrastructure Priorities</h2>
@@ -575,7 +608,7 @@
         },
         Table: {
           title: 'Table',
-          body: 'Use tables for tabular data with row/column relationships. Add a descriptive caption, define header cells (<th>) for rows and columns, and use scope attributes when possible. Avoid tables for layout. Clear headers help screen reader users understand each data cell in context.'
+          body: '<strong>Captions:</strong> Every data table should have a caption that describes its contents. The caption appears visually with the table and is announced by screen readers. Use the "Edit Caption" button to add or update a caption.<br><br><strong>Summary (optional):</strong> For complex tables with multiple levels or difficult structures, include a summary that explains the table organization. Keep summaries under 200 characters when possible. Use the "Edit Caption" button to add a summary attribute.<br><br><strong>Headers:</strong> Use &lt;th&gt; header cells (not &lt;td&gt;) for row and column headers. Add scope="col" for column headers and scope="row" for row headers. This helps screen reader users understand each data cell in context.<br><br><strong>Structure:</strong> Use tables only for tabular data with row/column relationships. Avoid tables for layout. Clear headers with proper scope attributes are essential for accessibility.'
         },
         A11yCheckerSummary: {
           title: 'A11y Checker Summary',
@@ -2472,7 +2505,72 @@
       setStatus('table', 'Table mode ready. Add captions and headers to improve data table accessibility.');
 
       const validateButton = document.getElementById('table-validate');
+      const captionEditButton = document.getElementById('table-caption-edit');
       const helpButton = document.getElementById('table-help');
+      const captionDialog = document.getElementById('table-caption-dialog');
+      const captionInput = document.getElementById('table-caption-input');
+      const summaryInput = document.getElementById('table-summary-input');
+      const captionSaveBtn = document.getElementById('table-caption-save');
+      const captionCloseBtn = document.getElementById('table-caption-close');
+      const captionBackdrop = captionDialog.querySelector('.backdrop');
+
+      // Open caption edit dialog
+      captionEditButton.addEventListener('click', () => {
+        const html = tableEditor.getData();
+        const captionMatch = html.match(/<caption[^>]*>(.*?)<\/caption>/i);
+        const summaryMatch = html.match(/<table[^>]*summary\s*=\s*["']([^"']*)["']/i);
+        
+        captionInput.value = captionMatch ? captionMatch[1] : '';
+        summaryInput.value = summaryMatch ? summaryMatch[1] : '';
+        captionDialog.classList.add('open');
+        captionInput.focus();
+      });
+
+      // Close caption dialog
+      const closeDialog = () => captionDialog.classList.remove('open');
+      captionCloseBtn.addEventListener('click', closeDialog);
+      captionBackdrop.addEventListener('click', closeDialog);
+
+      // Save caption changes
+      captionSaveBtn.addEventListener('click', () => {
+        const html = tableEditor.getData();
+        const captionText = captionInput.value.trim();
+        const summaryText = summaryInput.value.trim();
+        
+        let updatedHtml = html;
+        const tableMatch = html.match(/<table[^>]*>(.*?)<\/table>/is);
+        
+        if (tableMatch) {
+          const tableContent = tableMatch[1];
+          let newTableContent = tableContent;
+          
+          // Remove existing caption if present
+          newTableContent = newTableContent.replace(/<caption[^>]*>.*?<\/caption>\s*/i, '');
+          
+          // Add new caption at the beginning if text is provided
+          if (captionText) {
+            newTableContent = `<caption>${captionText}</caption>\n${newTableContent}`;
+          }
+          
+          // Update summary attribute on table element
+          let tableTag = html.match(/<table[^>]*>/i)[0];
+          if (summaryText) {
+            tableTag = tableTag.replace(/summary\s*=\s*["'][^"']*["']/i, `summary="${summaryText}"`);
+            if (!tableTag.includes('summary=')) {
+              tableTag = tableTag.replace('>', ` summary="${summaryText}">`);
+            }
+          } else {
+            tableTag = tableTag.replace(/\s*summary\s*=\s*["'][^"']*["']/i, '');
+          }
+          
+          updatedHtml = html.replace(/<table[^>]*>/i, tableTag);
+          updatedHtml = updatedHtml.replace(/<table[^>]*>(.*?)<\/table>/is, `<table>${newTableContent}</table>`);
+        }
+        
+        tableEditor.setData(updatedHtml);
+        closeDialog();
+        setStatus('table', `Caption updated: "${captionText || '(empty)'}". Validate to check table structure.`);
+      });
 
       validateButton.addEventListener('click', () => validateTables(tableEditor));
       helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'Table', 'table'));
