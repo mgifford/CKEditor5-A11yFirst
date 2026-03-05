@@ -46,7 +46,12 @@ jobs:
           rsync -a --delete CKEditor4/ docs/CKEditor4/
           rsync -a ckeditor.js docs/CKEditor4/
           rsync -a contents.css styles.js docs/CKEditor4/
-          rsync -a adapters core lang plugins skins vendor docs/CKEditor4/
+          rsync -a adapters/ docs/CKEditor4/adapters/
+          rsync -a core/ docs/CKEditor4/core/
+          rsync -a lang/ docs/CKEditor4/lang/
+          rsync -a plugins/ docs/CKEditor4/plugins/
+          rsync -a skins/ docs/CKEditor4/skins/
+          rsync -a vendor/ docs/CKEditor4/vendor/
 
       - name: Upload docs artifact
         uses: actions/upload-pages-artifact@v3
