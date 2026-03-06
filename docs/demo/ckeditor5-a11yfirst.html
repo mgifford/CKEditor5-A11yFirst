@@ -2744,7 +2744,7 @@
       let validationTimeout;
       formatEditor.model.document.on('change:data', () => {
         clearTimeout(validationTimeout);
-        validationTimeout = setTimeout(() => validateParagraphFormats(formatEditor), 500);
+        validationTimeout = setTimeout(() => validateParagraphFormats(formatEditor, formatEditorSourceHtml), 500);
       });
 
     }).catch((err) => {
