@@ -13,6 +13,7 @@
     .demo-instructions p { margin: 0.2rem 0 0.4rem; }
     .demo-instructions ol, .demo-instructions ul { margin: 0.2rem 0 0.4rem 1.1rem; }
     .demo-instructions .label { font-weight: 600; }
+    .toolbar-select { min-width: 200px; }
     .editor { min-height: 260px; }
     #editor-strict { min-height: 420px; }
     .note { font-size: 0.95rem; color: #444; }
@@ -21,9 +22,6 @@
     .strict-tests.pass { color: #0a6b1f; }
     .strict-tests.fail { color: #8a1c1c; }
     .image-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
-    .image-actions { margin-bottom: 0.7rem; }
-    .image-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
-    .image-actions .secondary { margin-left: 0.4rem; }
     .tool-status { margin-top: 0.4rem; font-size: 0.85rem; color: #555; }
     .image-props-modal { position: fixed; inset: 0; z-index: 2200; display: none; align-items: center; justify-content: center; pointer-events: none; }
     .image-props-modal.open { display: flex; }
@@ -72,37 +70,26 @@
     .a11yhelp-modal .actions { margin-top: 0.7rem; display: flex; justify-content: flex-end; }
     .a11yhelp-modal .actions button { padding: 0.3rem 0.6rem; cursor: pointer; }
     .style-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
-    .style-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem; align-items: center; }
-    .style-actions select { padding: 0.3rem 0.4rem; min-width: 220px; }
-    .style-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
     .marker { background-color: #fff3a3; }
     .list-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
-    .list-actions { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
-    .list-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
     .list-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .list-results ul { margin: 0.2rem 0 0 1.1rem; }
     .list-results .ok { color: #0a6b1f; }
     .list-results .info { color: #0050a3; }
     .list-results .warn { color: #7a2f00; }
     .format-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
-    .format-actions { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
-    .format-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
     .format-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .format-results ul { margin: 0.2rem 0 0 1.1rem; }
     .format-results .ok { color: #0a6b1f; }
     .format-results .info { color: #0050a3; }
     .format-results .warn { color: #7a2f00; }
     .table-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
-    .table-actions { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
-    .table-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
     .table-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .table-results ul { margin: 0.2rem 0 0 1.1rem; }
     .table-results .ok { color: #0a6b1f; }
     .table-results .info { color: #0050a3; }
     .table-results .warn { color: #7a2f00; }
     .checker-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
-    .checker-actions { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
-    .checker-actions button { padding: 0.35rem 0.7rem; cursor: pointer; }
     .checker-results { margin-top: 0.7rem; border: 1px solid #d0d7de; border-radius: 6px; padding: 0.7rem; background: #fafcff; }
     .checker-results h3 { margin: 0 0 0.5rem; font-size: 0.95rem; }
     .checker-results ul { margin: 0.25rem 0 0 1.1rem; }
@@ -230,11 +217,7 @@
         and <a href="https://www.drupal.org/project/editoria11y" target="_blank" rel="noreferrer">editoria11y (Drupal)</a>.
       </p>
       <p class="image-guidance">Image insertion in this demo is URL-based through A11yFirst Image Properties to remain compatible with GitHub Pages (no binary upload flow).</p>
-      <div class="image-actions">
-        <button id="image-audit" type="button">Run axe-core image audit</button>
-        <button id="sa11y-enable" class="secondary" type="button">Enable Sa11y overlay</button>
-        <div id="sa11y-status" class="tool-status" aria-live="polite">Sa11y is disabled (opt-in).</div>
-      </div>
+      <div id="sa11y-status" class="tool-status" aria-live="polite">Sa11y is disabled (opt-in).</div>
       <div id="editor-image" class="editor">
         <h2>Solar Punk Architecture</h2>
         <p>Buildings in solar punk cities blend seamlessly with nature, featuring <strong>living walls</strong>, transparent solar glass, and modular designs that adapt to community needs.</p>
@@ -384,23 +367,6 @@
         </ul>
       </div>
       <p class="style-guidance">Apply inline character styles separately from structural heading controls, then remove styles or open Help.</p>
-      <div class="style-actions">
-        <select id="style-choice" aria-label="Character style choice">
-          <option value="strong">Strong</option>
-          <option value="emphasis">Emphasis</option>
-          <option value="marker">Marker</option>
-          <option value="inlinequote">Inline quotation</option>
-          <option value="cite">Cited work</option>
-          <option value="code">Computer code</option>
-          <option value="subscript">Subscript</option>
-          <option value="superscript">Superscript</option>
-          <option value="deleted">Deleted Text</option>
-          <option value="inserted">Inserted Text</option>
-        </select>
-        <button id="style-apply" type="button">Apply Character Style</button>
-        <button id="style-remove" type="button">Remove Styles</button>
-        <button id="style-help" type="button">Help</button>
-      </div>
       <div id="editor-style" class="editor">
         <h2>Technology and Nature in Harmony</h2>
         <p>Solar punk reimagines our relationship with technology, moving from <del>extractive industrial practices</del> toward <ins>regenerative systems</ins> that restore ecosystems while meeting human needs.</p>
@@ -428,10 +394,6 @@
         </ul>
       </div>
       <p class="list-guidance">Create accessible lists with proper structure. Use real list markup instead of manually typed bullets or numbers.</p>
-      <div class="list-actions">
-        <button id="list-validate" type="button">Validate Lists</button>
-        <button id="list-help" type="button">Help</button>
-      </div>
       <div id="editor-list" class="editor">
         <h2>Principles of Solar Punk Design</h2>
         <p>Core values that guide sustainable community building:</p>
@@ -478,10 +440,6 @@
         </ul>
       </div>
       <p class="format-guidance">Use semantic paragraph formats to add meaning to content blocks. Choose blockquote for citations, preformatted for code, and address for contact information.</p>
-      <div class="format-actions">
-        <button id="format-validate" type="button">Validate Formats</button>
-        <button id="format-help" type="button">Help</button>
-      </div>
       <div id="editor-format" class="editor">
         <h2>Solar Punk Manifesto</h2>
         <p>The Solar Punk movement envisions an accessible and inclusive future where communities thrive in harmony with nature. This philosophy merges ecological wisdom with civic participation and technology that works for everyone.</p>
@@ -535,11 +493,6 @@
         </ul>
       </div>
       <p class="table-guidance">Use tables for real tabular data, not layout. Add a caption, define headers, and keep structure clear for screen reader navigation.</p>
-      <div class="table-actions">
-        <button id="table-caption-edit" type="button">Edit Caption</button>
-        <button id="table-validate" type="button">Validate Tables</button>
-        <button id="table-help" type="button">Help</button>
-      </div>
       <div id="table-caption-dialog" class="table-caption-dialog" role="dialog" aria-modal="true" aria-labelledby="table-caption-title" style="display: none;">
         <div class="backdrop" data-close-table-caption="true"></div>
         <div class="dialog">
@@ -619,11 +572,6 @@
         </ul>
       </div>
       <p class="checker-guidance">Run an in-editor accessibility summary that combines axe-core results with A11yFirst-specific authoring checks. This works while focused in editor mode without relying on page overlays.</p>
-      <div class="checker-actions">
-        <button id="checker-run" type="button">Run Checker Summary</button>
-        <button id="checker-clear" type="button">Clear Summary</button>
-        <button id="checker-help" type="button">Help</button>
-      </div>
       <div id="editor-checker" class="editor">
         <h1>A11y Checker Test Content</h1>
         <p>This editor contains intentional accessibility issues to test the checker's ability to detect and report problems.</p>
@@ -822,6 +770,54 @@
         loadButton: document.getElementById('a11yhelp-load'),
         closeButton: document.getElementById('a11yhelp-close')
       };
+    }
+
+    function appendToolbarButton(editor, options) {
+      const toolbarElement = editor.ui.view.toolbar.element;
+      if (!toolbarElement) {
+        return null;
+      }
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = options.id;
+      button.className = `ck ck-button ck-off ${options.className || ''}`.trim();
+      button.textContent = options.label;
+      if (options.ariaLabel) {
+        button.setAttribute('aria-label', options.ariaLabel);
+      }
+      if (options.onClick) {
+        button.addEventListener('click', options.onClick);
+      }
+
+      toolbarElement.appendChild(button);
+      return button;
+    }
+
+    function appendToolbarSelect(editor, options) {
+      const toolbarElement = editor.ui.view.toolbar.element;
+      if (!toolbarElement) {
+        return null;
+      }
+
+      const wrapper = document.createElement('span');
+      wrapper.className = 'ck ck-toolbar__item';
+
+      const select = document.createElement('select');
+      select.id = options.id;
+      select.className = 'ck ck-input toolbar-select';
+      select.setAttribute('aria-label', options.ariaLabel || options.id);
+
+      (options.choices || []).forEach((choice) => {
+        const option = document.createElement('option');
+        option.value = choice.value;
+        option.textContent = choice.label;
+        select.appendChild(option);
+      });
+
+      wrapper.appendChild(select);
+      toolbarElement.appendChild(wrapper);
+      return select;
     }
 
     function renderHelpTopic(helpControls, topicKey) {
@@ -1273,18 +1269,13 @@
     }
 
     function createImagePropertiesToolbarButton(editor) {
-      const toolbarElement = editor.ui.view.toolbar.element;
-      if (!toolbarElement) {
-        return null;
+      const button = appendToolbarButton(editor, {
+        id: 'image-props-open',
+        label: 'A11yFirst Image Properties'
+      });
+      if (button) {
+        button.style.display = 'none';
       }
-
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.id = 'image-props-open';
-      button.className = 'ck ck-button ck-off';
-      button.textContent = 'A11yFirst Image Properties';
-      button.style.display = 'none';
-      toolbarElement.appendChild(button);
       return button;
     }
 
@@ -1466,18 +1457,13 @@
     }
 
     function createLinkPropertiesToolbarButton(editor) {
-      const toolbarElement = editor.ui.view.toolbar.element;
-      if (!toolbarElement) {
-        return null;
+      const button = appendToolbarButton(editor, {
+        id: 'link-props-open',
+        label: linkLang.menu
+      });
+      if (button) {
+        button.style.display = 'none';
       }
-
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.id = 'link-props-open';
-      button.className = 'ck ck-button ck-off';
-      button.textContent = linkLang.menu;
-      button.style.display = 'none';
-      toolbarElement.appendChild(button);
       return button;
     }
 
@@ -2329,8 +2315,14 @@
 
       setStatus('image', 'Image-focused mode ready. Select an image to reveal A11yFirst Image Properties in the editor toolbar.');
 
-      const auditButton = document.getElementById('image-audit');
-      const sa11yButton = document.getElementById('sa11y-enable');
+      const auditButton = appendToolbarButton(imageEditor, {
+        id: 'image-audit',
+        label: 'Run axe-core image audit'
+      });
+      const sa11yButton = appendToolbarButton(imageEditor, {
+        id: 'sa11y-enable',
+        label: 'Enable Sa11y overlay'
+      });
       const controls = getImagePropertiesElements();
       const helpControls = getHelpElements();
       const imageEditableRoot = imageEditor.editing.view.getDomRoot();
@@ -2428,7 +2420,8 @@
         syncImagePropertiesFromSelection(imageEditor, controls);
       });
 
-      auditButton.addEventListener('click', async () => {
+      if (auditButton) {
+        auditButton.addEventListener('click', async () => {
         const result = await runImageAxeAudit();
         renderImageResults(result);
 
@@ -2437,11 +2430,14 @@
         } else {
           setStatus('image', `axe-core audit blocked: ${result.blocking.length} issue(s) detected.`);
         }
-      });
+        });
+      }
 
-      sa11yButton.addEventListener('click', async () => {
-        await enableSa11yOverlay();
-      });
+      if (sa11yButton) {
+        sa11yButton.addEventListener('click', async () => {
+          await enableSa11yOverlay();
+        });
+      }
 
       const shouldAutoEnableSa11y = new URLSearchParams(window.location.search).get('sa11y') === '1';
       if (shouldAutoEnableSa11y) {
@@ -2586,14 +2582,40 @@
         styleEditable.setAttribute('aria-labelledby', 'demo5-heading');
       }
 
+      appendToolbarSelect(styleEditor, {
+        id: 'style-choice',
+        ariaLabel: 'Character style choice',
+        choices: [
+          { value: 'strong', label: 'Strong' },
+          { value: 'emphasis', label: 'Emphasis' },
+          { value: 'marker', label: 'Marker' },
+          { value: 'inlinequote', label: 'Inline quotation' },
+          { value: 'cite', label: 'Cited work' },
+          { value: 'code', label: 'Computer code' },
+          { value: 'subscript', label: 'Subscript' },
+          { value: 'superscript', label: 'Superscript' },
+          { value: 'deleted', label: 'Deleted Text' },
+          { value: 'inserted', label: 'Inserted Text' }
+        ]
+      });
+      appendToolbarButton(styleEditor, { id: 'style-apply', label: 'Apply Character Style' });
+      appendToolbarButton(styleEditor, { id: 'style-remove', label: 'Remove Styles' });
+      appendToolbarButton(styleEditor, { id: 'style-help', label: 'Style Help' });
+
       const controls = getCharacterStyleElements();
       const helpControls = getHelpElements();
 
       setStatus('style', 'Character Style mode ready. Select text and apply inline styles.');
 
-      controls.applyButton.addEventListener('click', () => applyCharacterStyle(styleEditor, controls));
-      controls.removeButton.addEventListener('click', () => removeCharacterStyles(styleEditor));
-      controls.helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'CharacterStyle', 'style'));
+      if (controls.applyButton) {
+        controls.applyButton.addEventListener('click', () => applyCharacterStyle(styleEditor, controls));
+      }
+      if (controls.removeButton) {
+        controls.removeButton.addEventListener('click', () => removeCharacterStyles(styleEditor));
+      }
+      if (controls.helpButton) {
+        controls.helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'CharacterStyle', 'style'));
+      }
     });
 
     ClassicEditor.create(document.querySelector('#editor-list'), {
@@ -2619,11 +2641,21 @@
 
       setStatus('list', 'List mode ready. Create ordered and unordered lists with proper structure.');
 
-      const validateButton = document.getElementById('list-validate');
-      const helpButton = document.getElementById('list-help');
+      const validateButton = appendToolbarButton(listEditor, {
+        id: 'list-validate',
+        label: 'Validate Lists'
+      });
+      const helpButton = appendToolbarButton(listEditor, {
+        id: 'list-help',
+        label: 'List Help'
+      });
 
-      validateButton.addEventListener('click', () => validateLists(listEditor));
-      helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'List', 'list'));
+      if (validateButton) {
+        validateButton.addEventListener('click', () => validateLists(listEditor));
+      }
+      if (helpButton) {
+        helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'List', 'list'));
+      }
 
       // Auto-validate on data change (debounced)
       let validationTimeout;
@@ -2656,11 +2688,21 @@
 
       setStatus('format', 'Paragraph Format mode ready. Use semantic formats for quoted content, code, and addresses.');
 
-      const validateButton = document.getElementById('format-validate');
-      const helpButton = document.getElementById('format-help');
+      const validateButton = appendToolbarButton(formatEditor, {
+        id: 'format-validate',
+        label: 'Validate Formats'
+      });
+      const helpButton = appendToolbarButton(formatEditor, {
+        id: 'format-help',
+        label: 'Format Help'
+      });
 
-      validateButton.addEventListener('click', () => validateParagraphFormats(formatEditor));
-      helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'ParagraphFormat', 'format'));
+      if (validateButton) {
+        validateButton.addEventListener('click', () => validateParagraphFormats(formatEditor));
+      }
+      if (helpButton) {
+        helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'ParagraphFormat', 'format'));
+      }
 
       // Auto-validate on data change (debounced)
       let validationTimeout;
@@ -2688,9 +2730,18 @@
 
       setStatus('table', 'Table mode ready. Add captions and headers to improve data table accessibility.');
 
-      const validateButton = document.getElementById('table-validate');
-      const captionEditButton = document.getElementById('table-caption-edit');
-      const helpButton = document.getElementById('table-help');
+      const captionEditButton = appendToolbarButton(tableEditor, {
+        id: 'table-caption-edit',
+        label: 'Edit Caption'
+      });
+      const validateButton = appendToolbarButton(tableEditor, {
+        id: 'table-validate',
+        label: 'Validate Tables'
+      });
+      const helpButton = appendToolbarButton(tableEditor, {
+        id: 'table-help',
+        label: 'Table Help'
+      });
       const captionDialog = document.getElementById('table-caption-dialog');
       const captionInput = document.getElementById('table-caption-input');
       const summaryInput = document.getElementById('table-summary-input');
@@ -2699,16 +2750,18 @@
       const captionBackdrop = captionDialog.querySelector('.backdrop');
 
       // Open caption edit dialog
-      captionEditButton.addEventListener('click', () => {
-        const html = tableEditor.getData();
-        const captionMatch = html.match(/<caption[^>]*>(.*?)<\/caption>/i);
-        const summaryMatch = html.match(/<table[^>]*summary\s*=\s*["']([^"']*)["']/i);
-        
-        captionInput.value = captionMatch ? captionMatch[1] : '';
-        summaryInput.value = summaryMatch ? summaryMatch[1] : '';
-        captionDialog.classList.add('open');
-        captionInput.focus();
-      });
+      if (captionEditButton) {
+        captionEditButton.addEventListener('click', () => {
+          const html = tableEditor.getData();
+          const captionMatch = html.match(/<caption[^>]*>(.*?)<\/caption>/i);
+          const summaryMatch = html.match(/<table[^>]*summary\s*=\s*["']([^"']*)["']/i);
+          
+          captionInput.value = captionMatch ? captionMatch[1] : '';
+          summaryInput.value = summaryMatch ? summaryMatch[1] : '';
+          captionDialog.classList.add('open');
+          captionInput.focus();
+        });
+      }
 
       // Close caption dialog
       const closeDialog = () => captionDialog.classList.remove('open');
@@ -2756,8 +2809,12 @@
         setStatus('table', `Caption updated: "${captionText || '(empty)'}". Validate to check table structure.`);
       });
 
-      validateButton.addEventListener('click', () => validateTables(tableEditor));
-      helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'Table', 'table'));
+      if (validateButton) {
+        validateButton.addEventListener('click', () => validateTables(tableEditor));
+      }
+      if (helpButton) {
+        helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'Table', 'table'));
+      }
 
       let validationTimeout;
       tableEditor.model.document.on('change:data', () => {
@@ -2785,23 +2842,38 @@
       }
 
       const helpControls = getHelpElements();
-      const runButton = document.getElementById('checker-run');
-      const clearButton = document.getElementById('checker-clear');
-      const helpButton = document.getElementById('checker-help');
+      const runButton = appendToolbarButton(checkerEditor, {
+        id: 'checker-run',
+        label: 'Run Checker Summary'
+      });
+      const clearButton = appendToolbarButton(checkerEditor, {
+        id: 'checker-clear',
+        label: 'Clear Summary'
+      });
+      const helpButton = appendToolbarButton(checkerEditor, {
+        id: 'checker-help',
+        label: 'Checker Help'
+      });
       const resultsEl = document.getElementById('checker-results');
 
       setStatus('checker', 'Checker mode ready. Run summary to review blocking and advisory issues in-editor.');
 
-      runButton.addEventListener('click', async () => {
-        await runCheckerSummary(checkerEditor);
-      });
+      if (runButton) {
+        runButton.addEventListener('click', async () => {
+          await runCheckerSummary(checkerEditor);
+        });
+      }
 
-      clearButton.addEventListener('click', () => {
-        resultsEl.innerHTML = '';
-        setStatus('checker', 'Checker summary cleared.');
-      });
+      if (clearButton) {
+        clearButton.addEventListener('click', () => {
+          resultsEl.innerHTML = '';
+          setStatus('checker', 'Checker summary cleared.');
+        });
+      }
 
-      helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'A11yCheckerSummary', 'checker'));
+      if (helpButton) {
+        helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'A11yCheckerSummary', 'checker'));
+      }
     });
 
     (() => {
