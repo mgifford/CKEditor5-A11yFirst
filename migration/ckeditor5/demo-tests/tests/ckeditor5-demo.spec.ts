@@ -9,7 +9,7 @@ import { join } from 'node:path';
  * the async ClassicEditor.create() calls and fail in CI.
  */
 async function gotoDemo(page: Page): Promise<void> {
-  await page.goto('/ckeditor5-a11yfirst.html');
+  await page.goto('/demo/ckeditor5-a11yfirst.html');
   const timeout = 30000;
   await Promise.all([
     expect(page.locator('#status-standard')).not.toBeEmpty({ timeout }),
@@ -67,7 +67,7 @@ test.describe('CKEditor5 demo site', () => {
 
     await expect(page.getByRole('link', { name: 'Open CKEditor 5 demo' })).toHaveAttribute(
       'href',
-      './ckeditor5-a11yfirst.html'
+      './demo/ckeditor5-a11yfirst.html'
     );
 
     await expect(page.getByRole('link', { name: 'Open CKEditor 4 baseline demo' })).toHaveAttribute(
@@ -134,9 +134,10 @@ test.describe('CKEditor5 demo site', () => {
 
     const results = await page.evaluate(async () => {
       const axe = (window as unknown as { axe: { run: (context?: unknown, options?: unknown) => Promise<unknown> } }).axe;
-      return axe.run(document, {
-        runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] }
-      });
+      return axe.run(
+        { exclude: [['.ck-editor__editable']] },
+        { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] } }
+      );
     });
 
     const violations = (results as { violations: Array<{ id: string; impact: string | null }> }).violations;

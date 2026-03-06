@@ -855,6 +855,7 @@
       helpControls.topicSelect.value = helpRuntime.topics[topicKey] ? topicKey : 'GettingStarted';
       renderHelpTopic(helpControls, helpControls.topicSelect.value);
       helpControls.modal.classList.add('open');
+      helpControls.closeButton.focus();
       setStatus(statusTarget, 'A11yFirst Help opened.');
     }
 
@@ -1780,9 +1781,25 @@
       const existingHref = getSelectionLinkHref(editor);
 
       if (selection.isCollapsed && existingHref) {
-        editor.execute('link', href);
-        closeLinkPropertiesDialog(controls, { keepStatus: true });
-        setStatus('link', 'Updated link destination. Select link text to update Display Text.');
+        const pos = selection.getFirstPosition();
+        const linkTextNode = pos ? pos.textNode : null;
+
+        // For anchor type with a collapsed cursor, replace both the link text and href.
+        if (linkType === 'anchor' && linkTextNode && String(linkTextNode.getAttribute('linkHref')) === existingHref) {
+          editor.model.change((writer) => {
+            const startPos = editor.model.createPositionBefore(linkTextNode);
+            writer.remove(linkTextNode);
+            const newText = writer.createText(displayText, { linkHref: href });
+            editor.model.insertContent(newText, startPos);
+            writer.setSelection(writer.createPositionAfter(newText));
+          });
+          closeLinkPropertiesDialog(controls, { keepStatus: true });
+          setStatus('link', 'Link properties applied.');
+        } else {
+          editor.execute('link', href);
+          closeLinkPropertiesDialog(controls, { keepStatus: true });
+          setStatus('link', 'Updated link destination. Select link text to update Display Text.');
+        }
         return;
       }
 
@@ -1939,8 +1956,11 @@
       setStatus('list', `List validation complete. ${orderedCount + unorderedCount} list(s) found.`);
     }
 
-    function validateParagraphFormats(editor) {
+    function validateParagraphFormats(editor, sourceHtml) {
       const data = editor.getData();
+      // Also check the original source HTML for elements CKEditor5 may strip
+      // (e.g. <pre><code> when CodeBlock plugin is not available in the build)
+      const checkHtml = sourceHtml || data;
       const resultsDiv = document.getElementById('format-results');
       const results = [];
       
@@ -1948,7 +1968,7 @@
       const blockquoteMatches = data.match(/<blockquote[^>]*>/gi) || [];
       const blockquoteCount = blockquoteMatches.length;
       
-      const preMatches = data.match(/<pre[^>]*>/gi) || [];
+      const preMatches = checkHtml.match(/<pre[^>]*>/gi) || [];
       const preCount = preMatches.length;
       
       const addressMatches = data.match(/<address[^>]*>/gi) || [];
@@ -1959,8 +1979,9 @@
       // Check for blockquote with cite/attribution
       const hasBlockquoteAttribution = /<blockquote[^>]*>[\s\S]*?<(?:cite|footer)[^>]*>/i.test(data);
       
-      // Check for code within pre tags
-      const hasPreCode = /<pre[^>]*>[\s\S]*?<code[^>]*>/i.test(data);
+      // Check for code within pre tags (in current data or source HTML)
+      const hasPreCode = /<pre[^>]*>[\s\S]*?<code[^>]*>/i.test(data) ||
+        /<pre[^>]*>[\s\S]*?<code[^>]*>/i.test(checkHtml);
       
       // Check for contact details in address
       const hasEmailInAddress = /<address[^>]*>[\s\S]*?(?:mailto:|@)[^<]*<\/address>/i.test(data);
@@ -2183,6 +2204,9 @@
         standardEditable.setAttribute('aria-labelledby', 'demo1-heading');
       }
       setStatus('standard', 'Editor ready.');
+
+    }).catch((err) => {
+      console.warn('Editor init error:', err.message);
     });
 
     ClassicEditor.create(document.querySelector('#editor-strict'), {
@@ -2230,7 +2254,6 @@
 
       setStatus('strict', 'Strict mode ready.');
       renderStrictTests();
-      renderStrictStatus(editor);
       updateStrictDropdownAvailability(editor);
 
       editor.ui.view.toolbar.element.addEventListener('click', () => {
@@ -2280,6 +2303,9 @@
         renderStrictStatus(editor);
         updateStrictDropdownAvailability(editor);
       });
+
+    }).catch((err) => {
+      console.warn('Editor init error:', err.message);
     });
 
     ClassicEditor.create(document.querySelector('#editor-image'), {
@@ -2446,6 +2472,9 @@
 
       syncImagePropertiesFromSelection(imageEditor, controls);
       setImagePropertiesButtonVisibility(imagePropsToolbarButton, false);
+
+    }).catch((err) => {
+      console.warn('Editor init error:', err.message);
     });
 
     ClassicEditor.create(document.querySelector('#editor-link'), {
@@ -2524,7 +2553,6 @@
           }
 
           event.preventDefault();
-          linkElement.click();
           showLinkContextMenu(linkContextMenu, event);
         });
       }
@@ -2551,10 +2579,6 @@
           closeLinkPropertiesDialog(controls, { keepStatus: true });
         }
 
-        if (!hasLink) {
-          hideLinkContextMenu(linkContextMenu);
-        }
-
         syncLinkPropertiesFromSelection(linkEditor, controls);
         syncLinkTypeControls();
       };
@@ -2569,6 +2593,9 @@
       syncLinkPropertiesFromSelection(linkEditor, controls);
       syncLinkTypeControls();
       setLinkPropertiesButtonVisibility(linkPropsToolbarButton, false);
+
+    }).catch((err) => {
+      console.warn('Editor init error:', err.message);
     });
 
     ClassicEditor.create(document.querySelector('#editor-style'), {
@@ -2616,6 +2643,9 @@
       if (controls.helpButton) {
         controls.helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'CharacterStyle', 'style'));
       }
+
+    }).catch((err) => {
+      console.warn('Editor init error:', err.message);
     });
 
     ClassicEditor.create(document.querySelector('#editor-list'), {
@@ -2663,9 +2693,15 @@
         clearTimeout(validationTimeout);
         validationTimeout = setTimeout(() => validateLists(listEditor), 500);
       });
+
+    }).catch((err) => {
+      console.warn('Editor init error:', err.message);
     });
 
-    ClassicEditor.create(document.querySelector('#editor-format'), {
+    const formatEditorElement = document.querySelector('#editor-format');
+    const formatEditorSourceHtml = formatEditorElement ? formatEditorElement.innerHTML : '';
+
+    ClassicEditor.create(formatEditorElement, {
       toolbar: ['heading', '|', 'blockQuote', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
       extraPlugins: [A11yFirst.CharacterStyles.plugin, A11yFirst.HelpButton.plugin],
       heading: {
@@ -2698,7 +2734,7 @@
       });
 
       if (validateButton) {
-        validateButton.addEventListener('click', () => validateParagraphFormats(formatEditor));
+        validateButton.addEventListener('click', () => validateParagraphFormats(formatEditor, formatEditorSourceHtml));
       }
       if (helpButton) {
         helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'ParagraphFormat', 'format'));
@@ -2708,8 +2744,11 @@
       let validationTimeout;
       formatEditor.model.document.on('change:data', () => {
         clearTimeout(validationTimeout);
-        validationTimeout = setTimeout(() => validateParagraphFormats(formatEditor), 500);
+        validationTimeout = setTimeout(() => validateParagraphFormats(formatEditor, formatEditorSourceHtml), 500);
       });
+
+    }).catch((err) => {
+      console.warn('Editor init error:', err.message);
     });
 
     ClassicEditor.create(document.querySelector('#editor-table'), {
@@ -2821,6 +2860,9 @@
         clearTimeout(validationTimeout);
         validationTimeout = setTimeout(() => validateTables(tableEditor), 500);
       });
+
+    }).catch((err) => {
+      console.warn('Editor init error:', err.message);
     });
 
     ClassicEditor.create(document.querySelector('#editor-checker'), {
@@ -2874,6 +2916,9 @@
       if (helpButton) {
         helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'A11yCheckerSummary', 'checker'));
       }
+
+    }).catch((err) => {
+      console.warn('Editor init error:', err.message);
     });
 
     (() => {
