@@ -9,6 +9,10 @@
     h1, h2 { margin-bottom: 0.4rem; }
     .row { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem; }
     .panel { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
+    .demo-instructions { margin: 0.6rem 0 0.9rem; padding: 0.7rem 0.9rem; border: 1px solid #d7def7; border-radius: 8px; background: #f6f8ff; font-size: 0.9rem; }
+    .demo-instructions p { margin: 0.2rem 0 0.4rem; }
+    .demo-instructions ol, .demo-instructions ul { margin: 0.2rem 0 0.4rem 1.1rem; }
+    .demo-instructions .label { font-weight: 600; }
     .editor { min-height: 260px; }
     #editor-strict { min-height: 420px; }
     .note { font-size: 0.95rem; color: #444; }
@@ -140,6 +144,21 @@
   <div class="row">
     <section id="demo1" class="panel">
       <h2 id="demo1-heading">Demo 1: Standard A11yFirst Configuration</h2>
+      <div class="demo-instructions">
+        <p><span class="label">Plugins demoed:</span> A11yFirst Heading, Image, Link, List, Table, Character Styles, Help Button.</p>
+        <p class="label">Manual test</p>
+        <ol>
+          <li>Open the A11yFirst Help button and switch between a few topics.</li>
+          <li>Use the Heading menu to add an H2 and H3, then add a bulleted list.</li>
+          <li>Add or edit a link to confirm link editing still works alongside A11yFirst plugins.</li>
+        </ol>
+        <p class="label">Expected</p>
+        <ul>
+          <li>Help dialog opens with topics and closes without errors.</li>
+          <li>Headings and lists insert normally with no warning status messages.</li>
+          <li>Status reads “Editor ready.” after load.</li>
+        </ul>
+      </div>
       <div id="editor-standard" class="editor">
         <h1>Building Tomorrow's Green Cities</h1>
         <p>Accessible and inclusive Solar Punk envisions a future where renewable energy, sustainable architecture, and thriving ecosystems coexist with social equity. In these urban landscapes, <strong>solar panels</strong> cover rooftops, <em>vertical gardens</em> climb building facades, and community spaces are designed for people of all abilities.</p>
@@ -157,6 +176,21 @@
 
     <section id="demo2" class="panel">
       <h2 id="demo2-heading">Demo 2: High-Restriction Heading Mode</h2>
+      <div class="demo-instructions">
+        <p><span class="label">Plugins demoed:</span> A11yFirst Heading (strict rules), Help Button.</p>
+        <p class="label">Manual test</p>
+        <ol>
+          <li>Place the caret at the top and try to choose an H4 or H5 from the Heading menu.</li>
+          <li>Insert an H2, then try to jump directly to H4 (skip H3).</li>
+          <li>Paste or type headings that skip levels and observe normalization.</li>
+        </ol>
+        <p class="label">Expected</p>
+        <ul>
+          <li>Disallowed heading selections are blocked with a clear status message.</li>
+          <li>Skipped heading levels trigger a warning and/or auto-normalization.</li>
+          <li>Status area shows strict mode guidance and test results.</li>
+        </ul>
+      </div>
       <div id="editor-strict" class="editor">
         <h2>2. Harmonic Urban Planning</h2>
         <h3>3. Integrated Permaculture Zones</h3>
@@ -174,6 +208,21 @@
 
     <section id="demo3" class="panel">
       <h2 id="demo3-heading">Demo 3: Image-Focused Mode</h2>
+      <div class="demo-instructions">
+        <p><span class="label">Plugins demoed:</span> A11yFirst Image, Help Button, axe-core audit integration.</p>
+        <p class="label">Manual test</p>
+        <ol>
+          <li>Select the image, open Image Properties (toolbar or right-click), and clear the alt text.</li>
+          <li>Click “Apply accessibility metadata,” then run the “Run axe-core image audit” button.</li>
+          <li>Add a meaningful alt text and re-run the audit.</li>
+        </ol>
+        <p class="label">Expected</p>
+        <ul>
+          <li>Missing alt text produces an advisory or blocking message in the results.</li>
+          <li>With good alt text, the audit reports pass or zero blocking issues.</li>
+          <li>If axe-core is unavailable, a fallback advisory message appears.</li>
+        </ul>
+      </div>
       <p class="image-guidance">
         Uses CKEditor5 native text + image tools (bold, italic, link, text alternative, caption, and image styles),
         then runs external checker audits (axe-core).
@@ -257,6 +306,20 @@
 
     <section id="demo4" class="panel">
       <h2 id="demo4-heading">Demo 4: Link-Focused Mode</h2>
+      <div class="demo-instructions">
+        <p><span class="label">Plugins demoed:</span> A11yFirst Link, Help Button.</p>
+        <p class="label">Manual test</p>
+        <ol>
+          <li>Select an existing link and open Edit Link (toolbar or right-click).</li>
+          <li>Change the display text to a generic phrase like “Click here,” then apply.</li>
+          <li>Update the display text to a descriptive phrase and apply again.</li>
+        </ol>
+        <p class="label">Expected</p>
+        <ul>
+          <li>Generic link text triggers a guidance warning in the status area.</li>
+          <li>Descriptive link text clears the warning and leaves the editor in a ready state.</li>
+        </ul>
+      </div>
       <p class="link-guidance">Select an existing link, then open A11yFirst Link Properties from the contextual toolbar button or right-click menu.</p>
       <div id="editor-link" class="editor">
         <h2 id="energy-networks">Open Source Energy Networks</h2>
@@ -306,6 +369,20 @@
 
     <section id="demo5" class="panel">
       <h2 id="demo5-heading">Demo 5: Character Style Mode</h2>
+      <div class="demo-instructions">
+        <p><span class="label">Plugins demoed:</span> A11yFirst Character Styles, Help Button.</p>
+        <p class="label">Manual test</p>
+        <ol>
+          <li>Select text and apply “Marker” or “Cited work.”</li>
+          <li>Apply “Computer code” to a technical phrase.</li>
+          <li>Use “Remove Styles” to clear all inline formatting.</li>
+        </ol>
+        <p class="label">Expected</p>
+        <ul>
+          <li>Inline styles apply appropriate semantics (highlight, cite, code).</li>
+          <li>Remove Styles resets the text to plain formatting.</li>
+        </ul>
+      </div>
       <p class="style-guidance">Apply inline character styles separately from structural heading controls, then remove styles or open Help.</p>
       <div class="style-actions">
         <select id="style-choice" aria-label="Character style choice">
@@ -335,6 +412,21 @@
 
     <section id="demo6" class="panel">
       <h2 id="demo6-heading">Demo 6: List Guidance Mode</h2>
+      <div class="demo-instructions">
+        <p><span class="label">Plugins demoed:</span> A11yFirst List, Help Button.</p>
+        <p class="label">Manual test</p>
+        <ol>
+          <li>Click “Validate Lists” to evaluate the existing ordered and unordered lists.</li>
+          <li>Add a fake list by typing “1. Item” as plain text, then validate again.</li>
+          <li>Create a nested list and re-run validation.</li>
+        </ol>
+        <p class="label">Expected</p>
+        <ul>
+          <li>Valid lists report a green OK message and list counts.</li>
+          <li>Manual bullet/number patterns trigger a warning about fake lists.</li>
+          <li>Nested lists are detected and reported as a positive result.</li>
+        </ul>
+      </div>
       <p class="list-guidance">Create accessible lists with proper structure. Use real list markup instead of manually typed bullets or numbers.</p>
       <div class="list-actions">
         <button id="list-validate" type="button">Validate Lists</button>
@@ -370,6 +462,21 @@
 
     <section id="demo7" class="panel">
       <h2 id="demo7-heading">Demo 7: Paragraph Format Mode</h2>
+      <div class="demo-instructions">
+        <p><span class="label">Plugins demoed:</span> Paragraph format validator (demo), Help Button.</p>
+        <p class="label">Manual test</p>
+        <ol>
+          <li>Click “Validate Formats” and review the counts for blockquote, pre, and address.</li>
+          <li>Remove the blockquote or address section and validate again.</li>
+          <li>Add a code block inside &lt;pre&gt; with &lt;code&gt; tags and re-run validation.</li>
+        </ol>
+        <p class="label">Expected</p>
+        <ul>
+          <li>Results list the number of semantic blocks found.</li>
+          <li>Removing blockquote/address reduces the count and updates the summary.</li>
+          <li>Adding &lt;code&gt; inside &lt;pre&gt; changes tips into OK results.</li>
+        </ul>
+      </div>
       <p class="format-guidance">Use semantic paragraph formats to add meaning to content blocks. Choose blockquote for citations, preformatted for code, and address for contact information.</p>
       <div class="format-actions">
         <button id="format-validate" type="button">Validate Formats</button>
@@ -412,6 +519,21 @@
 
     <section id="demo8" class="panel">
       <h2 id="demo8-heading">Demo 8: Table Accessibility Mode</h2>
+      <div class="demo-instructions">
+        <p><span class="label">Plugins demoed:</span> A11yFirst Table, Help Button.</p>
+        <p class="label">Manual test</p>
+        <ol>
+          <li>Click “Validate Tables” and confirm the table shows caption and header results.</li>
+          <li>Delete the caption or header row and validate again.</li>
+          <li>Use “Edit Caption” to add a new caption and optional summary.</li>
+        </ol>
+        <p class="label">Expected</p>
+        <ul>
+          <li>Valid tables report captions, headers, and scope tips.</li>
+          <li>Missing captions or headers trigger warning messages.</li>
+          <li>Saving a caption updates the table and status message.</li>
+        </ul>
+      </div>
       <p class="table-guidance">Use tables for real tabular data, not layout. Add a caption, define headers, and keep structure clear for screen reader navigation.</p>
       <div class="table-actions">
         <button id="table-caption-edit" type="button">Edit Caption</button>
@@ -481,6 +603,21 @@
 
     <section id="demo9" class="panel">
       <h2 id="demo9-heading">Demo 9: A11y Checker Summary Mode</h2>
+      <div class="demo-instructions">
+        <p><span class="label">Plugins demoed:</span> A11yFirst A11yChecker, Heading, Image, Link, List, Table, Help Button.</p>
+        <p class="label">Manual test</p>
+        <ol>
+          <li>Click “Run Checker Summary” to scan the intentional issues.</li>
+          <li>Fix a problem (e.g., add alt text or change “Click here”) and re-run.</li>
+          <li>Use “Clear Summary” to reset the results panel.</li>
+        </ol>
+        <p class="label">Expected</p>
+        <ul>
+          <li>Summary shows blocking and advisory lists based on current content.</li>
+          <li>Fixing issues reduces the counts when re-running the summary.</li>
+          <li>Clear removes the summary output and updates status.</li>
+        </ul>
+      </div>
       <p class="checker-guidance">Run an in-editor accessibility summary that combines axe-core results with A11yFirst-specific authoring checks. This works while focused in editor mode without relying on page overlays.</p>
       <div class="checker-actions">
         <button id="checker-run" type="button">Run Checker Summary</button>
