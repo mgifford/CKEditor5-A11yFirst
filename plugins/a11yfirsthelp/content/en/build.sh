@@ -23,8 +23,13 @@ sed -e '/IMAGEHELP/ {'       -e 'r imageHelp.tmp'       -e 'd' -e '}' setLang-4.
 sed -e '/GETTINGSTARTED/ {'  -e 'r gettingStarted.tmp'  -e 'd' -e '}' setLang-5.js > setLang-6.js
 sed -e '/ABOUTA11YFIRST/ {'  -e 'r aboutA11yFirst.tmp'  -e 'd' -e '}' setLang-6.js > en.js
 
-# Move the end result to the lang folder
-mv en.js ../../lang/
+# Generate locale alias files (en-au, en-ca, en-gb) from en.js
+sed "s/setLang( 'a11yfirsthelp', 'en',/setLang( 'a11yfirsthelp', 'en-au',/" en.js > en-au.js
+sed "s/setLang( 'a11yfirsthelp', 'en',/setLang( 'a11yfirsthelp', 'en-ca',/" en.js > en-ca.js
+sed "s/setLang( 'a11yfirsthelp', 'en',/setLang( 'a11yfirsthelp', 'en-gb',/" en.js > en-gb.js
+
+# Move the end results to the lang folder
+mv en.js en-au.js en-ca.js en-gb.js ../../lang/
 
 # Remove temp files
 rm -f *.tmp setLang-?.js
