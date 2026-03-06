@@ -1,5 +1,15 @@
 # A11yFirst for CKEditor 5
 
+> ## ⚠️ Experimental Project — AI-Assisted Content
+>
+> **This project is experimental.** Much of the documentation and site content in this repository was generated with the assistance of AI tools. **All claims, guidance, and implementation details need to be validated in real-world use before relying on them.**
+>
+> Impacts of using A11yFirst may vary significantly based on where and how it is implemented. Results in your environment may differ from what is described here.
+>
+> **We need your feedback!** If you try this project and get positive or negative results, please [open an issue](https://github.com/mgifford/CKEditor5-A11yFirst/issues) in the GitHub issue queue. Include links and references so that claims can be discussed and validated by the community.
+
+---
+
 A CKEditor 5 plugin suite that promotes and encourages the creation of accessible content as you edit. This project is a migration of the [A11yFirst for CKEditor 4](CKEditor4/README.md) project to the CKEditor 5 platform.
 
 > **Note**: This repository contains a CKEditor 4 codebase that is being used as the starting point for a CKEditor 5 migration. The CKEditor 4 source and plugins in the repo root (`core/`, `plugins/`, `skins/`, etc.) are the **legacy platform** we are upgrading from — they are not the active CKEditor 5 development target. The CKEditor 5 A11yFirst work lives in the [`docs/`](docs/) directory.
