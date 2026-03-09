@@ -330,20 +330,185 @@
   }
 
   // ============================================================================
-  // A11y Checker Summary Plugin (combines all validators)
+  // A11y Checker Summary Plugin (replaces Quail.js with axe-core + custom rules)
+  //
+  // The CKEditor 4 a11ychecker plugin used Quail.js (plugins/a11ychecker/libs/quail/)
+  // as its scanning engine — a jQuery-based library archived in 2016 that only
+  // covered WCAG 2.0.  This CKEditor 5 implementation uses axe-core (WCAG 2.0,
+  // 2.1 and 2.2, no jQuery) combined with A11yFirst-specific custom rules.
   // ============================================================================
 
+  // Severity mapping from axe-core impact to A11yFirst tiers.
+  // Mirrors the checkerMappings module in migration/ckeditor5/a11yfirst/src/modules/checker/
+  function mapAxeImpact(impact) {
+    if (impact === 'critical') return 'severe';
+    if (impact === 'serious') return 'moderate';
+    return 'suggestion';
+  }
+
+  function isBlockingImpact(impact) {
+    return impact === 'critical' || impact === 'serious';
+  }
+
+  // Custom A11yFirst rules — run synchronously on HTML strings so they do not
+  // depend on a live DOM or an external library.  These replace the subset of
+  // Quail.js rules that were relevant to rich-text authoring.
+  function runCustomCheckerRules(html) {
+    const findings = [];
+
+    // Heading sequence
+    const levels = Array.from(html.matchAll(/<h([1-6])\b/gi)).map((m) => Number(m[1]));
+    let prev = null;
+    for (const level of levels) {
+      if (prev !== null && level > prev + 1) {
+        findings.push({
+          severity: 'severe',
+          blocking: true,
+          source: 'custom',
+          message: `Heading sequence skips from H${prev} to H${level}.`
+        });
+      }
+      prev = level;
+    }
+
+    // Link text quality
+    const GENERIC_LINK_TEXT = new Set(['', 'click here', 'click', 'link', 'read more', 'more', 'here']);
+    for (const m of html.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/gi)) {
+      const text = (m[1] || '').replace(/<[^>]+>/g, '').trim().toLowerCase();
+      if (GENERIC_LINK_TEXT.has(text)) {
+        findings.push({
+          severity: 'severe',
+          blocking: true,
+          source: 'custom',
+          message: `Link text "${text || '(empty)'}" is not descriptive. Use text that describes the link destination.`
+        });
+      }
+    }
+
+    // Image alt text
+    for (const m of html.matchAll(/<img\b([^>]*)>/gi)) {
+      const attrs = m[1] || '';
+      const altMatch = attrs.match(/\balt\s*=\s*(?:"([^"]*)"|'([^']*)')/i);
+      if (!altMatch) {
+        findings.push({
+          severity: 'severe',
+          blocking: true,
+          source: 'custom',
+          message: 'Image is missing the alt attribute. Provide descriptive text or use alt="" for decorative images.'
+        });
+      } else {
+        const alt = (altMatch[1] !== undefined ? altMatch[1] : altMatch[2] || '').trim();
+        if (alt === '') {
+          findings.push({
+            severity: 'suggestion',
+            blocking: false,
+            source: 'custom',
+            message: 'Image has empty alt text. Confirm the image is decorative.'
+          });
+        }
+      }
+    }
+
+    // Table structure
+    for (const m of html.matchAll(/<table[\s>][\s\S]*?<\/table>/gi)) {
+      const t = m[0];
+      if (!/<caption[\s>]/i.test(t)) {
+        findings.push({
+          severity: 'suggestion',
+          blocking: false,
+          source: 'custom',
+          message: 'Table is missing a <caption>. Add a caption that describes the table\'s purpose.'
+        });
+      }
+      if (!/<th[\s>]/i.test(t)) {
+        findings.push({
+          severity: 'severe',
+          blocking: true,
+          source: 'custom',
+          message: 'Table has no header cells (<th>). Use <th> elements for row and column headers.'
+        });
+      }
+    }
+
+    return findings;
+  }
+
+  // Convert axe-core violations into A11yFirst findings.
+  function adaptAxeViolations(violations) {
+    return violations.map((v) => ({
+      severity: mapAxeImpact(v.impact),
+      blocking: isBlockingImpact(v.impact),
+      source: 'axe-core',
+      message: `axe: ${v.id} — ${v.help}`
+    }));
+  }
+
+  /**
+   * Run an accessibility check on the given editor using:
+   *   1. axe-core (if available via window.axe) — WCAG 2.0/2.1/2.2 automated scan
+   *   2. A11yFirst custom rules — heading sequence, link text, image alt, table structure
+   *
+   * Returns a Promise resolving to a CheckerResult object.
+   *
+   * NOTE: This is the replacement for the old Quail.js-based check.  Quail.js
+   * required jQuery 1.x and only covered WCAG 2.0.  axe-core has no jQuery
+   * dependency and covers WCAG 2.0, 2.1 and 2.2.
+   *
+   * @param {object} editor  CKEditor5 editor instance
+   * @returns {Promise<{findings: Array, blocking: Array, advisory: Array, timestamp: string}>}
+   */
+  async function runA11yCheck(editor) {
+    const html = editor.getData ? editor.getData() : '';
+    const customFindings = runCustomCheckerRules(html);
+
+    let axeFindings = [];
+    if (typeof window !== 'undefined' && window.axe) {
+      try {
+        const editableEl = editor.ui && editor.ui.getEditableElement
+          ? editor.ui.getEditableElement()
+          : null;
+        const scanTarget = editableEl || document.body;
+        const result = await window.axe.run(scanTarget, {
+          runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] }
+        });
+        axeFindings = adaptAxeViolations(result.violations);
+      } catch (err) {
+        axeFindings = [{
+          severity: 'suggestion',
+          blocking: false,
+          source: 'axe-core',
+          message: `axe-core scan failed: ${err && err.message ? err.message : String(err)}`
+        }];
+      }
+    }
+
+    const allFindings = [...axeFindings, ...customFindings].sort((a, b) => {
+      if (a.blocking !== b.blocking) return a.blocking ? -1 : 1;
+      const order = { severe: 0, moderate: 1, suggestion: 2 };
+      return (order[a.severity] || 2) - (order[b.severity] || 2);
+    });
+
+    const checkerResult = {
+      findings: allFindings,
+      blocking: allFindings.filter((f) => f.blocking),
+      advisory: allFindings.filter((f) => !f.blocking),
+      timestamp: new Date().toISOString()
+    };
+
+    validationRegistry.setFindings('checker', checkerResult);
+    return checkerResult;
+  }
+
   function A11yFirstA11yCheckerPlugin(editor) {
-    // Collect findings from all categories
+    // Keep the internal validators aggregated in real time (lightweight, sync)
     editor.model.document.on('change:data', () => {
       const findings = validationRegistry.getFindings();
-      
+
       const summary = {
         blocking: [],
         advisory: []
       };
-      
-      // Aggregate findings from all validators (skip 'checker' which stores a summary object, not an array)
+
       Object.entries(findings).forEach(([category, categoryFindings]) => {
         if (category === 'checker' || !Array.isArray(categoryFindings)) return;
         categoryFindings.forEach(finding => {
@@ -354,9 +519,12 @@
           }
         });
       });
-      
+
       validationRegistry.setFindings('checker', summary);
     });
+
+    // Expose a runCheck method on the editor for external callers.
+    editor.a11yCheck = () => runA11yCheck(editor);
   }
 
   // ============================================================================
@@ -450,7 +618,18 @@
     plugin: A11yFirstTablePlugin
   };
   namespace.A11yChecker = {
-    plugin: A11yFirstA11yCheckerPlugin
+    plugin: A11yFirstA11yCheckerPlugin,
+    /**
+     * Run an accessibility check on a CKEditor5 editor instance.
+     *
+     * This uses axe-core (if available via window.axe) combined with
+     * A11yFirst custom rules.  It replaces the old Quail.js-based check
+     * used in the CKEditor 4 plugin.
+     *
+     * @param {object} editor  CKEditor5 editor instance
+     * @returns {Promise<CheckerResult>}
+     */
+    runCheck: runA11yCheck
   };
   namespace.ValidationRegistry = validationRegistry;
   global.A11yFirst = namespace;
