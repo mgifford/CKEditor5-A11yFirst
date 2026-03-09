@@ -1,0 +1,66 @@
+name: Link Check
+
+on:
+  push:
+    branches: [ "a11yfirst-master" ]
+    paths:
+      - "docs/**"
+      - "lychee.toml"
+      - ".github/workflows/link-check.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "lychee.toml"
+      - ".github/workflows/link-check.yml"
+  schedule:
+    # Weekly on Monday at 09:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  # On every push / PR: validate that all internal (relative) links in the
+  # docs HTML files resolve to real files on disk.  External URLs are skipped
+  # here to avoid rate-limit failures and to keep PR checks fast.
+  link-check-local:
+    name: Check internal links (local)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check internal links in docs HTML files
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --verbose
+            --no-progress
+            --offline
+            --config lychee.toml
+            'docs/**/*.html'
+          fail: true
+
+  # On schedule and manual runs: crawl the live GitHub Pages site to catch
+  # broken external links and any pages that are missing after deployment.
+  link-check-live:
+    name: Check links on deployed site
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check links on deployed GitHub Pages site
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --verbose
+            --no-progress
+            --config lychee.toml
+            https://mgifford.github.io/CKEditor5-A11yFirst/
+            https://mgifford.github.io/CKEditor5-A11yFirst/demo/index.html
+            https://mgifford.github.io/CKEditor5-A11yFirst/demo/ckeditor5-a11yfirst.html
+          fail: true
