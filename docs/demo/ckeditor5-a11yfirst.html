@@ -2077,15 +2077,10 @@
       setStatus('table', `Table validation complete. ${tableMatches.length} table(s) found.`);
     }
 
-    function summarizeA11yFindings(findings) {
-      const blocking = findings.filter((item) => item.severity === 'blocking');
-      const advisory = findings.filter((item) => item.severity !== 'blocking');
-      return { blocking, advisory };
-    }
-
     function renderCheckerSummary(findings) {
       const resultsEl = document.getElementById('checker-results');
-      const { blocking, advisory } = summarizeA11yFindings(findings);
+      const blocking = findings.filter((item) => item.severity === 'blocking');
+      const advisory = findings.filter((item) => item.severity !== 'blocking');
 
       if (!blocking.length && !advisory.length) {
         resultsEl.innerHTML = '<h3>Summary</h3><div class="ok">PASS: No blocking or advisory issues found in current editor content.</div>';
@@ -2106,94 +2101,20 @@
       resultsEl.innerHTML = blocks.join('');
     }
 
-    function runCustomCheckerRules(editorData) {
-      const findings = [];
-
-      const headingLevels = Array.from(editorData.matchAll(/<h([1-6])\b/gi)).map((match) => Number(match[1]));
-      for (let i = 1; i < headingLevels.length; i += 1) {
-        if (headingLevels[i] > headingLevels[i - 1] + 1) {
-          findings.push({
-            severity: 'blocking',
-            message: `Heading sequence skips from H${headingLevels[i - 1]} to H${headingLevels[i]}.`
-          });
-          break;
-        }
-      }
-
-      const links = Array.from(editorData.matchAll(/<a[^>]*>([\s\S]*?)<\/a>/gi)).map((match) => String(match[1] || '').replace(/<[^>]+>/g, '').trim());
-      const badLinkText = ['click here', 'read more', 'more', 'link', 'here'];
-      links.forEach((text) => {
-        if (badLinkText.includes(text.toLowerCase())) {
-          findings.push({
-            severity: 'blocking',
-            message: `Link text "${text}" is not descriptive.`
-          });
-        }
-      });
-
-      const imageTags = Array.from(editorData.matchAll(/<img\b[^>]*>/gi)).map((match) => match[0]);
-      imageTags.forEach((img) => {
-        const altMatch = img.match(/\salt=("([^"]*)"|'([^']*)')/i);
-        const altText = altMatch ? (altMatch[2] ?? altMatch[3] ?? '').trim() : '';
-        if (!altMatch) {
-          findings.push({ severity: 'blocking', message: 'Image missing alt attribute.' });
-          return;
-        }
-        if (!altText) {
-          findings.push({ severity: 'advisory', message: 'Image has empty alt text. Confirm it is decorative.' });
-        }
-      });
-
-      const tables = Array.from(editorData.matchAll(/<table[\s>][\s\S]*?<\/table>/gi)).map((match) => match[0]);
-      tables.forEach((table) => {
-        if (!/<caption[\s>][\s\S]*?<\/caption>/i.test(table)) {
-          findings.push({ severity: 'advisory', message: 'Table is missing a caption.' });
-        }
-        if (!/<th[\s>]/i.test(table)) {
-          findings.push({ severity: 'blocking', message: 'Table has no header cells (<th>).'});
-        }
-      });
-
-      return findings;
-    }
-
-    async function runAxeForChecker(editor) {
-      const findings = [];
-
-      if (!window.axe) {
-        findings.push({ severity: 'advisory', message: 'axe-core not available in this environment.' });
-        return findings;
-      }
-
-      const editableRoot = editor.ui.getEditableElement();
-      if (!editableRoot) {
-        findings.push({ severity: 'advisory', message: 'Editable region not available for scan.' });
-        return findings;
-      }
-
-      const results = await window.axe.run(editableRoot, {
-        runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] }
-      });
-
-      results.violations.forEach((violation) => {
-        findings.push({
-          severity: (violation.impact === 'critical' || violation.impact === 'serious') ? 'blocking' : 'advisory',
-          message: `axe: ${violation.id} - ${violation.help}`
-        });
-      });
-
-      return findings;
-    }
-
     async function runCheckerSummary(editor) {
-      const data = editor.getData();
-      const customFindings = runCustomCheckerRules(data);
-      const axeFindings = await runAxeForChecker(editor);
-      const findings = [...axeFindings, ...customFindings];
+      // Delegate to the A11yFirst.A11yChecker.runCheck() plugin API, which
+      // combines axe-core automated scanning with A11yFirst custom rules.
+      // This replaces the old Quail.js-based checker from the CKEditor 4 plugin.
+      const result = await A11yFirst.A11yChecker.runCheck(editor);
 
-      renderCheckerSummary(findings);
-      const summary = summarizeA11yFindings(findings);
-      setStatus('checker', `Checker summary complete. ${summary.blocking.length} blocking, ${summary.advisory.length} advisory issue(s).`);
+      // Adapt the plugin result shape to the demo renderCheckerSummary format
+      const findingsForRender = result.findings.map((f) => ({
+        severity: f.blocking ? 'blocking' : 'advisory',
+        message: f.message
+      }));
+
+      renderCheckerSummary(findingsForRender);
+      setStatus('checker', `Checker summary complete. ${result.blocking.length} blocking, ${result.advisory.length} advisory issue(s).`);
     }
 
     ClassicEditor.create(document.querySelector('#editor-standard'), {
