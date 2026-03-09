@@ -130,16 +130,77 @@
     }
     .site-footer h2 { margin-top: 0; color: #7b5800; font-size: 1rem; }
     .site-footer p { margin: 0.4rem 0; color: #4a3600; font-size: 0.9rem; }
+    /* Anchor link accessibility — see ACCESSIBILITY.md §Anchor Links */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 1rem;
+      padding: 0.5rem 1rem;
+      background: #000;
+      color: #fff;
+      font-weight: bold;
+      text-decoration: none;
+      z-index: 9999;
+      border-radius: 0 0 4px 4px;
+    }
+    .skip-link:focus { top: 0; }
+    @media (prefers-reduced-motion: no-preference) {
+      html { scroll-behavior: smooth; }
+    }
+    :target { scroll-margin-top: 1rem; }
+    h2[tabindex="-1"]:focus,
+    h3[tabindex="-1"]:focus {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .demo-nav {
+      margin: 1rem 0 1.5rem;
+      padding: 0.75rem 1rem;
+      background: #f6f8ff;
+      border: 1px solid #d7def7;
+      border-radius: 8px;
+    }
+    .demo-nav h2 { margin: 0 0 0.5rem; font-size: 1rem; }
+    .demo-nav ol { margin: 0; padding-left: 1.5rem; }
+    .demo-nav li { margin-bottom: 0.2rem; font-size: 0.93rem; }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <main id="main-content" tabindex="-1">
   <p><a href="./index.html">← Back to demo hub</a></p>
   <h1>A11yFirst CKEditor 5 Migration Preview</h1>
   <p class="note">This preview demonstrates accessibility-first authoring patterns for inclusive Solar Punk content that works for both people and planet.</p>
 
+  <nav class="demo-nav" aria-labelledby="demo-nav-heading">
+    <h2 id="demo-nav-heading">Jump to a demo</h2>
+    <ol>
+      <li><a href="#demo1-heading">Demo 1: Standard A11yFirst Configuration</a></li>
+      <li><a href="#demo2-heading">Demo 2: High-Restriction Heading Mode</a></li>
+      <li><a href="#demo3-heading">Demo 3: Image-Focused Mode</a></li>
+      <li><a href="#demo4-heading">Demo 4: Link-Focused Mode</a></li>
+      <li><a href="#demo5-heading">Demo 5: Character Style Mode</a></li>
+      <li><a href="#demo6-heading">Demo 6: List Guidance Mode</a></li>
+      <li><a href="#demo7-heading">Demo 7: Paragraph Format Mode</a></li>
+      <li><a href="#demo8-heading">Demo 8: Table Accessibility Mode</a></li>
+      <li><a href="#demo9-heading">Demo 9: A11y Checker Summary Mode</a></li>
+    </ol>
+  </nav>
+
   <div class="row">
     <section id="demo1" class="panel">
-      <h2 id="demo1-heading">Demo 1: Standard A11yFirst Configuration</h2>
+      <h2 id="demo1-heading" tabindex="-1">Demo 1: Standard A11yFirst Configuration</h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Heading, Image, Link, List, Table, Character Styles, Help Button.</p>
         <p class="label">Manual test</p>
@@ -171,7 +232,7 @@
     </section>
 
     <section id="demo2" class="panel">
-      <h2 id="demo2-heading">Demo 2: High-Restriction Heading Mode</h2>
+      <h2 id="demo2-heading" tabindex="-1">Demo 2: High-Restriction Heading Mode</h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Heading (strict rules), Help Button.</p>
         <p class="label">Manual test</p>
@@ -203,7 +264,7 @@
     </section>
 
     <section id="demo3" class="panel">
-      <h2 id="demo3-heading">Demo 3: Image-Focused Mode</h2>
+      <h2 id="demo3-heading" tabindex="-1">Demo 3: Image-Focused Mode</h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Image, Help Button, axe-core audit integration.</p>
         <p class="label">Manual test</p>
@@ -297,7 +358,7 @@
     </section>
 
     <section id="demo4" class="panel">
-      <h2 id="demo4-heading">Demo 4: Link-Focused Mode</h2>
+      <h2 id="demo4-heading" tabindex="-1">Demo 4: Link-Focused Mode</h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Link, Help Button.</p>
         <p class="label">Manual test</p>
@@ -360,7 +421,7 @@
     </section>
 
     <section id="demo5" class="panel">
-      <h2 id="demo5-heading">Demo 5: Character Style Mode</h2>
+      <h2 id="demo5-heading" tabindex="-1">Demo 5: Character Style Mode</h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Character Styles, Help Button.</p>
         <p class="label">Manual test</p>
@@ -386,7 +447,7 @@
     </section>
 
     <section id="demo6" class="panel">
-      <h2 id="demo6-heading">Demo 6: List Guidance Mode</h2>
+      <h2 id="demo6-heading" tabindex="-1">Demo 6: List Guidance Mode</h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst List, Help Button.</p>
         <p class="label">Manual test</p>
@@ -432,7 +493,7 @@
     </section>
 
     <section id="demo7" class="panel">
-      <h2 id="demo7-heading">Demo 7: Paragraph Format Mode</h2>
+      <h2 id="demo7-heading" tabindex="-1">Demo 7: Paragraph Format Mode</h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> Paragraph format validator (demo), Help Button.</p>
         <p class="label">Manual test</p>
@@ -485,7 +546,7 @@
     </section>
 
     <section id="demo8" class="panel">
-      <h2 id="demo8-heading">Demo 8: Table Accessibility Mode</h2>
+      <h2 id="demo8-heading" tabindex="-1">Demo 8: Table Accessibility Mode</h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Table, Help Button.</p>
         <p class="label">Manual test</p>
@@ -564,7 +625,7 @@
     </section>
 
     <section id="demo9" class="panel">
-      <h2 id="demo9-heading">Demo 9: A11y Checker Summary Mode</h2>
+      <h2 id="demo9-heading" tabindex="-1">Demo 9: A11y Checker Summary Mode</h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst A11yChecker, Heading, Image, Link, List, Table, Help Button.</p>
         <p class="label">Manual test</p>
@@ -616,6 +677,7 @@
       <div id="checker-results" class="checker-results" aria-live="polite"></div>
     </section>
   </div>
+  </main>
 
   <div id="a11yhelp-modal" class="a11yhelp-modal" role="dialog" aria-modal="true" aria-labelledby="a11yhelp-title">
     <div class="backdrop" data-close-a11yhelp="true"></div>
@@ -2877,6 +2939,25 @@
         }
       });
     })();
+  </script>
+
+  <script>
+    // Anchor navigation: smooth scroll (respects prefers-reduced-motion), focus management, URL update
+    (function () {
+      document.querySelectorAll('.demo-nav a[href^="#"], a.skip-link').forEach(function (link) {
+        link.addEventListener('click', function (event) {
+          var hash = link.getAttribute('href');
+          var targetId = hash.slice(1);
+          var target = document.getElementById(targetId);
+          if (!target) return;
+          event.preventDefault();
+          var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+          requestAnimationFrame(function () { target.focus({ preventScroll: true }); });
+          history.pushState(null, '', hash);
+        });
+      });
+    }());
   </script>
 
   <footer class="site-footer" role="contentinfo" aria-label="Experimental project disclaimer">
