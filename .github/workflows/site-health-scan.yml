@@ -13,9 +13,9 @@ jobs:
         uses: github/accessibility-scanner@v2
         with:
           urls: |
-            https://mgifford.github.io/plugins-dev/
-            https://mgifford.github.io/plugins-dev/ckeditor5-a11yfirst.html
+            https://mgifford.github.io/CKEditor5-A11yFirst/
+            https://mgifford.github.io/CKEditor5-A11yFirst/demo/ckeditor5-a11yfirst.html
           repository: ${{ github.repository }}
           token: ${{ secrets.GH_TOKEN }}
-          cache_key: plugins-dev-site-health
+          cache_key: ckeditor5-a11yfirst-site-health
           skip_copilot_assignment: true
