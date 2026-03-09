@@ -139,3 +139,49 @@ For a detailed comparison and migration parity targets, see:
 This document is intentionally modeled after the ACCESSIBILITY.md project style and incorporates the forms guidance pattern from:
 - https://mgifford.github.io/ACCESSIBILITY.md/
 - https://github.com/mgifford/ACCESSIBILITY.md/blob/main/examples/FORMS_ACCESSIBILITY_BEST_PRACTICES.md
+- https://github.com/mgifford/ACCESSIBILITY.md/blob/main/examples/ANCHOR_LINKS_ACCESSIBILITY_BEST_PRACTICES.md
+
+## Anchor Links Accessibility Best Practices
+
+All in-page anchor links in this project (skip links, table-of-contents links, demo navigation, and heading links) must follow the expectations below. For the full reference see the [Anchor Links Accessibility Best Practices](https://mgifford.github.io/ACCESSIBILITY.md/examples/ANCHOR_LINKS_ACCESSIBILITY_BEST_PRACTICES.html) document.
+
+### 1. Meaningful Link Text
+
+- Link text must make sense out of context. Avoid "click here", "read more", or "more".
+- Put the most important words first so link lists and heading lists are scannable.
+- When the visible text cannot be changed (e.g. icon-only links), add an accessible name with `aria-label` or visually-hidden text.
+
+### 2. Target Elements and Focus Management
+
+- Every anchor target must have a unique, stable `id`.
+- Non-interactive targets (headings, `<section>`, `<div>`) require `tabindex="-1"` so scripts can call `.focus()` on them after navigation.
+- After following an anchor link, focus must be moveable naturally (Tab, Shift+Tab) — never stranded.
+- The focused target must show a visible focus indicator that meets WCAG contrast requirements.
+- Use `scroll-margin-top` (or `scroll-padding-top` on the container) to offset fixed/sticky headers.
+
+### 3. Smooth Scroll and `prefers-reduced-motion`
+
+- Never apply `scroll-behavior: smooth` unconditionally.
+- Wrap all smooth-scroll CSS inside `@media (prefers-reduced-motion: no-preference)`.
+- JavaScript-driven scroll must check `window.matchMedia('(prefers-reduced-motion: reduce)')` before passing `behavior: 'smooth'` to `scrollIntoView`.
+
+### 4. Skip Links
+
+- Every page must include a "Skip to main content" link as the **first focusable element** in the DOM.
+- The skip link must be visible when focused (not permanently hidden).
+- The `<main>` target must have `id="main-content"` and `tabindex="-1"`.
+
+### 5. URL Fragments
+
+- Update `window.location.hash` or use `history.pushState` when JavaScript intercepts anchor clicks, so the position is bookmarkable.
+- Use meaningful, URL-friendly slug IDs, not auto-generated numeric IDs.
+
+### 6. Testing Expectations
+
+For each anchor link:
+1. Tab to the anchor link and confirm focus is visible.
+2. Press **Enter** to follow the link.
+3. Confirm focus moves to the target and the target is scrolled into view.
+4. Confirm no fixed header obscures the target.
+5. Tab forward and confirm focus continues logically through the page.
+6. With **Reduce Motion** enabled in the OS, confirm no smooth-scroll animation occurs.
