@@ -1,9 +1,27 @@
 CKEditor Accessibility Checker
 ==================================================
 
+> **⚠️ Legacy Plugin — CKEditor 4 only**
+>
+> This is the CKEditor 4 version of the Accessibility Checker. It uses [Quail.js](https://github.com/quailjs/quail) as its scanning engine — a jQuery-based library that is no longer actively maintained (last updated 2016).
+>
+> The CKEditor 5 A11yFirst migration replaces Quail.js with [axe-core v4.11.1](https://github.com/dequelabs/axe-core), which supports WCAG 2.0, 2.1, and 2.2 and does not require jQuery.
+>
+> See the [checker inventory research document](../../kitty-specs/001-a11yfirst-functional-parity-specification/research/checker-inventory.md) for a full comparison and migration details.
+
 # Overview
 
-This package contains the distribution version of Accessibility Checker.
+This package contains the distribution version of Accessibility Checker for CKEditor 4.
+
+## Accessibility Checking Engine
+
+This plugin uses **[Quail.js](https://github.com/quailjs/quail)** as its accessibility checking engine. Quail is bundled in `libs/quail/` and provides:
+
+- 264 accessibility test rules
+- WCAG 2.0 and Section 508 coverage
+- Severity levels: `severe`, `moderate`, and `suggestion`
+
+> **Note**: The Quail.js project is archived and no longer actively maintained. It targets WCAG 2.0 only (not WCAG 2.1 or 2.2). For modern accessibility checking, see the CKEditor 5 A11yFirst migration which uses axe-core.
 
 ## Requirements
 

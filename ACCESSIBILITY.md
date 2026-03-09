@@ -101,6 +101,31 @@ Please report issues in the repository issue tracker and include:
 - Expected behavior.
 - Assistive technology/browser details (if applicable).
 
+## Accessibility Checking Engines
+
+This project uses different accessibility checking engines depending on the CKEditor version:
+
+### CKEditor 4 (Legacy)
+
+The CKEditor 4 `plugins/a11ychecker/` plugin uses **[Quail.js](https://github.com/quailjs/quail)** as its engine:
+- Bundled in `plugins/a11ychecker/libs/quail/`
+- 264 test rules covering WCAG 2.0 and Section 508
+- Requires jQuery 1.x at runtime
+- **Status**: Quail.js is archived and no longer actively maintained (last release circa 2016)
+- **WCAG coverage**: WCAG 2.0 only
+
+### CKEditor 5 Migration
+
+The CKEditor 5 A11yFirst migration uses **[axe-core v4.11.1](https://github.com/dequelabs/axe-core)** as its engine:
+- Does not require jQuery
+- Supports WCAG 2.0, 2.1, and 2.2 (A and AA)
+- Actively maintained by Deque Systems
+- Integrated in Demo 3 (image scanning) and Demo 9 (A11y Checker Summary)
+
+For a detailed comparison and migration parity targets, see:
+- `kitty-specs/001-a11yfirst-functional-parity-specification/research/checker-inventory.md`
+- `kitty-specs/001-a11yfirst-functional-parity-specification/tasks/WP07-accessibility-checker-parity.md`
+
 ## Related Project Artifacts
 
 - Migration specification: `kitty-specs/001-a11yfirst-functional-parity-specification/spec.md`
