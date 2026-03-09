@@ -128,7 +128,7 @@ a.cke_button.cke_button_expandable {
 
 .cke_hc .cke_button
 {
-	border: 1px solid black;
+	border: 1px solid ButtonText;
 
 	/* Compensate the added border */
 	padding: 3px 5px;
@@ -301,7 +301,7 @@ a.cke_button_disabled:active
 .cke_hc .cke_toolbar_separator
 {
 	width: 0;
-	border-left: 1px solid;
+	border-left: 1px solid ButtonText;
 	margin: 1px 5px 0 0px;
 }
 

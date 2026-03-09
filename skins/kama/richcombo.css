@@ -89,13 +89,13 @@ a.cke_combo_button
 /* A basic support for the high-contrast mode to enhance the readability. */
 .cke_hc .cke_combo_button
 {
-	border: 1px solid black;
+	border: 1px solid ButtonText;
 	padding: 1px 3px 1px 3px;
 }
 
 .cke_hc .cke_rtl .cke_combo_button
 {
-	border: 1px solid black;
+	border: 1px solid ButtonText;
 }
 
 /* The label that shows the current value of the rich combo.
