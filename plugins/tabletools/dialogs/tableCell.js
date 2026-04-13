@@ -135,10 +135,6 @@ CKEDITOR.dialog.add( 'cellProperties', function( editor ) {
 				} ),
 				commit: function( selectedCell ) {
 					selectedCell.renameNode( this.getValue() );
-
-					if ( selectedCell.getName() != 'th' ) {
-						selectedCell.removeAttribute( 'scope' );
-					}
 				}
 			},
 			{
