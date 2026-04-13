@@ -109,6 +109,25 @@ Compare with the [CKEditor 4 A11yFirst baseline](CKEditor4/a11yfirst.html).
 
 ---
 
+## Related Accessibility Frameworks
+
+### SCULPT
+
+[SCULPT](https://www.worcestershire.gov.uk/council-services/business/digital-worcestershire/sculpt-accessibility) is a practical accessibility framework developed by Worcestershire County Council to help content authors create accessible digital content. The acronym covers six key areas:
+
+| Letter | Area | What it means |
+|--------|------|---------------|
+| **S** | **Structure** | Use proper headings and document structure |
+| **C** | **Colour and contrast** | Ensure sufficient colour contrast; don't use colour alone to convey meaning |
+| **U** | **Use of images** | Provide meaningful alternative text for images |
+| **L** | **Links** | Write descriptive link text (avoid "click here" or "read more") |
+| **P** | **Plain English** | Write clearly and concisely |
+| **T** | **Tables** | Use proper table markup with headers and captions |
+
+A11yFirst directly supports the SCULPT framework: its validators and in-editor guidance help authors meet the Structure (headings), Use of images (alt text), Links (meaningful link text), and Tables (captions and headers) criteria. The Character Styles plugin supports semantic markup that assists with readability (Plain English), and the plugin suite can be extended with contrast-checking tooling for the Colour and contrast criterion.
+
+---
+
 ## Repository Structure
 
 > **Note on directory naming**: Despite being named `docs/`, this directory is the **active CKEditor 5 development home** — it contains the plugin source, demo suite, and GitHub Pages content. The repo root (`core/`, `plugins/`, `skins/`, etc.) contains the CKEditor 4 legacy codebase inherited from the upstream fork.

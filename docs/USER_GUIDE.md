@@ -516,6 +516,35 @@ A11yFirst works with:
 - [W3C Web Accessibility Tutorials](https://www.w3.org/WAI/tutorials/) – Official web accessibility guidance
 - [WebAIM](https://webaim.org/) – Web Accessibility In Mind – practical tips
 - [WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/) – Official standards
+- [SCULPT Accessibility Framework](https://www.worcestershire.gov.uk/council-services/business/digital-worcestershire/sculpt-accessibility) – A practical six-point checklist for content authors (Structure, Colour and contrast, Use of images, Links, Plain English, Tables)
+
+---
+
+## The SCULPT Framework
+
+[SCULPT](https://www.worcestershire.gov.uk/council-services/business/digital-worcestershire/sculpt-accessibility) is an accessibility framework developed by Worcestershire County Council that gives content authors a memorable checklist for creating accessible digital content. It maps closely to the guidance built into A11yFirst:
+
+| SCULPT Area | What it means | A11yFirst Support |
+|-------------|---------------|-------------------|
+| **S**tructure | Use headings and logical document structure | ✅ Heading validator enforces correct heading hierarchy |
+| **C**olour and contrast | Ensure sufficient contrast; don't rely on colour alone | ⚠️ Not enforced in-editor; use a contrast checker alongside A11yFirst |
+| **U**se of images | Provide meaningful alternative text for images | ✅ Image validator warns when alt text is missing |
+| **L**inks | Write descriptive link text (avoid "click here", "more") | ✅ Link validator detects generic and empty link text |
+| **P**lain English | Write clearly and concisely | 💡 Use clear, simple language; A11yFirst encourages semantic structure |
+| **T**ables | Use proper table markup with headers and captions | ✅ Table validator checks for captions, header cells, and scope attributes |
+
+### Quick SCULPT checklist for authors
+
+Before publishing your content, ask yourself:
+
+1. **Structure** — Does my page have a clear heading hierarchy (H2 → H3 → H4)?
+2. **Colour and contrast** — Does my text have sufficient contrast against its background? Is colour used as the *only* way to convey information?
+3. **Use of images** — Do all meaningful images have descriptive alt text?
+4. **Links** — Does every link describe where it goes or what it does?
+5. **Plain English** — Is the content clear, concise, and free of unnecessary jargon?
+6. **Tables** — Does every table have a caption, header row, and appropriate scope attributes?
+
+A11yFirst will flag issues in categories S, U, L, and T automatically. Categories C and P rely on author judgment.
 
 ### Feedback
 For issues or suggestions, contact your content management team or visit the [A11yFirst GitHub](https://github.com/a11yfirst/plugins-dev).
