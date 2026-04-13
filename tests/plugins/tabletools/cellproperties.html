@@ -434,4 +434,42 @@
 	</table>
 </textarea>
 
+<textarea id="table-17">
+	<table>
+		<tbody>
+			<tr>
+				<th scope="col">[Header</th>
+				<td>Cell]</td>
+			</tr>
+		</tbody>
+	</table>
+	=>
+	<table>
+		<tbody>
+			<tr>
+				<th scope="row">Header</th>
+				<td>Cell</td>
+			</tr>
+		</tbody>
+	</table>
+</textarea>
+
+<textarea id="table-18">
+	<table>
+		<tbody>
+			<tr>
+				<th scope="col">[Header]</th>
+			</tr>
+		</tbody>
+	</table>
+	=>
+	<table>
+		<tbody>
+			<tr>
+				<th>Header</th>
+			</tr>
+		</tbody>
+	</table>
+</textarea>
+
 <textarea id="required"></textarea>

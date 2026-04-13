@@ -7,6 +7,10 @@ CKEDITOR.dialog.add( 'cellProperties', function( editor ) {
 	var langTable = editor.lang.table,
 		langCell = langTable.cell,
 		langCommon = editor.lang.common,
+		scopeLabel = langCell.scope || 'Scope',
+		scopeAutoLabel = langCell.scopeAuto || 'Auto',
+		scopeRowLabel = langCell.scopeRow || 'row',
+		scopeColLabel = langCell.scopeCol || 'col',
 		validate = CKEDITOR.dialog.validate,
 		rtl = editor.lang.dir == 'rtl',
 		colorDialog = editor.plugins.colordialog,
@@ -131,6 +135,43 @@ CKEDITOR.dialog.add( 'cellProperties', function( editor ) {
 				} ),
 				commit: function( selectedCell ) {
 					selectedCell.renameNode( this.getValue() );
+
+					if ( selectedCell.getName() != 'th' ) {
+						selectedCell.removeAttribute( 'scope' );
+					}
+				}
+			},
+			{
+				type: 'select',
+				id: 'scope',
+				requiredContent: 'th[scope]',
+				label: scopeLabel,
+				'default': '',
+				items: [
+					[ scopeAutoLabel, '' ],
+					[ scopeRowLabel, 'row' ],
+					[ scopeColLabel, 'col' ]
+				],
+				setup: setupCells( function( selectedCell ) {
+					if ( selectedCell.getName() != 'th' ) {
+						return '';
+					}
+
+					return selectedCell.getAttribute( 'scope' ) || '';
+				} ),
+				commit: function( selectedCell ) {
+					if ( selectedCell.getName() != 'th' ) {
+						selectedCell.removeAttribute( 'scope' );
+						return;
+					}
+
+					var scopeValue = this.getValue();
+
+					if ( scopeValue ) {
+						selectedCell.setAttribute( 'scope', scopeValue );
+					} else {
+						selectedCell.removeAttribute( 'scope' );
+					}
 				}
 			},
 			createSpacer( 'th' ),

@@ -151,6 +151,21 @@
 			assert.areEqual( CKEDITOR.dialog.EDITING_MODE, dialog.getMode( editor ), 'Dialog is in editing mode.' );
 		} ),
 
+		'test load and update scope value': doTest( 'table-17', function( dialog ) {
+				assert.areSame( 'th', dialog.getValueOf( 'info', 'cellType' ) );
+				assert.areSame( 'col', dialog.getValueOf( 'info', 'scope' ) );
+
+				dialog.setValueOf( 'info', 'scope', 'row' );
+			}
+		),
+
+		'test reset scope value to auto': doTest( 'table-18', function( dialog ) {
+				assert.areSame( 'col', dialog.getValueOf( 'info', 'scope' ) );
+
+				dialog.setValueOf( 'info', 'scope', '' );
+			}
+		),
+
 		// https://dev.ckeditor.com/ticket/16893
 		'test allowedContent rule': function() {
 			bender.editorBot.create( {
