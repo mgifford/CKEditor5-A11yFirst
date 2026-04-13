@@ -30,6 +30,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Sync CKEditor4 archive into docs
+        run: |
+          rm -rf docs/CKEditor4
+          mkdir -p docs/CKEditor4
+          rsync -a --delete CKEditor4/ docs/CKEditor4/
+          rsync -a ckeditor.js docs/CKEditor4/
+          rsync -a contents.css styles.js docs/CKEditor4/
+          rsync -a adapters/ docs/CKEditor4/adapters/
+          rsync -a core/ docs/CKEditor4/core/
+          rsync -a lang/ docs/CKEditor4/lang/
+          rsync -a plugins/ docs/CKEditor4/plugins/
+          rsync -a skins/ docs/CKEditor4/skins/
+          rsync -a vendor/ docs/CKEditor4/vendor/
+
       - name: Check internal links in docs HTML files
         uses: lycheeverse/lychee-action@v2
         with:
