@@ -327,6 +327,7 @@
             <div class="form-row">
               <label for="image-src-input">URL</label>
               <input id="image-src-input" type="text" placeholder="URL of the image source file" title="URL of the image source file" />
+              <button id="image-insert-url" type="button">Insert URL</button>
             </div>
             <fieldset>
               <legend>Accessible Descriptions</legend>
@@ -349,6 +350,7 @@
                   <option value="both">Yes; in the document before and after the image</option>
                 </select>
               </div>
+              <button id="image-apply-metadata" type="button">Apply Metadata</button>
               <button id="image-help" type="button" class="inline-help-btn">Help</button>
             </fieldset>
             <div class="form-row">
@@ -1381,9 +1383,11 @@
       return {
         modal: document.getElementById('image-props-modal'),
         srcInput: document.getElementById('image-src-input'),
+        insertUrlButton: document.getElementById('image-insert-url'),
         altInput: document.getElementById('image-alt-input'),
         decorativeInput: document.getElementById('image-decorative-input'),
         longDescSelect: document.getElementById('image-longdesc-select'),
+        applyMetadataButton: document.getElementById('image-apply-metadata'),
         captionInput: document.getElementById('image-caption-input'),
         widthInput: document.getElementById('image-width-input'),
         heightInput: document.getElementById('image-height-input'),
@@ -1493,6 +1497,56 @@
 
       // Sync caption checkbox: imageBlock with caption has a 'caption' child element
       controls.captionInput.checked = imageBlockHasCaption(selectedImage);
+    }
+
+    function applyImageUrl(editor, controls) {
+      const url = controls.srcInput.value.trim();
+
+      if (!url) {
+        setStatus('image', 'Enter an image URL first.');
+        return false;
+      }
+
+      const selectedImage = getSelectedImageModelElement(editor);
+
+      if (selectedImage) {
+        editor.model.change((writer) => {
+          writer.setAttribute('src', url, selectedImage);
+        });
+        setStatus('image', 'Applied image URL.');
+        return true;
+      }
+
+      const imageInsert = editor.commands.get('insertImage');
+      if (imageInsert && imageInsert.isEnabled) {
+        imageInsert.execute({ source: url });
+        setStatus('image', 'Inserted image from URL.');
+        return true;
+      }
+
+      setStatus('image', 'Image insert command is not available in this build.');
+      return false;
+    }
+
+    function applyImageMetadata(editor, controls) {
+      const selectedImage = getSelectedImageModelElement(editor);
+
+      if (!selectedImage) {
+        setStatus('image', 'Select an image first to apply metadata.');
+        return false;
+      }
+
+      const isDecorative = controls.decorativeInput.checked;
+      const altText = isDecorative ? '' : controls.altInput.value.trim();
+      const longDescPosition = controls.longDescSelect.value;
+
+      editor.model.change((writer) => {
+        writer.setAttribute('alt', altText, selectedImage);
+        writer.setAttribute('a11yLongDescPosition', longDescPosition, selectedImage);
+      });
+
+      setStatus('image', 'Image accessibility metadata applied.');
+      return true;
     }
 
     function applyAllImageProperties(editor, controls) {
@@ -2395,6 +2449,8 @@
       controls.helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'Image', 'image'));
       controls.closeButton.addEventListener('click', () => closeImagePropertiesDialog(controls));
       controls.cancelButton.addEventListener('click', () => closeImagePropertiesDialog(controls));
+      controls.insertUrlButton.addEventListener('click', () => applyImageUrl(imageEditor, controls));
+      controls.applyMetadataButton.addEventListener('click', () => applyImageMetadata(imageEditor, controls));
       controls.okButton.addEventListener('click', () => {
         if (applyAllImageProperties(imageEditor, controls)) {
           closeImagePropertiesDialog(controls, { keepStatus: true });
