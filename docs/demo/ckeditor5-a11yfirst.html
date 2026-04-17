@@ -26,16 +26,32 @@
     .image-props-modal { position: fixed; inset: 0; z-index: 2200; display: none; align-items: center; justify-content: center; pointer-events: none; }
     .image-props-modal.open { display: flex; }
     .image-props-modal .backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); }
-    .image-props-modal .dialog { position: relative; background: #fff; width: min(820px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 0.9rem 1rem; pointer-events: auto; }
-    .image-props-modal h3 { margin: 0 0 0.5rem; font-size: 1rem; }
-    .image-props-modal .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 0.75rem; }
-    .image-props-modal .full { grid-column: 1 / -1; }
+    .image-props-modal .dialog { position: relative; background: #fff; width: min(420px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 0; pointer-events: auto; }
+    .image-props-modal .dialog-header { display: flex; align-items: center; padding: 0.6rem 1rem; border-bottom: 1px solid #ddd; }
+    .image-props-modal .dialog-header h3 { margin: 0; font-size: 1rem; flex: 1; }
+    .image-props-modal .dialog-close-x { background: transparent; border: 0; font-size: 1.2rem; cursor: pointer; padding: 0.1rem 0.4rem; line-height: 1; color: #333; }
+    .image-props-modal .dialog-close-x:hover { color: #000; }
+    .image-props-modal .dialog-body { padding: 0.75rem 1rem; }
+    .image-props-modal .form-row { margin-bottom: 0.6rem; }
     .image-props-modal label { font-size: 0.9rem; display: block; margin-bottom: 0.2rem; }
     .image-props-modal input[type="text"], .image-props-modal select { width: 100%; padding: 0.3rem 0.4rem; box-sizing: border-box; }
-    .image-props-modal .actions { margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.45rem; }
-    .image-props-modal .actions button { padding: 0.3rem 0.6rem; cursor: pointer; }
-    .image-props-modal .hint { font-size: 0.85rem; color: #555; margin-top: 0.45rem; }
-    .image-props-modal .dialog-close { margin-left: auto; }
+    .image-props-modal fieldset { border: 1px solid #aaa; border-radius: 4px; padding: 0.5rem 0.75rem 0.6rem; margin: 0 0 0.6rem; }
+    .image-props-modal fieldset legend { font-size: 0.9rem; font-weight: 600; padding: 0 0.3rem; }
+    .image-props-modal .size-row { display: flex; align-items: flex-end; gap: 0.75rem; margin-bottom: 0.6rem; }
+    .image-props-modal .size-row .size-field { display: flex; flex-direction: column; }
+    .image-props-modal .size-row .size-field label { font-size: 0.9rem; margin-bottom: 0.2rem; }
+    .image-props-modal .size-row .size-field input { width: 60px; padding: 0.3rem 0.4rem; box-sizing: border-box; }
+    .image-props-modal .size-controls { display: flex; gap: 0.3rem; }
+    .image-props-modal .size-controls button { background: transparent; border: 1px solid #bbb; border-radius: 4px; cursor: pointer; padding: 0.2rem 0.4rem; font-size: 1rem; line-height: 1; }
+    .image-props-modal .size-controls button:hover { background: #f2f6fc; }
+    .image-props-modal .align-radio-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .image-props-modal .align-radio-group label { display: flex; align-items: center; gap: 0.25rem; font-size: 0.9rem; margin-bottom: 0; cursor: pointer; }
+    .image-props-modal .dialog-footer { display: flex; justify-content: flex-end; gap: 0.5rem; padding: 0.6rem 1rem; border-top: 1px solid #ddd; }
+    .image-props-modal .dialog-footer button { padding: 0.35rem 1rem; cursor: pointer; border: 1px solid #bbb; border-radius: 4px; background: #fff; font-size: 0.9rem; }
+    .image-props-modal .btn-primary { background: #2f6d00 !important; color: #fff !important; border-color: #2f6d00 !important; font-weight: 600; }
+    .image-props-modal .btn-primary:hover { background: #1f4e00 !important; }
+    .image-props-modal .inline-help-btn { margin-top: 0.4rem; padding: 0.25rem 0.6rem; cursor: pointer; border: 1px solid #bbb; border-radius: 4px; background: #fff; font-size: 0.9rem; }
+    .image-props-modal .checkbox-label { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; }
     .image-context-menu { position: fixed; z-index: 2250; min-width: 180px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18); padding: 0.25rem 0; display: none; }
     .image-context-menu.open { display: block; }
     .image-context-menu button { width: 100%; border: 0; background: transparent; text-align: left; padding: 0.45rem 0.7rem; font-size: 0.9rem; cursor: pointer; }
@@ -303,54 +319,72 @@
       <div id="image-props-modal" class="image-props-modal" role="dialog" aria-modal="true" aria-labelledby="image-props-title">
         <div class="backdrop" data-close-image-props="true"></div>
         <div class="dialog">
-          <h3 id="image-props-title">A11yFirst Image Properties</h3>
-          <div class="grid">
-            <div class="full">
-              <label for="image-src-input">Image URL</label>
-              <input id="image-src-input" type="text" placeholder="https://example.com/image.jpg" />
+          <div class="dialog-header">
+            <h3 id="image-props-title">Image Properties</h3>
+            <button id="image-props-close" type="button" class="dialog-close-x" aria-label="Close">&#x2715;</button>
+          </div>
+          <div class="dialog-body">
+            <div class="form-row">
+              <label for="image-src-input">URL</label>
+              <input id="image-src-input" type="text" placeholder="URL of the image source file" title="URL of the image source file" />
             </div>
-            <div class="full">
-              <label for="image-alt-input">Alternative text (spoken by screen reader)</label>
-              <input id="image-alt-input" type="text" placeholder="Short, meaningful description" />
-            </div>
-            <div class="full">
-              <label>
-                <input id="image-decorative-input" type="checkbox" />
-                Image does not require alternative text
+            <fieldset>
+              <legend>Accessible Descriptions</legend>
+              <div class="form-row">
+                <label for="image-alt-input">Alternative text (spoken by screen reader)</label>
+                <input id="image-alt-input" type="text" title="A short description of the content and function of the image, no longer than 100 characters" />
+              </div>
+              <div class="form-row">
+                <label class="checkbox-label">
+                  <input id="image-decorative-input" type="checkbox" style="width:auto;margin:0" />
+                  Image does not require alternative text
+                </label>
+              </div>
+              <div class="form-row">
+                <label for="image-longdesc-select">Is a long description needed, and if so, where will it be located?</label>
+                <select id="image-longdesc-select" title="Many people benefit from a detailed description of a complex image">
+                  <option value="nodesc">No, the alternative text is adequate</option>
+                  <option value="before">Yes; in the document before the image</option>
+                  <option value="after">Yes; in the document after the image</option>
+                  <option value="both">Yes; in the document before and after the image</option>
+                </select>
+              </div>
+              <button id="image-help" type="button" class="inline-help-btn">Help</button>
+            </fieldset>
+            <div class="form-row">
+              <label class="checkbox-label" title="The caption text is editable within the document">
+                <input id="image-caption-input" type="checkbox" style="width:auto;margin:0" />
+                Insert a caption text box below the image
               </label>
             </div>
-            <div class="full">
-              <label for="image-longdesc-select">Is a long description needed, and if so, where will it be located?</label>
-              <select id="image-longdesc-select">
-                <option value="nodesc">No, the alternative text is adequate</option>
-                <option value="before">Yes; in the document before the image</option>
-                <option value="after">Yes; in the document after the image</option>
-                <option value="both">Yes; in the document before and after the image</option>
-              </select>
+            <div class="size-row">
+              <div class="size-field">
+                <label for="image-width-input">Width</label>
+                <input id="image-width-input" type="text" placeholder="e.g. 50%" />
+              </div>
+              <div class="size-field">
+                <label for="image-height-input">Height</label>
+                <input id="image-height-input" type="text" placeholder="auto" />
+              </div>
+              <div class="size-controls">
+                <button id="image-lock-ratio" type="button" title="Lock Ratio" aria-label="Lock Ratio" aria-pressed="true">&#x1F512;</button>
+                <button id="image-reset-size" type="button" title="Reset Size" aria-label="Reset Size">&#x21BA;</button>
+              </div>
             </div>
-            <div>
-              <label for="image-width-input">Width (e.g. 50%)</label>
-              <input id="image-width-input" type="text" placeholder="50%" />
-            </div>
-            <div>
-              <label for="image-align-select">Alignment</label>
-              <select id="image-align-select">
-                <option value="none">None</option>
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
-              </select>
-            </div>
+            <fieldset>
+              <legend>Alignment</legend>
+              <div class="align-radio-group" role="radiogroup" aria-label="Image alignment">
+                <label><input type="radio" name="image-align-radio" value="none" /> None</label>
+                <label><input type="radio" name="image-align-radio" value="left" /> Left</label>
+                <label><input type="radio" name="image-align-radio" value="center" /> Center</label>
+                <label><input type="radio" name="image-align-radio" value="right" /> Right</label>
+              </div>
+            </fieldset>
           </div>
-          <div class="actions">
-            <button id="image-insert-url" type="button">Insert / update image URL</button>
-            <button id="image-apply-metadata" type="button">Apply accessibility metadata</button>
-            <button id="image-toggle-caption" type="button">Toggle caption</button>
-            <button id="image-apply-style" type="button">Apply alignment + width</button>
-            <button id="image-help" type="button">Help</button>
-            <button id="image-props-close" type="button" class="dialog-close">Close</button>
+          <div class="dialog-footer">
+            <button id="image-props-cancel" type="button">Cancel</button>
+            <button id="image-props-ok" type="button" class="btn-primary">OK</button>
           </div>
-          <p class="hint">This dialog is available when an image is selected in the editor.</p>
         </div>
       </div>
       <div id="status-image" class="status" aria-live="polite"></div>
@@ -1322,6 +1356,11 @@
       return styleMap[alignment] || 'block';
     }
 
+    function imageBlockHasCaption(imageElement) {
+      return imageElement.childCount > 0 &&
+        Array.from(imageElement.getChildren()).some((child) => child.is && child.is('element', 'caption'));
+    }
+
     function getImagePropertiesElements() {
       return {
         modal: document.getElementById('image-props-modal'),
@@ -1329,13 +1368,15 @@
         altInput: document.getElementById('image-alt-input'),
         decorativeInput: document.getElementById('image-decorative-input'),
         longDescSelect: document.getElementById('image-longdesc-select'),
+        captionInput: document.getElementById('image-caption-input'),
         widthInput: document.getElementById('image-width-input'),
-        alignSelect: document.getElementById('image-align-select'),
-        insertButton: document.getElementById('image-insert-url'),
-        metadataButton: document.getElementById('image-apply-metadata'),
-        captionButton: document.getElementById('image-toggle-caption'),
-        styleButton: document.getElementById('image-apply-style'),
+        heightInput: document.getElementById('image-height-input'),
+        lockRatioButton: document.getElementById('image-lock-ratio'),
+        resetSizeButton: document.getElementById('image-reset-size'),
+        alignRadios: document.querySelectorAll('input[name="image-align-radio"]'),
         helpButton: document.getElementById('image-help'),
+        okButton: document.getElementById('image-props-ok'),
+        cancelButton: document.getElementById('image-props-cancel'),
         closeButton: document.getElementById('image-props-close')
       };
     }
@@ -1416,102 +1457,89 @@
       const alt = selectedImage.getAttribute('alt') || '';
       const longDescPosition = selectedImage.getAttribute('a11yLongDescPosition') || 'nodesc';
       const resizedWidth = selectedImage.getAttribute('resizedWidth') || '';
+      const resizedHeight = selectedImage.getAttribute('resizedHeight') || '';
 
       controls.srcInput.value = src;
       controls.altInput.value = alt;
       controls.decorativeInput.checked = alt.trim().length === 0;
+      controls.altInput.disabled = controls.decorativeInput.checked;
       controls.longDescSelect.value = String(longDescPosition);
       controls.widthInput.value = String(resizedWidth);
-    }
+      controls.heightInput.value = String(resizedHeight);
 
-    function applyImageMetadata(editor, controls) {
-      const selectedImage = getSelectedImageModelElement(editor);
-      if (!selectedImage) {
-        setStatus('image', 'Select an image first to apply accessibility metadata.');
-        return;
-      }
-
-      const isDecorative = controls.decorativeInput.checked;
-      const altText = isDecorative ? '' : controls.altInput.value.trim();
-      const longDescPosition = controls.longDescSelect.value;
-
-      editor.model.change((writer) => {
-        writer.setAttribute('alt', altText, selectedImage);
-        writer.setAttribute('a11yLongDescPosition', longDescPosition, selectedImage);
+      // Sync alignment radio buttons from current image style
+      const currentStyle = selectedImage.getAttribute('imageStyle') || 'block';
+      const styleToAlign = { block: 'none', alignLeft: 'left', alignCenter: 'center', alignRight: 'right' };
+      const alignment = styleToAlign[String(currentStyle)] || 'none';
+      controls.alignRadios.forEach((radio) => {
+        radio.checked = radio.value === alignment;
       });
 
-      setStatus('image', `Image metadata applied (${isDecorative ? 'decorative' : 'described'}, long desc: ${longDescPosition}).`);
+      // Sync caption checkbox: imageBlock with caption has a 'caption' child element
+      controls.captionInput.checked = imageBlockHasCaption(selectedImage);
     }
 
-    function insertOrUpdateImageByUrl(editor, controls) {
+    function applyAllImageProperties(editor, controls) {
       const url = controls.srcInput.value.trim();
 
       if (!url) {
         setStatus('image', 'Enter an image URL first.');
-        return;
+        return false;
       }
 
       const selectedImage = getSelectedImageModelElement(editor);
 
       if (selectedImage) {
+        // Update existing image
+        const isDecorative = controls.decorativeInput.checked;
+        const altText = isDecorative ? '' : controls.altInput.value.trim();
+        const longDescPosition = controls.longDescSelect.value;
+        const width = controls.widthInput.value.trim();
+        const resizeCommand = editor.commands.get('resizeImage');
+        const styleCommand = editor.commands.get('imageStyle');
+
         editor.model.change((writer) => {
           writer.setAttribute('src', url, selectedImage);
+          writer.setAttribute('alt', altText, selectedImage);
+          writer.setAttribute('a11yLongDescPosition', longDescPosition, selectedImage);
         });
-        setStatus('image', 'Updated selected image URL.');
-        return;
+
+        // Apply alignment via imageStyle command
+        const selectedAlignRadio = Array.from(controls.alignRadios).find((r) => r.checked);
+        const alignment = selectedAlignRadio ? selectedAlignRadio.value : 'none';
+        if (styleCommand && styleCommand.isEnabled) {
+          styleCommand.execute({ value: mapAlignmentToStyleOption(alignment) });
+        }
+
+        // Apply width resize
+        if (resizeCommand && resizeCommand.isEnabled && width) {
+          resizeCommand.execute({ width });
+        } else if (resizeCommand && resizeCommand.isEnabled && !width) {
+          resizeCommand.execute({ width: null });
+        }
+
+        // Toggle caption to match checkbox
+        const captionCommand = editor.commands.get('toggleImageCaption');
+        if (captionCommand && captionCommand.isEnabled) {
+          if (controls.captionInput.checked !== imageBlockHasCaption(selectedImage)) {
+            captionCommand.execute();
+          }
+        }
+
+        setStatus('image', `Image properties applied (${isDecorative ? 'decorative' : 'described'}, align: ${alignment}${width ? ', width: ' + width : ''}).`);
+        return true;
       }
 
+      // No image selected: insert a new one
       const imageInsert = editor.commands.get('insertImage');
       if (imageInsert && imageInsert.isEnabled) {
         imageInsert.execute({ source: url });
         setStatus('image', 'Inserted image from URL.');
-        return;
+        return true;
       }
 
       setStatus('image', 'Image insert command is not available in this build.');
-    }
-
-    function toggleImageCaption(editor) {
-      const command = editor.commands.get('toggleImageCaption');
-      if (!command || !command.isEnabled) {
-        setStatus('image', 'Caption toggle is not available for current selection.');
-        return;
-      }
-
-      command.execute();
-      setStatus('image', 'Caption toggled.');
-    }
-
-    function applyImageStyleAndSize(editor, controls) {
-      const selectedImage = getSelectedImageModelElement(editor);
-      if (!selectedImage) {
-        setStatus('image', 'Select an image first to apply alignment and width.');
-        return;
-      }
-
-      const alignment = controls.alignSelect.value;
-      const width = controls.widthInput.value.trim();
-      const styleCommand = editor.commands.get('imageStyle');
-      const resizeCommand = editor.commands.get('resizeImage');
-      const applied = [];
-
-      if (styleCommand && styleCommand.isEnabled) {
-        const styleOption = mapAlignmentToStyleOption(alignment);
-        styleCommand.execute({ value: styleOption });
-        applied.push(`alignment ${alignment}`);
-      }
-
-      if (resizeCommand && resizeCommand.isEnabled && width) {
-        resizeCommand.execute({ width });
-        applied.push(`width ${width}`);
-      }
-
-      if (!applied.length) {
-        setStatus('image', 'No compatible native style/resize commands are available in this CDN build.');
-        return;
-      }
-
-      setStatus('image', `Applied ${applied.join(' and ')}.`);
+      return false;
     }
 
     function getLinkPropertiesElements() {
@@ -2348,17 +2376,35 @@
       const imageContextOpenProps = document.getElementById('image-context-open-props');
       const imagePropsToolbarButton = createImagePropertiesToolbarButton(imageEditor);
 
-      controls.insertButton.addEventListener('click', () => insertOrUpdateImageByUrl(imageEditor, controls));
-      controls.metadataButton.addEventListener('click', () => applyImageMetadata(imageEditor, controls));
-      controls.captionButton.addEventListener('click', () => toggleImageCaption(imageEditor));
-      controls.styleButton.addEventListener('click', () => applyImageStyleAndSize(imageEditor, controls));
       controls.helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'Image', 'image'));
       controls.closeButton.addEventListener('click', () => closeImagePropertiesDialog(controls));
+      controls.cancelButton.addEventListener('click', () => closeImagePropertiesDialog(controls));
+      controls.okButton.addEventListener('click', () => {
+        if (applyAllImageProperties(imageEditor, controls)) {
+          closeImagePropertiesDialog(controls, { keepStatus: true });
+        }
+      });
       controls.modal.addEventListener('click', (event) => {
         const target = event.target;
         if (target instanceof HTMLElement && target.dataset.closeImageProps === 'true') {
           closeImagePropertiesDialog(controls);
         }
+      });
+
+      // Lock-ratio toggle
+      controls.lockRatioButton.addEventListener('click', () => {
+        const isLocked = controls.lockRatioButton.getAttribute('aria-pressed') === 'true';
+        const nowLocked = !isLocked;
+        controls.lockRatioButton.setAttribute('aria-pressed', String(nowLocked));
+        controls.lockRatioButton.setAttribute('aria-label', nowLocked ? 'Lock Ratio' : 'Unlock Ratio');
+        controls.lockRatioButton.title = nowLocked ? 'Lock Ratio' : 'Unlock Ratio';
+        controls.lockRatioButton.textContent = nowLocked ? '\uD83D\uDD12' : '\uD83D\uDD13';
+      });
+
+      // Reset size clears width and height inputs
+      controls.resetSizeButton.addEventListener('click', () => {
+        controls.widthInput.value = '';
+        controls.heightInput.value = '';
       });
 
       document.addEventListener('keydown', (event) => {
