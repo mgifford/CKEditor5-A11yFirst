@@ -41,6 +41,7 @@ jobs:
           rsync -a core/ docs/CKEditor4/core/
           rsync -a lang/ docs/CKEditor4/lang/
           rsync -a plugins/ docs/CKEditor4/plugins/
+          rsync -a samples/ docs/CKEditor4/samples/
           rsync -a skins/ docs/CKEditor4/skins/
           rsync -a vendor/ docs/CKEditor4/vendor/
 
