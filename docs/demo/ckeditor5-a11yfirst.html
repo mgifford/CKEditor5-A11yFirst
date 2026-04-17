@@ -945,23 +945,39 @@
 
     function closeHelpDialog(helpControls, options = {}) {
       helpControls.modal.classList.remove('open');
-      if (!options.keepStatus) {
-        setStatus('help', 'Closed A11yFirst Help.');
-      }
     }
 
-    function openHelpDialog(helpControls, topicKey = 'GettingStarted', statusTarget = 'help') {
+    function openHelpDialog(helpControls, topicKey, statusTarget, availableTopics) {
       if (!helpRuntime.enabled) {
-        setStatus(statusTarget, linkLang.helpNotFound);
+        if (statusTarget && status[statusTarget]) {
+          setStatus(statusTarget, linkLang.helpNotFound);
+        }
         return;
       }
 
-      ensureHelpTopicsLoaded(helpControls);
-      helpControls.topicSelect.value = helpRuntime.topics[topicKey] ? topicKey : 'GettingStarted';
-      renderHelpTopic(helpControls, helpControls.topicSelect.value);
+      // Repopulate the topic select with the provided list (or all topics).
+      helpControls.topicSelect.innerHTML = '';
+      const keys = (availableTopics && availableTopics.length) ? availableTopics : Object.keys(helpRuntime.topics);
+      keys.forEach((key) => {
+        const topic = helpRuntime.topics[key];
+        if (topic) {
+          const option = document.createElement('option');
+          option.value = key;
+          option.textContent = topic.title;
+          helpControls.topicSelect.appendChild(option);
+        }
+      });
+
+      const selectedKey = (topicKey && helpRuntime.topics[topicKey])
+        ? topicKey
+        : (keys.find((k) => helpRuntime.topics[k]) || 'GettingStarted');
+      helpControls.topicSelect.value = selectedKey;
+      renderHelpTopic(helpControls, selectedKey);
       helpControls.modal.classList.add('open');
       helpControls.closeButton.focus();
-      setStatus(statusTarget, 'A11yFirst Help opened.');
+      if (statusTarget && status[statusTarget]) {
+        setStatus(statusTarget, 'A11yFirst Help opened.');
+      }
     }
 
     function bindSa11yCustomChecks(sa11y) {
@@ -2962,11 +2978,11 @@
     (() => {
       const helpControls = getHelpElements();
 
-      ensureHelpTopicsLoaded(helpControls);
-      renderHelpTopic(helpControls, 'GettingStarted');
-
       document.addEventListener('a11yFirstHelpRequested', (event) => {
-        openHelpDialog(helpControls, 'GettingStarted', 'help');
+        const detail = (event && event.detail) || {};
+        const topic = detail.topic || 'GettingStarted';
+        const availableTopics = detail.topics || null;
+        openHelpDialog(helpControls, topic, null, availableTopics);
       });
 
       helpControls.loadButton.addEventListener('click', () => renderHelpTopic(helpControls, helpControls.topicSelect.value));
