@@ -327,7 +327,7 @@
             <div class="form-row">
               <label for="image-src-input">URL</label>
               <input id="image-src-input" type="text" placeholder="URL of the image source file" title="URL of the image source file" />
-              <button id="image-insert-url" type="button">Insert URL</button>
+              <button id="image-insert-url" type="button" aria-label="Insert image from URL">Insert URL</button>
             </div>
             <fieldset>
               <legend>Accessible Descriptions</legend>
@@ -350,7 +350,7 @@
                   <option value="both">Yes; in the document before and after the image</option>
                 </select>
               </div>
-              <button id="image-apply-metadata" type="button">Apply Metadata</button>
+              <button id="image-apply-metadata" type="button" aria-label="Apply image accessibility metadata">Apply Metadata</button>
               <button id="image-help" type="button" class="inline-help-btn">Help</button>
             </fieldset>
             <div class="form-row">
@@ -1503,7 +1503,7 @@
       const url = controls.srcInput.value.trim();
 
       if (!url) {
-        setStatus('image', 'Enter an image URL first.');
+        setStatus('image', 'Please enter a valid image URL in the URL field before inserting.');
         return false;
       }
 
@@ -1532,7 +1532,7 @@
       const selectedImage = getSelectedImageModelElement(editor);
 
       if (!selectedImage) {
-        setStatus('image', 'Select an image first to apply metadata.');
+        setStatus('image', 'Please select an image in the editor before applying accessibility metadata.');
         return false;
       }
 
