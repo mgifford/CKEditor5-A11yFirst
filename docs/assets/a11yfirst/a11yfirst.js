@@ -765,22 +765,14 @@
         });
 
         view.on('execute', () => {
-          const anchorEl = view.element;
-          if (anchorEl) {
-            // Mark button as menu trigger for assistive technologies.
-            anchorEl.setAttribute('aria-haspopup', 'true');
-            toggleA11yHelpPanel(anchorEl, editor);
-          } else {
-            // Fallback when element is not yet available.
-            document.dispatchEvent(new CustomEvent('a11yFirstHelpRequested', {
-              detail: {
-                source: 'toolbar',
-                editor,
-                topic: 'GettingStarted',
-                topics: getHelpTopicsForEditor(editor)
-              }
-            }));
-          }
+          document.dispatchEvent(new CustomEvent('a11yFirstHelpRequested', {
+            detail: {
+              source: 'toolbar',
+              editor,
+              topic: 'GettingStarted',
+              topics: getHelpTopicsForEditor(editor)
+            }
+          }));
         });
 
         return view;
