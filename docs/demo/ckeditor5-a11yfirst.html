@@ -934,7 +934,9 @@
         }
       });
 
-      const selectedKey = (topicKey && helpRuntime.topics[topicKey]) ? topicKey : (keys[0] || 'GettingStarted');
+      const selectedKey = (topicKey && helpRuntime.topics[topicKey])
+        ? topicKey
+        : (keys.find((k) => helpRuntime.topics[k]) || 'GettingStarted');
       helpControls.topicSelect.value = selectedKey;
       renderHelpTopic(helpControls, selectedKey);
       helpControls.modal.classList.add('open');

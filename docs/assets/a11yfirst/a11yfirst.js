@@ -755,6 +755,9 @@
 
         const view = new ButtonViewCtor(locale);
 
+        // Use text label only (no icon) so authors can immediately read the button's
+        // purpose without needing to hover for a tooltip, matching the CK4 dropdown
+        // appearance of "A11yFirst Help" with visible text.
         view.set({
           label: 'A11yFirst Help',
           withText: true,
