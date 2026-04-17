@@ -1,4 +1,34 @@
 (function (global) {
+  // ============================================================================
+  // Help Topics Registry
+  // ============================================================================
+
+  const HELP_TOPIC_LABELS = {
+    HeadingParagraph:  'Heading / Paragraph',
+    List:              'List',
+    Image:             'Image',
+    CharacterStyle:    'Character Style',
+    ParagraphFormat:   'Paragraph Format',
+    Table:             'Table',
+    Link:              'Link',
+    A11yCheckerSummary:'A11y Checker',
+    GettingStarted:    'Getting Started',
+    AboutA11yFirst:    'About A11yFirst'
+  };
+
+  const HELP_TOPIC_ORDER = [
+    'HeadingParagraph',
+    'List',
+    'Image',
+    'CharacterStyle',
+    'ParagraphFormat',
+    'Table',
+    'Link',
+    'A11yCheckerSummary',
+    'GettingStarted',
+    'AboutA11yFirst'
+  ];
+
   const customStyleAttributes = [
     'a11yMarker',
     'a11yInlineQuote',
@@ -143,6 +173,8 @@
   }
 
   function A11yFirstCharacterStylesPlugin(editor) {
+    if (!editor._a11yFirstTopics) editor._a11yFirstTopics = new Set();
+    editor._a11yFirstTopics.add('CharacterStyle');
     registerCharacterStyleConverters(editor);
   }
 
@@ -151,6 +183,8 @@
   // ============================================================================
 
   function A11yFirstHeadingPlugin(editor) {
+    if (!editor._a11yFirstTopics) editor._a11yFirstTopics = new Set();
+    editor._a11yFirstTopics.add('HeadingParagraph');
     // Auto-validate heading hierarchy and sequence on data change
     editor.model.document.on('change:data', () => {
       const html = editor.getData();
@@ -178,6 +212,8 @@
   // ============================================================================
 
   function A11yFirstImagePlugin(editor) {
+    if (!editor._a11yFirstTopics) editor._a11yFirstTopics = new Set();
+    editor._a11yFirstTopics.add('Image');
     editor.model.document.on('change:data', () => {
       const html = editor.getData();
       const imageMatches = Array.from(html.matchAll(/<img[^>]*>/gi));
@@ -205,6 +241,8 @@
   // ============================================================================
 
   function A11yFirstLinkPlugin(editor) {
+    if (!editor._a11yFirstTopics) editor._a11yFirstTopics = new Set();
+    editor._a11yFirstTopics.add('Link');
     editor.model.document.on('change:data', () => {
       const html = editor.getData();
       const linkMatches = Array.from(html.matchAll(/<a\s+href[^>]*>(.*?)<\/a>/gi));
@@ -234,6 +272,8 @@
   // ============================================================================
 
   function A11yFirstListPlugin(editor) {
+    if (!editor._a11yFirstTopics) editor._a11yFirstTopics = new Set();
+    editor._a11yFirstTopics.add('List');
     editor.model.document.on('change:data', () => {
       const html = editor.getData();
       const findings = [];
@@ -287,6 +327,8 @@
   // ============================================================================
 
   function A11yFirstTablePlugin(editor) {
+    if (!editor._a11yFirstTopics) editor._a11yFirstTopics = new Set();
+    editor._a11yFirstTopics.add('Table');
     editor.model.document.on('change:data', () => {
       const html = editor.getData();
       const tableMatches = Array.from(html.matchAll(/<table[^>]*>.*?<\/table>/gs));
@@ -500,6 +542,8 @@
   }
 
   function A11yFirstA11yCheckerPlugin(editor) {
+    if (!editor._a11yFirstTopics) editor._a11yFirstTopics = new Set();
+    editor._a11yFirstTopics.add('A11yCheckerSummary');
     // Keep the internal validators aggregated in real time (lightweight, sync)
     editor.model.document.on('change:data', () => {
       const findings = validationRegistry.getFindings();
@@ -525,6 +569,150 @@
 
     // Expose a runCheck method on the editor for external callers.
     editor.a11yCheck = () => runA11yCheck(editor);
+  }
+
+  // ============================================================================
+  // Help Dropdown Panel
+  // ============================================================================
+
+  let _a11yHelpPanel = null;
+
+  /** Return the filtered list of help topic keys for a given editor instance. */
+  function getHelpTopicsForEditor(editor) {
+    const active = new Set(editor._a11yFirstTopics || []);
+    // Include ParagraphFormat topic when blockQuote command is available in the editor.
+    if (editor.commands && typeof editor.commands.get === 'function' && editor.commands.get('blockQuote')) {
+      active.add('ParagraphFormat');
+    }
+    return HELP_TOPIC_ORDER.filter(
+      (k) => k === 'GettingStarted' || k === 'AboutA11yFirst' || active.has(k)
+    );
+  }
+
+  /** Lazily create and return the singleton dropdown panel element. */
+  function ensureA11yHelpPanel() {
+    if (_a11yHelpPanel) return _a11yHelpPanel;
+
+    if (!document.getElementById('a11yfirst-help-panel-css')) {
+      const style = document.createElement('style');
+      style.id = 'a11yfirst-help-panel-css';
+      style.textContent =
+        '.a11yfirst-help-panel{' +
+          'position:fixed;z-index:99999;background:#fff;' +
+          'border:1px solid #c4c4c4;border-radius:4px;' +
+          'box-shadow:0 4px 12px rgba(0,0,0,.18);' +
+          'min-width:190px;display:none;padding:4px 0;' +
+          'list-style:none;margin:0;' +
+        '}' +
+        '.a11yfirst-help-panel li{margin:0;padding:0;}' +
+        '.a11yfirst-help-panel button{' +
+          'display:block;width:100%;text-align:left;' +
+          'padding:7px 16px;background:transparent;' +
+          'border:0;cursor:pointer;font-size:13px;' +
+          'color:#1f2328;line-height:1.4;white-space:nowrap;' +
+        '}' +
+        '.a11yfirst-help-panel button:hover,' +
+        '.a11yfirst-help-panel button:focus{' +
+          'background:#e8f0fe;' +
+          'outline:2px solid #3b82f6;outline-offset:-2px;' +
+        '}';
+      document.head.appendChild(style);
+    }
+
+    const panel = document.createElement('ul');
+    panel.className = 'a11yfirst-help-panel';
+    panel.setAttribute('role', 'menu');
+    panel.setAttribute('aria-label', 'A11yFirst Help Topics');
+    document.body.appendChild(panel);
+
+    // Close on click outside the panel or its anchor button.
+    document.addEventListener('click', (e) => {
+      if (!_a11yHelpPanel || _a11yHelpPanel.style.display === 'none') return;
+      const anchor = _a11yHelpPanel._anchorEl;
+      if (!_a11yHelpPanel.contains(e.target) && (!anchor || !anchor.contains(e.target))) {
+        _a11yHelpPanel.style.display = 'none';
+        _a11yHelpPanel._anchorEl = null;
+      }
+    }, true);
+
+    // Keyboard: Escape closes; arrow keys navigate items.
+    document.addEventListener('keydown', (e) => {
+      if (!_a11yHelpPanel || _a11yHelpPanel.style.display === 'none') return;
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        _a11yHelpPanel.style.display = 'none';
+        const anchor = _a11yHelpPanel._anchorEl;
+        _a11yHelpPanel._anchorEl = null;
+        if (anchor) anchor.focus();
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const items = [..._a11yHelpPanel.querySelectorAll('button')];
+        if (!items.length) return;
+        const idx = items.indexOf(document.activeElement);
+        const next = e.key === 'ArrowDown'
+          ? (idx + 1) % items.length
+          : (idx - 1 + items.length) % items.length;
+        items[next].focus();
+      }
+    });
+
+    _a11yHelpPanel = panel;
+    return panel;
+  }
+
+  /**
+   * Toggle the help topics dropdown anchored below `anchorEl`.
+   * If the panel is already open for this anchor it is closed instead.
+   */
+  function toggleA11yHelpPanel(anchorEl, editor) {
+    const panel = ensureA11yHelpPanel();
+
+    // Toggle off when already open for this button.
+    if (panel.style.display !== 'none' && panel._anchorEl === anchorEl) {
+      panel.style.display = 'none';
+      panel._anchorEl = null;
+      return;
+    }
+
+    const topics = getHelpTopicsForEditor(editor);
+
+    // Rebuild menu items for this editor's topic list.
+    panel.innerHTML = '';
+    panel._anchorEl = anchorEl;
+
+    topics.forEach((topicKey) => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'presentation');
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('role', 'menuitem');
+      btn.textContent = HELP_TOPIC_LABELS[topicKey] || topicKey;
+      btn.addEventListener('click', () => {
+        panel.style.display = 'none';
+        panel._anchorEl = null;
+        document.dispatchEvent(new CustomEvent('a11yFirstHelpRequested', {
+          detail: { source: 'dropdown', editor, topic: topicKey, topics }
+        }));
+      });
+
+      li.appendChild(btn);
+      panel.appendChild(li);
+    });
+
+    // Position below the anchor element; keep inside viewport.
+    const rect = anchorEl.getBoundingClientRect();
+    const panelMaxWidth = 220;
+    let left = rect.left;
+    if (left + panelMaxWidth > window.innerWidth - 8) {
+      left = window.innerWidth - panelMaxWidth - 8;
+    }
+    panel.style.left = `${Math.max(4, left)}px`;
+    panel.style.top = `${rect.bottom + 2}px`;
+    panel.style.display = 'block';
+
+    const firstBtn = panel.querySelector('button');
+    if (firstBtn) firstBtn.focus();
   }
 
   // ============================================================================
@@ -569,15 +757,27 @@
 
         view.set({
           label: 'A11yFirst Help',
-          icon: '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9.5 7.5h1v5h-1z" fill="currentColor"/><circle cx="10" cy="14.5" r="0.8" fill="currentColor"/></svg>',
-          tooltip: true
+          withText: true,
+          tooltip: false
         });
 
         view.on('execute', () => {
-          const event = new CustomEvent('a11yFirstHelpRequested', {
-            detail: { source: 'toolbar', editor }
-          });
-          document.dispatchEvent(event);
+          const anchorEl = view.element;
+          if (anchorEl) {
+            // Mark button as menu trigger for assistive technologies.
+            anchorEl.setAttribute('aria-haspopup', 'true');
+            toggleA11yHelpPanel(anchorEl, editor);
+          } else {
+            // Fallback when element is not yet available.
+            document.dispatchEvent(new CustomEvent('a11yFirstHelpRequested', {
+              detail: {
+                source: 'toolbar',
+                editor,
+                topic: 'GettingStarted',
+                topics: getHelpTopicsForEditor(editor)
+              }
+            }));
+          }
         });
 
         return view;
