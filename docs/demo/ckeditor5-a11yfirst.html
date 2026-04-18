@@ -2210,7 +2210,7 @@
       if (tableMatches.length && captionMatches.length) {
         results.push(`<span class="ok">✓ Found ${captionMatches.length} table caption(s)</span>`);
       } else if (tableMatches.length && !captionMatches.length) {
-        results.push('<span class="warn">⚠ Add a caption to describe the table purpose.</span>');
+        results.push('<span class="warn">⚠ Add a caption to describe the table purpose. Use the <strong>Edit Caption</strong> button in the toolbar above to add one.</span>');
       }
 
       if (tableMatches.length && thMatches.length) {
@@ -2902,9 +2902,9 @@
       if (captionEditButton) {
         captionEditButton.addEventListener('click', () => {
           const html = tableEditor.getData();
-          const captionMatch = html.match(/<caption[^>]*>(.*?)<\/caption>/i);
+          const captionMatch = html.match(/<caption[^>]*>([\s\S]*?)<\/caption>/i);
           const summaryMatch = html.match(/<table[^>]*summary\s*=\s*["']([^"']*)["']/i);
-          
+
           captionInput.value = captionMatch ? captionMatch[1] : '';
           summaryInput.value = summaryMatch ? summaryMatch[1] : '';
           captionDialog.classList.add('open');
@@ -2922,37 +2922,37 @@
         const html = tableEditor.getData();
         const captionText = captionInput.value.trim();
         const summaryText = summaryInput.value.trim();
-        
+
         let updatedHtml = html;
-        const tableMatch = html.match(/<table[^>]*>(.*?)<\/table>/is);
-        
+        const tableMatch = html.match(/<table[^>]*>([\s\S]*?)<\/table>/i);
+
         if (tableMatch) {
-          const tableContent = tableMatch[1];
-          let newTableContent = tableContent;
-          
+          let newTableContent = tableMatch[1];
+
           // Remove existing caption if present
-          newTableContent = newTableContent.replace(/<caption[^>]*>.*?<\/caption>\s*/i, '');
-          
+          newTableContent = newTableContent.replace(/<caption[^>]*>[\s\S]*?<\/caption>\s*/i, '');
+
           // Add new caption at the beginning if text is provided
           if (captionText) {
             newTableContent = `<caption>${captionText}</caption>\n${newTableContent}`;
           }
-          
-          // Update summary attribute on table element
+
+          // Build the updated opening table tag (with or without summary attribute)
           let tableTag = html.match(/<table[^>]*>/i)[0];
           if (summaryText) {
-            tableTag = tableTag.replace(/summary\s*=\s*["'][^"']*["']/i, `summary="${summaryText}"`);
-            if (!tableTag.includes('summary=')) {
+            if (/summary\s*=\s*["'][^"']*["']/i.test(tableTag)) {
+              tableTag = tableTag.replace(/summary\s*=\s*["'][^"']*["']/i, `summary="${summaryText}"`);
+            } else {
               tableTag = tableTag.replace('>', ` summary="${summaryText}">`);
             }
           } else {
             tableTag = tableTag.replace(/\s*summary\s*=\s*["'][^"']*["']/i, '');
           }
-          
-          updatedHtml = html.replace(/<table[^>]*>/i, tableTag);
-          updatedHtml = updatedHtml.replace(/<table[^>]*>(.*?)<\/table>/is, `<table>${newTableContent}</table>`);
+
+          // Replace the entire <table>…</table> block, preserving the updated tag
+          updatedHtml = html.replace(/<table[^>]*>([\s\S]*?)<\/table>/i, () => `${tableTag}${newTableContent}</table>`);
         }
-        
+
         tableEditor.setData(updatedHtml);
         closeDialog();
         setStatus('table', `Caption updated: "${captionText || '(empty)'}". Validate to check table structure.`);
@@ -2964,6 +2964,12 @@
       if (helpButton) {
         helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'Table', 'table'));
       }
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && captionDialog.classList.contains('open')) {
+          closeDialog();
+        }
+      });
 
       let validationTimeout;
       tableEditor.model.document.on('change:data', () => {
