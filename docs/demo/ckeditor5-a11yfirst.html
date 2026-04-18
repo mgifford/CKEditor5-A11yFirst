@@ -2890,7 +2890,15 @@
       console.warn('Editor init error:', err.message);
     });
 
-    ClassicEditor.create(document.querySelector('#editor-table'), {
+    // Capture the initial table HTML *before* ClassicEditor.create() replaces
+    // the element's content with the editor UI.  After .then() runs, the
+    // original DOM content is no longer accessible.
+    const _editorTableEl = document.querySelector('#editor-table');
+    const _initialTableHtml = _editorTableEl ? _editorTableEl.innerHTML : '';
+    const _initTableCaption = (_initialTableHtml.match(/<caption[^>]*>([\s\S]*?)<\/caption>/i) || [])[1] || '';
+    const _initTableSummary = (_initialTableHtml.match(/<table[^>]*\bsummary\s*=\s*["']([^"']*)["']/i) || [])[1] || '';
+
+    ClassicEditor.create(_editorTableEl, {
       toolbar: ['insertTable', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
       extraPlugins: [A11yFirst.Table.plugin, A11yFirst.HelpButton.plugin],
       table: {
@@ -2915,26 +2923,15 @@
       // JS object and render them in a dedicated display area instead.
       // ------------------------------------------------------------------
 
-      // Capture the initial caption/summary from the original page HTML
-      // *before* CKEditor5 replaces the element's content.  By the time the
-      // `.then()` callback runs the element has already been replaced, so we
-      // read the text rendered in the editing view as a fallback.
-      const tableA11yData = { caption: '', summary: '' };
+      // Seed from DOM values captured before the editor was created.  Also
+      // check getData() in case a future build restores native caption support.
+      const tableA11yData = { caption: _initTableCaption, summary: _initTableSummary };
 
-      // Try to read the initial caption from the editor's data output.
-      // CKEditor5 strips <caption>, so this will usually be empty on first
-      // load, but keeps working if a future build restores caption support.
       const initialData = tableEditor.getData();
       const initCaptionMatch = initialData.match(/<caption[^>]*>([\s\S]*?)<\/caption>/i);
       const initSummaryMatch = initialData.match(/<table[^>]*\bsummary\s*=\s*["']([^"']*)["']/i);
       if (initCaptionMatch) tableA11yData.caption = initCaptionMatch[1].trim();
       if (initSummaryMatch) tableA11yData.summary = initSummaryMatch[1].trim();
-
-      // If the editor stripped the caption, seed from the known initial value
-      // embedded in the page HTML so the demo starts with useful data shown.
-      if (!tableA11yData.caption) {
-        tableA11yData.caption = 'Community investment priorities for inclusive Solar Punk neighborhoods';
-      }
 
       /** Render the stored caption/summary in the visible display area. */
       function renderTableCaptionArea() {

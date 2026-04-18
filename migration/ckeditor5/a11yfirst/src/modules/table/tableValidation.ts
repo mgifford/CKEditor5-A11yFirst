@@ -20,8 +20,8 @@ export function validateTableAccessibility(
   tableHtml: string,
   externalData?: TableA11yData,
 ): TableValidationResult {
-  const captionText = extractTableCaption(tableHtml) ?? externalData?.caption ?? null;
-  const summaryText = extractTableSummary(tableHtml) ?? externalData?.summary ?? null;
+  const captionText = extractTableCaption(tableHtml) ?? (externalData?.caption?.trim() || null);
+  const summaryText = extractTableSummary(tableHtml) ?? (externalData?.summary?.trim() || null);
 
   return {
     hasCaption: hasTableCaption(tableHtml, externalData?.caption),
