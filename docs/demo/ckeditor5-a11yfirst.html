@@ -100,6 +100,10 @@
     .format-results .info { color: #0050a3; }
     .format-results .warn { color: #7a2f00; }
     .table-guidance { margin-bottom: 0.7rem; font-size: 0.92rem; color: #444; }
+    .table-caption-area { margin: 0 0 0.5rem; padding: 0.55rem 0.9rem; background: #f0f7ff; border: 1px solid #c8dff7; border-radius: 6px; font-size: 0.92rem; }
+    .table-caption-area.empty { color: #888; font-style: italic; }
+    .table-caption-area .caption-label { font-weight: 600; margin-right: 0.3rem; }
+    .table-caption-area .summary-row { margin-top: 0.3rem; font-size: 0.88rem; color: #555; }
     .table-results { margin-top: 0.6rem; font-size: 0.9rem; }
     .table-results ul { margin: 0.2rem 0 0 1.1rem; }
     .table-results .ok { color: #0a6b1f; }
@@ -633,6 +637,9 @@
             <button id="table-caption-close" type="button">Close</button>
           </div>
         </div>
+      </div>
+      <div id="table-caption-area" class="table-caption-area empty" aria-live="polite" aria-label="Current table caption and summary">
+        <em>No caption set. Use "Edit Caption" to add one.</em>
       </div>
       <div id="editor-table" class="editor">
         <h2>Inclusive Solar Punk Infrastructure Priorities</h2>
@@ -2205,13 +2212,15 @@
       setStatus('format', `Format validation complete. ${totalSemanticBlocks} semantic block(s) found.`);
     }
 
-    function validateTables(editor) {
+    function validateTables(editor, externalData) {
       const data = editor.getData();
       const resultsDiv = document.getElementById('table-results');
       const results = [];
 
       const tableMatches = data.match(/<table[\s>]/gi) || [];
       const captionMatches = data.match(/<caption[\s>][\s\S]*?<\/caption>/gi) || [];
+      const hasExternalCaption = externalData && externalData.caption && externalData.caption.trim().length > 0;
+      const hasExternalSummary = externalData && externalData.summary && externalData.summary.trim().length > 0;
       const thMatches = data.match(/<th[\s>]/gi) || [];
       const scopeMatches = data.match(/<th[^>]*\sscope=["'][^"']+["'][^>]*>/gi) || [];
       const emptyHeaderMatches = data.match(/<th[^>]*>\s*<\/th>/gi) || [];
@@ -2222,10 +2231,15 @@
         results.push(`<span class="ok">✓ Found ${tableMatches.length} table(s)</span>`);
       }
 
-      if (tableMatches.length && captionMatches.length) {
-        results.push(`<span class="ok">✓ Found ${captionMatches.length} table caption(s)</span>`);
-      } else if (tableMatches.length && !captionMatches.length) {
+      if (tableMatches.length && (captionMatches.length || hasExternalCaption)) {
+        const captionSource = captionMatches.length ? '' : ' (stored via Edit Caption)';
+        results.push(`<span class="ok">✓ Table caption present${captionSource}</span>`);
+      } else if (tableMatches.length) {
         results.push('<span class="warn">⚠ Add a caption to describe the table purpose. Use the <strong>Edit Caption</strong> button in the toolbar above to add one.</span>');
+      }
+
+      if (tableMatches.length && hasExternalSummary) {
+        results.push('<span class="ok">✓ Summary present (stored via Edit Caption)</span>');
       }
 
       if (tableMatches.length && thMatches.length) {
@@ -2876,7 +2890,15 @@
       console.warn('Editor init error:', err.message);
     });
 
-    ClassicEditor.create(document.querySelector('#editor-table'), {
+    // Capture the initial table HTML *before* ClassicEditor.create() replaces
+    // the element's content with the editor UI.  After .then() runs, the
+    // original DOM content is no longer accessible.
+    const _editorTableEl = document.querySelector('#editor-table');
+    const _initialTableHtml = _editorTableEl ? _editorTableEl.innerHTML : '';
+    const _initTableCaption = (_initialTableHtml.match(/<caption[^>]*>([\s\S]*?)<\/caption>/i) || [])[1] || '';
+    const _initTableSummary = (_initialTableHtml.match(/<table[^>]*\bsummary\s*=\s*["']([^"']*)["']/i) || [])[1] || '';
+
+    ClassicEditor.create(_editorTableEl, {
       toolbar: ['insertTable', '|', 'bold', 'italic', 'link', '|', 'undo', 'redo', '|', 'a11yFirstHelp'],
       extraPlugins: [A11yFirst.Table.plugin, A11yFirst.HelpButton.plugin],
       table: {
@@ -2891,6 +2913,45 @@
       }
 
       const helpControls = getHelpElements();
+
+      // ------------------------------------------------------------------
+      // Caption / summary state — stored outside CKEditor5's data model.
+      //
+      // The CKEditor5 classic build (v41) does not include the TableCaption
+      // plugin, so <caption> elements and the `summary` attribute are stripped
+      // during the setData / getData cycle.  We preserve the values in a plain
+      // JS object and render them in a dedicated display area instead.
+      // ------------------------------------------------------------------
+
+      // Seed from DOM values captured before the editor was created.  Also
+      // check getData() in case a future build restores native caption support.
+      const tableA11yData = { caption: _initTableCaption, summary: _initTableSummary };
+
+      const initialData = tableEditor.getData();
+      const initCaptionMatch = initialData.match(/<caption[^>]*>([\s\S]*?)<\/caption>/i);
+      const initSummaryMatch = initialData.match(/<table[^>]*\bsummary\s*=\s*["']([^"']*)["']/i);
+      if (initCaptionMatch) tableA11yData.caption = initCaptionMatch[1].trim();
+      if (initSummaryMatch) tableA11yData.summary = initSummaryMatch[1].trim();
+
+      /** Render the stored caption/summary in the visible display area. */
+      function renderTableCaptionArea() {
+        const area = document.getElementById('table-caption-area');
+        if (!area) return;
+        if (!tableA11yData.caption) {
+          area.className = 'table-caption-area empty';
+          area.innerHTML = '<em>No caption set. Use "Edit Caption" to add one.</em>';
+          return;
+        }
+        area.className = 'table-caption-area';
+        let html = `<span class="caption-label">Caption:</span>${tableA11yData.caption}`;
+        if (tableA11yData.summary) {
+          html += `<div class="summary-row"><span class="caption-label">Summary:</span>${tableA11yData.summary}</div>`;
+        }
+        area.innerHTML = html;
+      }
+
+      // Show initial state immediately.
+      renderTableCaptionArea();
 
       setStatus('table', 'Table mode ready. Add captions and headers to improve data table accessibility.');
 
@@ -2913,15 +2974,12 @@
       const captionCloseBtn = document.getElementById('table-caption-close');
       const captionBackdrop = captionDialog.querySelector('.backdrop');
 
-      // Open caption edit dialog
+      // Open caption edit dialog — populate fields from stored state, not
+      // from getData() which no longer contains <caption> or summary.
       if (captionEditButton) {
         captionEditButton.addEventListener('click', () => {
-          const html = tableEditor.getData();
-          const captionMatch = html.match(/<caption[^>]*>([\s\S]*?)<\/caption>/i);
-          const summaryMatch = html.match(/<table[^>]*summary\s*=\s*["']([^"']*)["']/i);
-
-          captionInput.value = captionMatch ? captionMatch[1] : '';
-          summaryInput.value = summaryMatch ? summaryMatch[1] : '';
+          captionInput.value = tableA11yData.caption;
+          summaryInput.value = tableA11yData.summary;
           captionDialog.classList.add('open');
           captionInput.focus();
         });
@@ -2932,49 +2990,22 @@
       captionCloseBtn.addEventListener('click', closeDialog);
       captionBackdrop.addEventListener('click', closeDialog);
 
-      // Save caption changes
+      // Save caption changes — update the stored state and re-render the
+      // display area.  We intentionally do NOT call setData() here because
+      // CKEditor5 would strip both <caption> and the summary attribute.
       captionSaveBtn.addEventListener('click', () => {
-        const html = tableEditor.getData();
-        const captionText = captionInput.value.trim();
-        const summaryText = summaryInput.value.trim();
+        tableA11yData.caption = captionInput.value.trim();
+        tableA11yData.summary = summaryInput.value.trim();
 
-        let updatedHtml = html;
-        const tableMatch = html.match(/<table[^>]*>([\s\S]*?)<\/table>/i);
-
-        if (tableMatch) {
-          let newTableContent = tableMatch[1];
-
-          // Remove existing caption if present
-          newTableContent = newTableContent.replace(/<caption[^>]*>[\s\S]*?<\/caption>\s*/i, '');
-
-          // Add new caption at the beginning if text is provided
-          if (captionText) {
-            newTableContent = `<caption>${captionText}</caption>\n${newTableContent}`;
-          }
-
-          // Build the updated opening table tag (with or without summary attribute)
-          let tableTag = html.match(/<table[^>]*>/i)[0];
-          if (summaryText) {
-            if (/summary\s*=\s*["'][^"']*["']/i.test(tableTag)) {
-              tableTag = tableTag.replace(/summary\s*=\s*["'][^"']*["']/i, `summary="${summaryText}"`);
-            } else {
-              tableTag = tableTag.replace('>', ` summary="${summaryText}">`);
-            }
-          } else {
-            tableTag = tableTag.replace(/\s*summary\s*=\s*["'][^"']*["']/i, '');
-          }
-
-          // Replace the entire <table>…</table> block, preserving the updated tag
-          updatedHtml = html.replace(/<table[^>]*>([\s\S]*?)<\/table>/i, () => `${tableTag}${newTableContent}</table>`);
-        }
-
-        tableEditor.setData(updatedHtml);
+        renderTableCaptionArea();
         closeDialog();
-        setStatus('table', `Caption updated: "${captionText || '(empty)'}". Validate to check table structure.`);
+        setStatus('table', `Caption updated: "${tableA11yData.caption || '(empty)'}". Validate to check table structure.`);
+        // Re-run validation so the caption check reflects the new state.
+        validateTables(tableEditor, tableA11yData);
       });
 
       if (validateButton) {
-        validateButton.addEventListener('click', () => validateTables(tableEditor));
+        validateButton.addEventListener('click', () => validateTables(tableEditor, tableA11yData));
       }
       if (helpButton) {
         helpButton.addEventListener('click', () => openHelpDialog(helpControls, 'Table', 'table'));
@@ -2989,7 +3020,7 @@
       let validationTimeout;
       tableEditor.model.document.on('change:data', () => {
         clearTimeout(validationTimeout);
-        validationTimeout = setTimeout(() => validateTables(tableEditor), 500);
+        validationTimeout = setTimeout(() => validateTables(tableEditor, tableA11yData), 500);
       });
 
     }).catch((err) => {
