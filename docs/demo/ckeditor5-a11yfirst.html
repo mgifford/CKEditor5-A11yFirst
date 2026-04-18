@@ -169,6 +169,21 @@
       outline: 3px solid #005fcc;
       outline-offset: 2px;
     }
+    /* Heading anchor permalink links */
+    .heading-anchor {
+      margin-left: 0.4em;
+      font-size: 0.75em;
+      font-weight: normal;
+      text-decoration: none;
+      color: transparent;
+      vertical-align: middle;
+    }
+    h2:hover .heading-anchor,
+    h2:focus-within .heading-anchor,
+    .heading-anchor:focus {
+      color: #0b57d0;
+      text-decoration: underline;
+    }
     .visually-hidden {
       position: absolute;
       width: 1px;
@@ -216,7 +231,7 @@
 
   <div class="row">
     <section id="demo1" class="panel">
-      <h2 id="demo1-heading" tabindex="-1">Demo 1: Standard A11yFirst Configuration</h2>
+      <h2 id="demo1-heading" tabindex="-1">Demo 1: Standard A11yFirst Configuration<a href="#demo1-heading" class="heading-anchor" aria-label="Link to Demo 1: Standard A11yFirst Configuration section"><span aria-hidden="true">#</span></a></h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Heading, Image, Link, List, Table, Character Styles, Help Button.</p>
         <p class="label">Manual test</p>
@@ -248,7 +263,7 @@
     </section>
 
     <section id="demo2" class="panel">
-      <h2 id="demo2-heading" tabindex="-1">Demo 2: High-Restriction Heading Mode</h2>
+      <h2 id="demo2-heading" tabindex="-1">Demo 2: High-Restriction Heading Mode<a href="#demo2-heading" class="heading-anchor" aria-label="Link to Demo 2: High-Restriction Heading Mode section"><span aria-hidden="true">#</span></a></h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Heading (strict rules), Help Button.</p>
         <p class="label">Manual test</p>
@@ -280,7 +295,7 @@
     </section>
 
     <section id="demo3" class="panel">
-      <h2 id="demo3-heading" tabindex="-1">Demo 3: Image-Focused Mode</h2>
+      <h2 id="demo3-heading" tabindex="-1">Demo 3: Image-Focused Mode<a href="#demo3-heading" class="heading-anchor" aria-label="Link to Demo 3: Image-Focused Mode section"><span aria-hidden="true">#</span></a></h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Image, Help Button, axe-core audit integration.</p>
         <p class="label">Manual test</p>
@@ -394,7 +409,7 @@
     </section>
 
     <section id="demo4" class="panel">
-      <h2 id="demo4-heading" tabindex="-1">Demo 4: Link-Focused Mode</h2>
+      <h2 id="demo4-heading" tabindex="-1">Demo 4: Link-Focused Mode<a href="#demo4-heading" class="heading-anchor" aria-label="Link to Demo 4: Link-Focused Mode section"><span aria-hidden="true">#</span></a></h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Link, Help Button.</p>
         <p class="label">Manual test</p>
@@ -457,7 +472,7 @@
     </section>
 
     <section id="demo5" class="panel">
-      <h2 id="demo5-heading" tabindex="-1">Demo 5: Character Style Mode</h2>
+      <h2 id="demo5-heading" tabindex="-1">Demo 5: Character Style Mode<a href="#demo5-heading" class="heading-anchor" aria-label="Link to Demo 5: Character Style Mode section"><span aria-hidden="true">#</span></a></h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Character Styles, Help Button.</p>
         <p class="label">Manual test</p>
@@ -483,7 +498,7 @@
     </section>
 
     <section id="demo6" class="panel">
-      <h2 id="demo6-heading" tabindex="-1">Demo 6: List Guidance Mode</h2>
+      <h2 id="demo6-heading" tabindex="-1">Demo 6: List Guidance Mode<a href="#demo6-heading" class="heading-anchor" aria-label="Link to Demo 6: List Guidance Mode section"><span aria-hidden="true">#</span></a></h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst List, Help Button.</p>
         <p class="label">Manual test</p>
@@ -529,7 +544,7 @@
     </section>
 
     <section id="demo7" class="panel">
-      <h2 id="demo7-heading" tabindex="-1">Demo 7: Paragraph Format Mode</h2>
+      <h2 id="demo7-heading" tabindex="-1">Demo 7: Paragraph Format Mode<a href="#demo7-heading" class="heading-anchor" aria-label="Link to Demo 7: Paragraph Format Mode section"><span aria-hidden="true">#</span></a></h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> Paragraph format validator (demo), Help Button.</p>
         <p class="label">Manual test</p>
@@ -582,7 +597,7 @@
     </section>
 
     <section id="demo8" class="panel">
-      <h2 id="demo8-heading" tabindex="-1">Demo 8: Table Accessibility Mode</h2>
+      <h2 id="demo8-heading" tabindex="-1">Demo 8: Table Accessibility Mode<a href="#demo8-heading" class="heading-anchor" aria-label="Link to Demo 8: Table Accessibility Mode section"><span aria-hidden="true">#</span></a></h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst Table, Help Button.</p>
         <p class="label">Manual test</p>
@@ -661,7 +676,7 @@
     </section>
 
     <section id="demo9" class="panel">
-      <h2 id="demo9-heading" tabindex="-1">Demo 9: A11y Checker Summary Mode</h2>
+      <h2 id="demo9-heading" tabindex="-1">Demo 9: A11y Checker Summary Mode<a href="#demo9-heading" class="heading-anchor" aria-label="Link to Demo 9: A11y Checker Summary Mode section"><span aria-hidden="true">#</span></a></h2>
       <div class="demo-instructions">
         <p><span class="label">Plugins demoed:</span> A11yFirst A11yChecker, Heading, Image, Link, List, Table, Help Button.</p>
         <p class="label">Manual test</p>
