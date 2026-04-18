@@ -343,7 +343,7 @@
         if (!hasCaption) {
           findings.push({
             level: 'advisory',
-            message: `Table ${tableIndex + 1} has no caption. Consider adding a <caption> to describe the table's purpose.`
+            message: `Table ${tableIndex + 1} has no caption. Add a <caption> element to describe the table's purpose. Use the "Edit Caption" toolbar button if available.`
           });
         }
         
