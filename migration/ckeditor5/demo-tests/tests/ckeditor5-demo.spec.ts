@@ -146,6 +146,23 @@ test.describe('CKEditor5 demo site', () => {
     expect(blocking, JSON.stringify(blocking, null, 2)).toHaveLength(0);
   });
 
+  test('checker editor has no image-alt violations after render', async ({ page }) => {
+    await gotoDemo(page);
+
+    await page.evaluate(axeSource);
+
+    const results = await page.evaluate(async () => {
+      const axe = (window as unknown as { axe: { run: (context?: unknown, options?: unknown) => Promise<unknown> } }).axe;
+      return axe.run(
+        { include: [['#editor-checker .ck-editor__editable']] },
+        { runOnly: { type: 'rule', values: ['image-alt'] } }
+      );
+    });
+
+    const violations = (results as { violations: Array<{ id: string }> }).violations;
+    expect(violations, JSON.stringify(violations, null, 2)).toHaveLength(0);
+  });
+
   test('image-focused mode runs axe-core audit checks', async ({ page }) => {
     await gotoDemo(page);
 
