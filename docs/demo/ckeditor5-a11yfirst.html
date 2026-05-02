@@ -756,6 +756,53 @@
   <script src="../assets/a11yfirst/a11yfirst.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.11.1/axe.min.js" onerror="this.onerror=null;this.src='../assets/vendor/axe-core/axe.min.js';"></script>
   <script>
+    // Fix landmark-unique: CKEditor5 renders role="region" elements inside
+    // .ck-aria-live-announcer for each editor instance. Without unique accessible
+    // names these violate WCAG 2.4.1 (axe rule: landmark-unique). A MutationObserver
+    // watches for these regions and assigns a unique aria-label to each one.
+    (function () {
+      var regionCount = 0;
+
+      function labelAriaLiveRegion(region) {
+        if (!region.getAttribute('aria-label')) {
+          regionCount += 1;
+          var politeness = region.getAttribute('aria-live') || 'polite';
+          region.setAttribute(
+            'aria-label',
+            'CKEditor ' + regionCount + ' ' + politeness + ' announcements'
+          );
+        }
+      }
+
+      function scanAndLabel(root) {
+        root.querySelectorAll('.ck-aria-live-announcer [role="region"]').forEach(labelAriaLiveRegion);
+      }
+
+      var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+          mutation.addedNodes.forEach(function (node) {
+            if (node.nodeType !== 1) {
+              return;
+            }
+            if (node.getAttribute('role') === 'region' && node.closest && node.closest('.ck-aria-live-announcer')) {
+              labelAriaLiveRegion(node);
+            }
+            if (node.querySelectorAll) {
+              node.querySelectorAll('[role="region"]').forEach(function (descendant) {
+                if (descendant.closest && descendant.closest('.ck-aria-live-announcer')) {
+                  labelAriaLiveRegion(descendant);
+                }
+              });
+            }
+          });
+        });
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
+      scanAndLabel(document);
+    }());
+  </script>
+  <script>
     const status = {
       standard: document.getElementById('status-standard'),
       strict: document.getElementById('status-strict'),
