@@ -329,6 +329,44 @@
   function A11yFirstTablePlugin(editor) {
     if (!editor._a11yFirstTopics) editor._a11yFirstTopics = new Set();
     editor._a11yFirstTopics.add('Table');
+
+    // -----------------------------------------------------------------------
+    // Ensure every <th> nested-editable cell has an accessible name so that
+    // the axe-core `aria-input-field-name` rule is satisfied.
+    //
+    // CKEditor5 applies role="textbox" to every nested-editable element
+    // (including <th> cells).  ARIA requires that elements with input-field
+    // roles carry an accessible name supplied via aria-label, aria-labelledby,
+    // or title — the element's text content is treated as the *value*, not
+    // the label.  Column-header cells in <thead> receive "Column N header"
+    // and row-header cells in <tbody> receive "Row N header".
+    // -----------------------------------------------------------------------
+    function labelThNestedEditables() {
+      const domRoot = editor.editing.view.getDomRoot();
+      if (!domRoot) return;
+      domRoot.querySelectorAll('th.ck-editor__nested-editable').forEach((th) => {
+        const row = th.closest('tr');
+        const table = th.closest('table');
+        if (!row || !table) return;
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        const colIndex = cells.indexOf(th) + 1;
+        const inThead = !!th.closest('thead');
+        if (inThead) {
+          th.setAttribute('aria-label', `Column ${colIndex} header`);
+        } else {
+          const rows = Array.from(table.querySelectorAll('tbody tr'));
+          const rowIndex = rows.indexOf(row) + 1;
+          th.setAttribute('aria-label', `Row ${rowIndex} header`);
+        }
+      });
+    }
+
+    // Label cells on first render and after each data change.  Using
+    // change:data (deferred via setTimeout) avoids the overhead of running on
+    // every cursor movement that the view 'render' event would incur.
+    editor.on('ready', labelThNestedEditables);
+    editor.model.document.on('change:data', () => setTimeout(labelThNestedEditables, 0));
+
     editor.model.document.on('change:data', () => {
       const html = editor.getData();
       const tableMatches = Array.from(html.matchAll(/<table[^>]*>.*?<\/table>/gs));
