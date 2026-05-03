@@ -153,8 +153,12 @@ test.describe('CKEditor5 demo site', () => {
 
     const results = await page.evaluate(async () => {
       const axe = (window as unknown as { axe: { run: (context?: unknown, options?: unknown) => Promise<unknown> } }).axe;
+      const editor = (window as unknown as { checkerEditorInstance?: { ui: { view: { editable: { element: Element | null } } } } }).checkerEditorInstance;
+      if (!editor) throw new Error('checker editor instance not found');
+      const editable = editor.ui.view.editable.element;
+      if (!editable) throw new Error('checker editable element not found');
       return axe.run(
-        { include: [['#editor-checker .ck-editor__editable']] },
+        editable,
         { runOnly: { type: 'rule', values: ['image-alt'] } }
       );
     });
