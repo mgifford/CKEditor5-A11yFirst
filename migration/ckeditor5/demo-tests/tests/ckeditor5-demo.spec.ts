@@ -735,6 +735,55 @@ test.describe('CKEditor5 demo site', () => {
     await expect(toolbar.getByLabel('A11yFirst Help')).toBeVisible();
   });
 
+  test('table editor td nested-editable cells all have aria-label (aria-input-field-name)', async ({ page }) => {
+    await gotoDemo(page);
+
+    const tablePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 8: Table Accessibility Mode' }) });
+
+    const tableEditable = tablePanel.locator('.ck-editor__editable_inline');
+    await expect(tableEditable).toBeVisible();
+
+    // Every td.ck-editor__nested-editable inside the table editor must carry
+    // an aria-label so the axe-core `aria-input-field-name` rule is satisfied.
+    const unlabelledTdCount = await tableEditable.evaluate((root) => {
+      return Array.from(root.querySelectorAll('td.ck-editor__nested-editable'))
+        .filter((td) => !td.getAttribute('aria-label'))
+        .length;
+    });
+
+    expect(unlabelledTdCount, 'All td nested-editable cells must have aria-label').toBe(0);
+  });
+
+  test('table editor td nested-editable cells pass axe aria-input-field-name rule', async ({ page }) => {
+    await gotoDemo(page);
+
+    await page.evaluate(axeSource);
+
+    const tablePanel = page
+      .locator('section.panel')
+      .filter({ has: page.getByRole('heading', { name: 'Demo 8: Table Accessibility Mode' }) });
+
+    const tableEditable = tablePanel.locator('.ck-editor__editable_inline');
+    await expect(tableEditable).toBeVisible();
+
+    const results = await page.evaluate(async () => {
+      const axe = (window as unknown as { axe: { run: (context?: unknown, options?: unknown) => Promise<unknown> } }).axe;
+      const editor = (window as unknown as { tableEditorInstance?: { ui: { view: { editable: { element: Element | null } } } } }).tableEditorInstance;
+      if (!editor) throw new Error('table editor instance not found');
+      const editable = editor.ui.view.editable.element;
+      if (!editable) throw new Error('table editable element not found');
+      return axe.run(
+        editable,
+        { runOnly: { type: 'rule', values: ['aria-input-field-name'] } }
+      );
+    });
+
+    const violations = (results as { violations: Array<{ id: string; nodes: Array<{ html: string }> }> }).violations;
+    expect(violations, JSON.stringify(violations, null, 2)).toHaveLength(0);
+  });
+
   test('checker summary mode runs and reports status', async ({ page }) => {
     await gotoDemo(page);
 
