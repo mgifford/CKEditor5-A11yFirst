@@ -331,32 +331,45 @@
     editor._a11yFirstTopics.add('Table');
 
     // -----------------------------------------------------------------------
-    // Ensure every <th> nested-editable cell has an accessible name so that
+    // Ensure every nested-editable cell has an accessible name so that
     // the axe-core `aria-input-field-name` rule is satisfied.
     //
     // CKEditor5 applies role="textbox" to every nested-editable element
-    // (including <th> cells).  ARIA requires that elements with input-field
-    // roles carry an accessible name supplied via aria-label, aria-labelledby,
-    // or title — the element's text content is treated as the *value*, not
-    // the label.  Column-header cells in <thead> receive "Column N header"
-    // and row-header cells in <tbody> receive "Row N header".
+    // (both <th> and <td> cells).  ARIA requires that elements with
+    // input-field roles carry an accessible name via aria-label,
+    // aria-labelledby, or title — the element's text content is treated
+    // as the *value*, not the label.
+    //
+    //   <th> in <thead>  → "Column N header"
+    //   <th> in <tbody>  → "Row N header"
+    //   <td>             → "Row N, Column M"
+    //
+    // Row / column indices are 1-based and computed across the full table
+    // (all <tr> elements, including any header row).
     // -----------------------------------------------------------------------
-    function labelThNestedEditables() {
+    function labelNestedEditables() {
       const domRoot = editor.editing.view.getDomRoot();
       if (!domRoot) return;
-      domRoot.querySelectorAll('th.ck-editor__nested-editable').forEach((th) => {
-        const row = th.closest('tr');
-        const table = th.closest('table');
+
+      domRoot.querySelectorAll('th.ck-editor__nested-editable, td.ck-editor__nested-editable').forEach((cell) => {
+        const row = cell.closest('tr');
+        const table = cell.closest('table');
         if (!row || !table) return;
+
+        const allRows = Array.from(table.querySelectorAll('tr'));
+        const rowIndex = allRows.indexOf(row) + 1;
         const cells = Array.from(row.querySelectorAll('th, td'));
-        const colIndex = cells.indexOf(th) + 1;
-        const inThead = !!th.closest('thead');
-        if (inThead) {
-          th.setAttribute('aria-label', `Column ${colIndex} header`);
+        const colIndex = cells.indexOf(cell) + 1;
+
+        if (cell.tagName === 'TH') {
+          const inThead = !!cell.closest('thead');
+          if (inThead) {
+            cell.setAttribute('aria-label', `Column ${colIndex} header`);
+          } else {
+            cell.setAttribute('aria-label', `Row ${rowIndex} header`);
+          }
         } else {
-          const rows = Array.from(table.querySelectorAll('tbody tr'));
-          const rowIndex = rows.indexOf(row) + 1;
-          th.setAttribute('aria-label', `Row ${rowIndex} header`);
+          cell.setAttribute('aria-label', `Row ${rowIndex}, Column ${colIndex}`);
         }
       });
     }
@@ -364,8 +377,8 @@
     // Label cells on first render and after each data change.  Using
     // change:data (deferred via setTimeout) avoids the overhead of running on
     // every cursor movement that the view 'render' event would incur.
-    editor.on('ready', labelThNestedEditables);
-    editor.model.document.on('change:data', () => setTimeout(labelThNestedEditables, 0));
+    editor.on('ready', labelNestedEditables);
+    editor.model.document.on('change:data', () => setTimeout(labelNestedEditables, 0));
 
     editor.model.document.on('change:data', () => {
       const html = editor.getData();
