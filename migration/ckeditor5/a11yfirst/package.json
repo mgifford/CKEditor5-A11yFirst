@@ -1,15 +1,59 @@
 {
-  "name": "@a11yfirst/ckeditor5",
+  "name": "ckeditor5-a11yfirst",
   "version": "0.1.0",
-  "private": true,
+  "description": "A11yFirst accessibility-first plugin suite for CKEditor5 — enforces heading hierarchy, image alt text, link text quality, table structure, and runs automated WCAG 2.x checks via axe-core.",
+  "keywords": [
+    "ckeditor5",
+    "ckeditor5-plugin",
+    "accessibility",
+    "a11y",
+    "a11yfirst",
+    "wcag",
+    "axe-core",
+    "rich-text-editor"
+  ],
+  "author": "A11yFirst Contributors",
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://github.com/mgifford/CKEditor5-A11yFirst",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mgifford/CKEditor5-A11yFirst.git"
+  },
   "type": "module",
-  "description": "A11yFirst CKEditor5 migration package",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "peerDependencies": {
+    "ckeditor5": ">=41.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ckeditor5": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.4",
+    "happy-dom": "^20.8.9",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4"
   }
