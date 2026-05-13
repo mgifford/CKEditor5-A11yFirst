@@ -1,6 +1,6 @@
 {
   "name": "ckeditor5-a11yfirst",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A11yFirst accessibility-first plugin suite for CKEditor5 — enforces heading hierarchy, image alt text, link text quality, table structure, and runs automated WCAG 2.x checks via axe-core.",
   "keywords": [
     "ckeditor5",
